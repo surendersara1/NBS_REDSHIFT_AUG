@@ -1,0 +1,18 @@
+{
+  "app": "python app.py",
+  "watch": {
+    "include": ["**"],
+    "exclude": ["README.md", "cdk*.json", "requirements*.txt", "**/__pycache__"]
+  },
+  "context": {
+    "project": "nbs-coaching",
+    "stage": "dev",
+    "raw_bucket": "nbs-raw-suren",
+    "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:target-partitions": ["aws"],
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:enablePartitionLiterals": true,
+    "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": true
+  }
+}
