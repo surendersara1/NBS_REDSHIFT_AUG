@@ -56,8 +56,42 @@ THE SOLUTION: TRUE HYBRID STORAGE TIERS (S3 OBJECT STORE + REDSHIFT RMS)
 │  4. COLD ARCHIVAL TIER (Amazon S3 Intelligent-Tiering / Glacier Flexible Archive)                            │
 │     • Location: Amazon S3 Archive (`s3://enterprise-lake/archive/web_engagement/`)                           │
 │     • Format: Snappy Parquet partitioned by `event_date`                                                     │
-│     • Query Engine: Seamless Unified Late-Binding View (`WITH NO SCHEMA BINDING`) spanning RMS + S3         │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                  LAKEHOUSE IAM TRUST & ACCESS ARCHITECTURE
+                                  
+ ┌──────────────────────────────────────┐       ┌──────────────────────────────────────────────────────────────┐
+ │  Redshift Cluster / Serverless       │       │  AWS IAM Role:                                               │
+ │  Principal: `redshift.amazonaws.com` ├──────►│  `RedshiftSpectrumLakehouseRole`                             │
+ └──────────────────────────────────────┘       └──────────────────────────────┬───────────────────────────────┘
+                                                                               │
+                                       ┌───────────────────────────────────────┼──────────────────────────────────────┐
+                                       │                                       │                                      │
+                                       ▼                                       ▼                                      ▼
+                        ┌──────────────────────────────┐       ┌──────────────────────────────┐       ┌──────────────────────────────┐
+                        │  Amazon S3 Bucket Access     │       │  AWS Glue Data Catalog       │       │  Amazon S3 Tables / Iceberg  │
+                        │  • `s3:GetObject`            │       │  • `glue:GetDatabase`        │       │  • `s3tables:GetTable`       │
+                        │  • `s3:PutObject`            │       │  • `glue:GetTable`           │       │  • `s3tables:GetTableData`   │
+                        │  • `s3:ListBucket`           │       │  • `glue:GetPartitions`      │       │  • `s3tables:PutTableData`   │
+                        │  • `s3:DeleteObject`         │       │  • `glue:BatchCreatePart.`   │       │  • (Apache Iceberg REST API) │
+                        └──────────────────────────────┘       └──────────────────────────────┘       └──────────────────────────────┘
+
+                                      HYBRID QUERY ENGINE ROUTING (HOT VS COLD)
+                                      
+                              ┌──────────────────────────────────────────────────┐
+                              │  Unified Query: `v_unified_enterprise_events`    │
+                              │  (Late-Binding View WITH NO SCHEMA BINDING)       │
+                              └────────────────────────┬─────────────────────────┘
+                                                       │
+                                  ┌────────────────────┴────────────────────┐
+                                  │ WHERE event_date >= '2026-08-01'        │
+                                  ▼                                         ▼
+                 ┌─────────────────────────────────┐       ┌─────────────────────────────────┐
+                 │  HOT RMS PATH (< 90 Days)       │       │  COLD LAKEHOUSE PATH (> 90 Days)│
+                 │  • Scans Local NVMe SSD Cache   │       │  • Pushes scan to Spectrum fleet│
+                 │  • Reads 1MB RMS columnar blocks│       │  • Reads S3 Snappy Parquet files│
+                 │  • Latency: Sub-millisecond     │       │  • Latency: 100ms - 2.5s        │
+                 └─────────────────────────────────┘       └─────────────────────────────────┘
 ======================================================================================
 */
 
