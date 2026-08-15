@@ -1,17 +1,21 @@
 /*
 ======================================================================================
-MODULE 60: ENTERPRISE STORAGE ARCHITECTURE & LAKEHOUSE DEEP DIVE
+MODULE 60: ENTERPRISE HYBRID STORAGE ARCHITECTURE & LAKEHOUSE DEEP DIVE
 ======================================================================================
 MAPPED BEST PRACTICES (from PROCEDURE_OPTIMIZATION_BEST_PRACTICES_MASTER_FILE.md):
-- Practice 8: SORT KEY -> ZONE MAPS skips blocks (1MB immutable block mechanics).
+- Practice 8: SORT KEY -> ZONE MAPS skips blocks (1MB immutable block mechanics in RMS).
 - Practice 26, 79: Staging in collocated #TEMP tables with ON COMMIT DROP and ANALYZE.
 - Practice 29: Collocated Distribution Keys (DISTSTYLE KEY) across fact and staging.
 - Practice 42: Complete Idempotency & Zero-Downtime Partition Swaps.
 - Practice 44: High-Performance MERGE vs ALTER TABLE APPEND pointer swapping.
 - Practice 58: SUPER/PartiQL for dynamic schemaless event drift vs relational columns.
 - Practice 62: Refreshing statistics (ANALYZE) after bulk ingestion and tiering.
-- Practice 89-91: Medallion Architecture: Bronze (S3 Raw) -> Silver (Enriched) -> Gold (RMS Star Schema).
-- Practice 92: Auto-Refreshing Materialized Views on curated Star Schemas.
+- Practice 89-91: True Medallion Architecture across Storage Layers:
+    * BRONZE: Amazon S3 / Amazon S3 Tables (Raw Immutable Object Storage)
+    * SILVER: Amazon S3 Tables (Iceberg) or Redshift Cleansed Staging
+    * GOLD:   Redshift Managed Storage (RMS) on NVMe SSDs (Star Schema Facts/Dims)
+    * COLD:   S3 Intelligent-Tiering / Glacier Parquet Archive
+- Practice 92: Auto-Refreshing Materialized Views on curated RMS Star Schemas.
 - Practice 104-108: Spectrum / S3 Tables partition pruning, S3 overwrite protection, and FinOps lifecycle tiering.
 
 TARGET AUDIENCE: Lead Data Architects, Principal Engineers, and Warehouse Developers
@@ -21,25 +25,52 @@ Storing 100% of multi-year history in Redshift Managed Storage (RMS) causes mill
 in compute/storage overspend. Conversely, running complex 10-way dashboard joins directly against 
 raw S3 files causes 60-second BI timeouts and saturates S3 GET rate limits.
 
-THE SOLUTION: HYBRID LAKEHOUSE MEDALLION ARCHITECTURE
-1. Bronze (Raw): Amazon S3 / S3 Tables (Immutable Raw JSON/Parquet, partitioned by ingestion date).
-2. Silver (Cleansed): Deduplicated, schema-validated Parquet on S3 or Redshift Staging tables.
-3. Gold (Curated Star Schema): Redshift Managed Storage (RMS) with local NVMe SSD cache tiering, 
-   collocated distribution keys, compound sort keys, and automated Materialized Views.
-4. Cold Archival Tier: Automated partition offloading from RMS to S3 with seamless unified views.
+THE SOLUTION: TRUE HYBRID STORAGE TIERS (S3 OBJECT STORE + REDSHIFT RMS)
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  1. BRONZE TIER (Amazon S3 / S3 Tables)                                                                     │
+│     • Location: Amazon S3 Object Storage (`s3://enterprise-lake/bronze/`)                                    │
+│     • Format: Raw Immutable JSON / Snappy Parquet partitioned by ingestion date                             │
+│     • Catalog: AWS Glue Data Catalog or Amazon S3 Tables (Apache Iceberg REST Catalog)                       │
+│     • Queried by: Redshift Spectrum & External Table Engines (Spark, EMR, Athena)                            │
+└──────────────────────────────────────┬───────────────────────────────────────────────────────────────────────┘
+                                       │ (Redshift-Native Pushdown ELT: Querying S3 directly in SQL)
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  2. SILVER TIER (Cleansed & Deduplicated Lakehouse Staging)                                                  │
+│     • Location: S3 Tables (Apache Iceberg) or Redshift High-Speed Staging Tables                             │
+│     • Format: Strongly-typed columnar storage, NULL-sanitized, deduplicated                                 │
+│     • Capabilities: Instant Zero-Copy table pointer swaps using `ALTER TABLE APPEND`                         │
+└──────────────────────────────────────┬───────────────────────────────────────────────────────────────────────┘
+                                       │ (Star Schema Surrogate Mapping & Materialization)
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  3. GOLD TIER (Redshift Managed Storage - RMS with Local NVMe SSD Cache)                                     │
+│     • Location: Redshift RA3 Managed Storage (Hot 90-Day Active Window)                                      │
+│     • Format: 1MB Immutable Columnar Blocks with Zone Maps & AZ Replication                                  │
+│     • Design: Kimball Star Schema Fact/Dim (`DISTSTYLE KEY`, `COMPOUND SORTKEY`)                             │
+│     • Performance: Sub-second BI dashboards via Auto-Refreshing Materialized Views                           │
+└──────────────────────────────────────┬───────────────────────────────────────────────────────────────────────┘
+                                       │ (Automated FinOps Lifecycle Offloading)
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  4. COLD ARCHIVAL TIER (Amazon S3 Intelligent-Tiering / Glacier Flexible Archive)                            │
+│     • Location: Amazon S3 Archive (`s3://enterprise-lake/archive/web_engagement/`)                           │
+│     • Format: Snappy Parquet partitioned by `event_date`                                                     │
+│     • Query Engine: Seamless Unified Late-Binding View (`WITH NO SCHEMA BINDING`) spanning RMS + S3         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ======================================================================================
 */
 
 -- ===================================================================================
--- SECTION 1: STORAGE INTERNALS — REDSHIFT MANAGED STORAGE (RMS) VS S3 LAKEHOUSE
+-- SECTION 1: PHYSICAL STORAGE INTERNALS — RMS VS S3 OPEN LAKEHOUSE
 -- ===================================================================================
 /*
 --------------------------------------------------------------------------------------
-1. REDSHIFT MANAGED STORAGE (RMS) PHYSICAL LAYOUT:
+1. REDSHIFT MANAGED STORAGE (RMS) PHYSICAL INTERNALS:
 --------------------------------------------------------------------------------------
 - Two-Tier Storage Architecture:
   * Tier 1 (Local NVMe SSD Cache): Sits directly on compute nodes (RA3 instances). 
-    Delivers sub-millisecond data block reads for working working-set data.
+    Delivers sub-millisecond data block reads (< 0.5ms) for active working-set data.
   * Tier 2 (S3-Backed Managed Storage): Infinite, durable backing store. Redshift automatically 
     replicates 1MB blocks across 3 Availability Zones (AZs).
 - 1MB Immutable Columnar Blocks:
@@ -84,7 +115,7 @@ LIMIT 10;
 
 
 -- ===================================================================================
--- SECTION 2: END-TO-END SETUP GUIDE (IAM ROLES, S3 BUCKETS, GLUE & S3 TABLES)
+-- SECTION 2: END-TO-END LAKEHOUSE SETUP (IAM ROLES, S3 BUCKETS, GLUE & S3 TABLES)
 -- ===================================================================================
 /*
 HOW REDSHIFT CONNECTS TO S3, GLUE & S3 TABLES:
@@ -149,23 +180,38 @@ STEP 3: CREATE EXTERNAL SCHEMAS IN REDSHIFT
 
 
 -- ===================================================================================
--- SECTION 3: MEDALLION ARCHITECTURE DATA SETUP (BRONZE, SILVER, GOLD)
+-- SECTION 3: PHYSICAL STORAGE TABLES ACROSS THE MEDALLION LAYERS
 -- ===================================================================================
 
 -- -----------------------------------------------------------------------------------
--- BRONZE TIER: Raw Ingestion Landing Table (Simulating Incoming S3 Lake Data)
+-- 1. BRONZE TIER (S3 OBJECT STORE / S3 TABLES EXTERNAL TABLE)
 -- -----------------------------------------------------------------------------------
-DROP TABLE IF EXISTS raw_bronze_landing CASCADE;
-CREATE TABLE raw_bronze_landing (
-    raw_payload_id BIGINT IDENTITY(1,1),
+/*
+In production, Bronze lives 100% on S3 as raw files. Redshift queries it via Spectrum:
+
+CREATE EXTERNAL TABLE ext_lake_glue.ext_bronze_web_events (
+    source_system VARCHAR(50),
+    payload_json VARCHAR(MAX),
+    payload_super SUPER,
+    ingested_at TIMESTAMP
+)
+PARTITIONED BY (ingestion_date DATE)
+STORED AS PARQUET
+LOCATION 's3://enterprise-lake-us-east-1/bronze/web_events/';
+*/
+
+-- Local Sandbox Emulation of Bronze Landing Table (For standalone cluster execution):
+DROP TABLE IF EXISTS ext_bronze_web_events CASCADE;
+CREATE TABLE ext_bronze_web_events (
     source_system VARCHAR(50) NOT NULL ENCODE bytedict,
-    payload_json VARCHAR(MAX) ENCODE zstd,       -- Raw dynamic JSON string
-    payload_super SUPER,                         -- Native SUPER binary for schemaless drift
-    ingested_at TIMESTAMP DEFAULT SYSDATE ENCODE az64
+    payload_json VARCHAR(MAX) ENCODE zstd,
+    payload_super SUPER,                         -- Dynamic schemaless SUPER type for upstream payload drift
+    ingested_at TIMESTAMP DEFAULT SYSDATE ENCODE az64,
+    ingestion_date DATE NOT NULL ENCODE az64     -- Partition column in S3 Lakehouse
 );
 
--- Generate 100,000 realistic raw event records with varying schemas and JSON attributes:
-INSERT INTO raw_bronze_landing (source_system, payload_json, payload_super, ingested_at)
+-- Populate Bronze Lakehouse with 100,000 raw events:
+INSERT INTO ext_bronze_web_events (source_system, payload_json, payload_super, ingested_at, ingestion_date)
 SELECT 
     CASE WHEN s.n % 3 = 0 THEN 'WEB_APP' WHEN s.n % 3 = 1 THEN 'MOBILE_IOS' ELSE 'MOBILE_ANDROID' END,
     '{"event_id": "EVT_' || s.n::VARCHAR || '", "user_id": ' || (s.n % 10000 + 1)::VARCHAR || 
@@ -178,7 +224,8 @@ SELECT
     '", "duration_ms": ' || (100 + (s.n % 4900))::VARCHAR || 
     ', "is_checkout": ' || CASE WHEN s.n % 10 = 0 THEN 'true' ELSE 'false' END || 
     ', "client_version": "v' || (1 + (s.n % 4))::VARCHAR || '.0", "geo": {"country": "US", "city": "New York"}}'),
-    DATEADD(minute, -(s.n % 1440), '2026-08-15 12:00:00'::TIMESTAMP)
+    DATEADD(minute, -(s.n % 1440), '2026-08-15 12:00:00'::TIMESTAMP),
+    '2026-08-15'::DATE
 FROM (
     SELECT ROW_NUMBER() OVER () as n
     FROM (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a,
@@ -189,10 +236,10 @@ FROM (
     LIMIT 100000
 ) s;
 
-ANALYZE raw_bronze_landing;
+ANALYZE ext_bronze_web_events;
 
 -- -----------------------------------------------------------------------------------
--- SILVER TIER: Cleansed, Structured & Deduplicated Staging Table
+-- 2. SILVER TIER (CLEANSED, DEDUPLICATED & STRONGLY-TYPED STAGING TABLE)
 -- -----------------------------------------------------------------------------------
 DROP TABLE IF EXISTS silver_web_events CASCADE;
 CREATE TABLE silver_web_events (
@@ -213,7 +260,7 @@ DISTKEY (user_id)
 COMPOUND SORTKEY (event_date, user_id);
 
 -- -----------------------------------------------------------------------------------
--- GOLD TIER: Curated Kimball Star Schema Fact Table (In Redshift Managed Storage)
+-- 3. GOLD TIER (KIMBALL STAR SCHEMA FACT TABLE IN REDSHIFT MANAGED STORAGE - RMS)
 -- -----------------------------------------------------------------------------------
 DROP TABLE IF EXISTS gold_fct_web_engagement CASCADE;
 CREATE TABLE gold_fct_web_engagement (
@@ -225,7 +272,7 @@ CREATE TABLE gold_fct_web_engagement (
     duration_ms INT NOT NULL ENCODE az64,
     is_checkout INT NOT NULL ENCODE az64,
     event_timestamp TIMESTAMP NOT NULL ENCODE az64,
-    event_date DATE NOT NULL ENCODE raw, -- Leading Sort Key: RAW encoding for fast Zone Maps
+    event_date DATE NOT NULL ENCODE raw, -- Leading Sort Key: RAW encoding for Zone Maps
     ingested_at TIMESTAMP DEFAULT SYSDATE ENCODE az64,
     PRIMARY KEY (engagement_sk)
 )
@@ -234,7 +281,7 @@ DISTKEY (user_id)
 COMPOUND SORTKEY (event_date, user_id);
 
 -- -----------------------------------------------------------------------------------
--- GOLD AGGREGATION: Auto-Refreshing Materialized View for Sub-Second Executive BI
+-- 4. GOLD AGGREGATION: Auto-Refreshing Materialized View for Sub-Second Executive BI
 -- -----------------------------------------------------------------------------------
 DROP MATERIALIZED VIEW IF EXISTS gold_mv_daily_traffic_summary CASCADE;
 CREATE MATERIALIZED VIEW gold_mv_daily_traffic_summary
@@ -254,7 +301,55 @@ GROUP BY event_date, domain;
 
 
 -- ===================================================================================
--- SECTION 3: DATA MOVEMENT MECHANICS — COPY, ALTER TABLE APPEND, UNLOAD
+-- SECTION 4: LAKEHOUSE ELT — INGESTING BRONZE S3 INTO SILVER IN SQL
+-- ===================================================================================
+/*
+THE POWER OF REDSHIFT SPECTRUM ELT:
+Instead of running expensive external AWS Glue / Spark jobs to parse Bronze S3 JSON, 
+Redshift processes the transformation natively using compiled C++ compute slices!
+*/
+
+CREATE OR REPLACE PROCEDURE prc_elt_bronze_to_silver(p_batch_date DATE)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_rows_inserted BIGINT := 0;
+BEGIN
+    RAISE INFO 'Starting native Redshift Lakehouse ELT: Bronze (S3) -> Silver ...';
+
+    -- Delete today's watermark to guarantee idempotency:
+    DELETE FROM silver_web_events WHERE event_date = p_batch_date;
+
+    -- Query Bronze S3 external data directly and shred JSON using PartiQL in parallel:
+    INSERT INTO silver_web_events (
+        event_id, user_id, domain, url_path, duration_ms, is_checkout, 
+        client_version, country, event_timestamp, event_date
+    )
+    SELECT 
+        (payload_super.event_id)::VARCHAR(64) AS event_id,
+        (payload_super.user_id)::BIGINT AS user_id,
+        (payload_super.domain)::VARCHAR(100) AS domain,
+        (payload_super.url)::VARCHAR(255) AS url_path,
+        (payload_super.duration_ms)::INT AS duration_ms,
+        (payload_super.is_checkout)::BOOLEAN AS is_checkout,
+        (payload_super.client_version)::VARCHAR(20) AS client_version,
+        (payload_super.geo.country)::CHAR(2) AS country,
+        ingested_at AS event_timestamp,
+        ingestion_date AS event_date
+    FROM ext_bronze_web_events
+    WHERE ingestion_date = p_batch_date;
+
+    GET DIAGNOSTICS v_rows_inserted = ROW_COUNT;
+    RAISE INFO 'ELT Complete: Loaded % cleansed events into Silver.', v_rows_inserted;
+
+EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION 'prc_elt_bronze_to_silver failed: %', SQLERRM;
+END;
+$$;
+
+
+-- ===================================================================================
+-- SECTION 5: DATA MOVEMENT MECHANICS — COPY, ALTER TABLE APPEND, UNLOAD
 -- ===================================================================================
 
 -- -----------------------------------------------------------------------------------
@@ -264,17 +359,11 @@ GROUP BY event_date, domain;
 PRODUCTION COPY SYNTAX:
 COPY silver_web_events
 FROM 's3://my-enterprise-lake-us-east-1/manifests/2026-08-15-batch.manifest'
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
+IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
 FORMAT AS PARQUET
 MANIFEST
 COMPUPDATE OFF
 STATUPDATE ON;
-
-WHY THIS IS OPTIMAL:
-1. MANIFEST: Explicitly lists every S3 part file. Protects against missing or partially uploaded files.
-2. PARQUET: Columnar layout reduces S3 network transfer volume by 75% compared to raw CSV.
-3. COMPUPDATE OFF: Avoids re-analyzing column compression on every single batch load.
-4. STATUPDATE ON: Refreshes histogram statistics immediately so downstream joins do not degrade.
 */
 
 -- -----------------------------------------------------------------------------------
@@ -326,13 +415,9 @@ ANALYZE stage_web_events_append;
 -- Instant Zero-Copy Block Pointer Swap:
 ALTER TABLE silver_web_events APPEND FROM stage_web_events_append;
 
--- Verify source table was emptied and target table was populated instantly:
--- SELECT COUNT(1) FROM stage_web_events_append; -- Returns 0 rows!
--- SELECT COUNT(1) FROM silver_web_events;        -- Returns 25,000 rows!
-
 
 -- ===================================================================================
--- SECTION 4: THE S3 TARGET OVERWRITE PROBLEM & ZERO-DOWNTIME ATOMIC PUBLISHING
+-- SECTION 6: THE S3 TARGET OVERWRITE PROBLEM & ZERO-DOWNTIME ATOMIC PUBLISHING
 -- ===================================================================================
 /*
 THE PROBLEM: WHAT HAPPENS IF WE DIRECTLY OVERWRITE A S3 TARGET PREFIX?
@@ -367,7 +452,7 @@ BEGIN
     -- Step 1: In production, export new partition data to isolated staging path via UNLOAD
     -- UNLOAD ('SELECT * FROM silver_web_events WHERE event_date = ''' || p_partition_date || '''')
     -- TO p_s3_staging_prefix
-    -- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
+    -- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
     -- FORMAT AS PARQUET
     -- CLEANPATH
     -- MANIFEST;
@@ -387,7 +472,7 @@ $$;
 
 
 -- ===================================================================================
--- SECTION 5: SCHEMA EVOLUTION MANAGEMENT ACROSS LAKE & WAREHOUSE
+-- SECTION 7: SCHEMA EVOLUTION MANAGEMENT ACROSS LAKE & WAREHOUSE
 -- ===================================================================================
 /*
 HOW ENTERPRISES HANDLE SCHEMA EVOLUTION:
@@ -432,7 +517,7 @@ $$;
 
 
 -- ===================================================================================
--- SECTION 6: AUTOMATED COLD DATA TIERING & STORAGE FINOPS PIPELINE
+-- SECTION 8: AUTOMATED COLD DATA TIERING & STORAGE FINOPS PIPELINE
 -- ===================================================================================
 /*
 THE STORAGE TIERING LIFECYCLE:
@@ -503,7 +588,7 @@ BEGIN
     -- Step 2: In production: UNLOAD cold history prior to v_cutoff_date to S3 Parquet archive
     -- UNLOAD ('SELECT * FROM gold_fct_web_engagement WHERE event_date < ''' || v_cutoff_date || '''')
     -- TO 's3://enterprise-lakehouse-us-east-1/archive/web_engagement/'
-    -- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
+    -- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
     -- FORMAT AS PARQUET
     -- PARTITION BY (event_date)
     -- CLEANPATH;
@@ -526,16 +611,19 @@ $$;
 
 
 -- ===================================================================================
--- SECTION 7: USAGE, VERIFICATION & QUERY PLAN PROOF
+-- SECTION 9: USAGE, VERIFICATION & QUERY PLAN PROOF
 -- ===================================================================================
 
--- (a) Execute schema evolution test:
+-- (a) Execute native lakehouse ELT (Bronze S3 -> Silver):
+CALL prc_elt_bronze_to_silver('2026-08-15'::DATE);
+
+-- (b) Execute schema evolution test:
 CALL prc_merge_with_schema_evolution('silver_web_events');
 
--- (b) Execute storage tiering pipeline:
+-- (c) Execute storage tiering pipeline:
 CALL prc_automated_storage_tiering(90);
 
--- (c) Verify Materialized View auto-refresh status:
+-- (d) Verify Materialized View auto-refresh status:
 SELECT 
     database_name,
     schema_name,
@@ -547,14 +635,14 @@ SELECT
 FROM sys_mv_refresh_history
 ORDER BY last_refresh_time DESC LIMIT 5;
 
--- (d) Explain Plan: Verify Hybrid View Routing with S3 Spectrum vs RMS Local NVMe:
+-- (e) Explain Plan: Verify Hybrid View Routing with S3 Spectrum vs RMS Local NVMe:
 EXPLAIN
 SELECT event_date, domain, COUNT(1), SUM(is_checkout)
 FROM v_unified_enterprise_events
 WHERE event_date >= '2026-08-01'::DATE
 GROUP BY event_date, domain;
 
--- (e) Inspect S3 Spectrum scan bytes and execution metrics:
+-- (f) Inspect S3 Spectrum scan bytes and execution metrics:
 SELECT 
     query,
     segment,
