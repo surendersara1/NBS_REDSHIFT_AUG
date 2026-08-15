@@ -84,7 +84,72 @@ LIMIT 10;
 
 
 -- ===================================================================================
--- SECTION 2: MEDALLION ARCHITECTURE DATA SETUP (BRONZE, SILVER, GOLD)
+-- SECTION 2: END-TO-END SETUP GUIDE (IAM ROLES, S3 BUCKETS, GLUE & S3 TABLES)
+-- ===================================================================================
+/*
+HOW REDSHIFT CONNECTS TO S3, GLUE & S3 TABLES:
+To query S3 or S3 Tables, Redshift requires an IAM Role with appropriate trust and permissions.
+
+STEP 1: CREATE THE IAM ROLE (AWS CONSOLE / CLI / TERRAFORM / CDK)
+--------------------------------------------------------------------------------------
+Trust Relationship (Trust Policy):
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "redshift.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+
+Required Permissions Policy (Attach to IAM Role):
+1. S3 Permissions (Read/Write for Data Lake & UNLOAD/COPY):
+   - "s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket" on "arn:aws:s3:::enterprise-lake-*"
+2. AWS Glue Data Catalog Permissions (For Redshift Spectrum):
+   - "glue:GetDatabase", "glue:GetDatabases", "glue:GetTable", "glue:GetTables",
+     "glue:GetPartition", "glue:GetPartitions", "glue:CreateTable", "glue:BatchCreatePartition"
+3. Amazon S3 Tables Permissions (For Apache Iceberg REST Catalog / S3 Tables):
+   - "s3tables:GetTable", "s3tables:ListTables", "s3tables:GetTableData", "s3tables:PutTableData"
+4. AWS Lake Formation Permissions (Optional, if using centralized Lake Formation governance):
+   - "lakeformation:GetDataAccess"
+
+STEP 2: ATTACH THE IAM ROLE TO YOUR REDSHIFT CLUSTER / SERVERLESS NAMESPACE
+--------------------------------------------------------------------------------------
+AWS CLI:
+aws redshift modify-cluster-iam-roles \
+    --cluster-identifier nbs-redshift-cluster \
+    --add-iam-roles arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole
+
+STEP 3: CREATE EXTERNAL SCHEMAS IN REDSHIFT
+--------------------------------------------------------------------------------------
+*/
+
+-- (A) Standard S3 Data Lake via AWS Glue Catalog (Redshift Spectrum):
+-- CREATE EXTERNAL SCHEMA ext_lake_glue
+-- FROM DATA CATALOG
+-- DATABASE 'lakehouse_analytics_db'
+-- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
+-- CREATE EXTERNAL DATABASE IF NOT EXISTS;
+
+-- (B) Modern Amazon S3 Tables (Apache Iceberg Managed Table Bucket):
+-- CREATE EXTERNAL SCHEMA ext_s3_tables
+-- FROM S3TABLES
+-- CATALOG 'arn:aws:s3tables:us-east-1:123456789012:bucket/enterprise-analytics-bucket'
+-- NAMESPACE 'silver_telemetry'
+-- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole';
+
+-- (C) Centralized AWS Lake Formation Governed External Schema:
+-- CREATE EXTERNAL SCHEMA ext_lake_formation_governed
+-- FROM DATA CATALOG
+-- DATABASE 'governed_lake_db'
+-- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
+-- CATALOG_ID '123456789012';
+
+
+-- ===================================================================================
+-- SECTION 3: MEDALLION ARCHITECTURE DATA SETUP (BRONZE, SILVER, GOLD)
 -- ===================================================================================
 
 -- -----------------------------------------------------------------------------------
