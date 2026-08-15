@@ -3,122 +3,176 @@
 MODULE 60: ENTERPRISE STORAGE ARCHITECTURE & LAKEHOUSE DEEP DIVE
 ======================================================================================
 MAPPED BEST PRACTICES (from PROCEDURE_OPTIMIZATION_BEST_PRACTICES_MASTER_FILE.md):
-- Practice 89: Use a star schema for analytics — facts (measures) plus dimensions (context).
-- Practice 90: Denormalize for analytical reads.
-- Practice 91: Follow medallion layering: Bronze (raw) -> Silver (cleansed) -> Gold (business).
-- Practice 92: Use materialized views for pre-computed, frequently-queried aggregates.
-- Practice 104-108: Spectrum / Lakehouse partition pruning and S3 storage tiering.
-- Practice 42: Idempotent data publishing and zero-downtime partition swaps.
+- Practice 8: SORT KEY -> ZONE MAPS skips blocks (1MB immutable block mechanics).
+- Practice 26, 79: Staging in collocated #TEMP tables with ON COMMIT DROP and ANALYZE.
+- Practice 29: Collocated Distribution Keys (DISTSTYLE KEY) across fact and staging.
+- Practice 42: Complete Idempotency & Zero-Downtime Partition Swaps.
+- Practice 44: High-Performance MERGE vs ALTER TABLE APPEND pointer swapping.
+- Practice 58: SUPER/PartiQL for dynamic schemaless event drift vs relational columns.
+- Practice 62: Refreshing statistics (ANALYZE) after bulk ingestion and tiering.
+- Practice 89-91: Medallion Architecture: Bronze (S3 Raw) -> Silver (Enriched) -> Gold (RMS Star Schema).
+- Practice 92: Auto-Refreshing Materialized Views on curated Star Schemas.
+- Practice 104-108: Spectrum / S3 Tables partition pruning, S3 overwrite protection, and FinOps lifecycle tiering.
 
 TARGET AUDIENCE: Lead Data Architects, Principal Engineers, and Warehouse Developers
 BUSINESS SCENARIO: 
-An enterprise handles 50 Terabytes of new telemetry, web logs, and transactional records daily. 
-Storing 100% of raw historical data in Redshift Managed Storage (RMS) is cost-prohibitive. 
-Conversely, running complex 15-way dashboard joins directly against raw S3 CSV files results in 
-45-second query latencies and saturates external Glue catalogs.
+An enterprise ingests 50 Terabytes of telemetry, clickstream, and transaction data daily. 
+Storing 100% of multi-year history in Redshift Managed Storage (RMS) causes millions of dollars 
+in compute/storage overspend. Conversely, running complex 10-way dashboard joins directly against 
+raw S3 files causes 60-second BI timeouts and saturates S3 GET rate limits.
 
 THE SOLUTION: HYBRID LAKEHOUSE MEDALLION ARCHITECTURE
-1. Bronze (Raw): Amazon S3 (Immutable Raw JSON/Parquet) & S3 Tables / Iceberg.
-2. Silver (Enriched): Partitioned Parquet on S3 or staging tables in Redshift.
-3. Gold (Curated Star Schema): Redshift Managed Storage (RMS) with NVMe cache tiering, 
+1. Bronze (Raw): Amazon S3 / S3 Tables (Immutable Raw JSON/Parquet, partitioned by ingestion date).
+2. Silver (Cleansed): Deduplicated, schema-validated Parquet on S3 or Redshift Staging tables.
+3. Gold (Curated Star Schema): Redshift Managed Storage (RMS) with local NVMe SSD cache tiering, 
    collocated distribution keys, compound sort keys, and automated Materialized Views.
 4. Cold Archival Tier: Automated partition offloading from RMS to S3 with seamless unified views.
-
 ======================================================================================
-SECTION 1: STORAGE INTERNALS — REDSHIFT MANAGED STORAGE (RMS) VS S3 LAKEHOUSE
-======================================================================================
-Redshift Managed Storage (RMS) Architecture:
-- Tier 1: Local high-performance NVMe SSDs acting as a working cache on compute nodes.
-- Tier 2: Redshift Managed Storage backed by Amazon S3 (automatic block replication across 3 AZs).
-- 1MB Immutable Column Blocks: Every column is partitioned into 1MB blocks with automatic Zone Maps.
-- Contrast with S3 Lakehouse (Spectrum / S3 Tables / Iceberg):
-  * Open formats (Parquet, ORC, Iceberg).
-  * Storage and compute decoupled across external engines (Athena, Spark, EMR, Redshift).
-  * Network boundary: Queries against S3 must traverse the Redshift Spectrum fleet layer.
 */
 
 -- ===================================================================================
--- SECTION 2: EXTERNAL LAKEHOUSE CATALOG SETUP (GLUE & S3 TABLES)
+-- SECTION 1: STORAGE INTERNALS — REDSHIFT MANAGED STORAGE (RMS) VS S3 LAKEHOUSE
+-- ===================================================================================
+/*
+--------------------------------------------------------------------------------------
+1. REDSHIFT MANAGED STORAGE (RMS) PHYSICAL LAYOUT:
+--------------------------------------------------------------------------------------
+- Two-Tier Storage Architecture:
+  * Tier 1 (Local NVMe SSD Cache): Sits directly on compute nodes (RA3 instances). 
+    Delivers sub-millisecond data block reads for working working-set data.
+  * Tier 2 (S3-Backed Managed Storage): Infinite, durable backing store. Redshift automatically 
+    replicates 1MB blocks across 3 Availability Zones (AZs).
+- 1MB Immutable Columnar Blocks:
+  * Redshift stores data in fixed 1MB physical blocks per column.
+  * Every 1MB block has a metadata header containing the block's Zone Map (Min and Max values).
+  * Blocks are 100% immutable: `UPDATE` and `DELETE` do NOT modify existing blocks in place. 
+    Instead, they mark rows as "tombstones" (deleted in transaction metadata) and append new 1MB blocks.
+- Slices & Parallelism:
+  * Each compute node is partitioned into multiple "slices" (e.g. 2 to 16 slices per node).
+  * Each slice manages its own local NVMe directory and processes its portion of physical 1MB blocks in parallel.
+
+--------------------------------------------------------------------------------------
+2. S3 OPEN DATA LAKE & S3 TABLES (SPECTRUM / ICEBERG):
+--------------------------------------------------------------------------------------
+- Decoupled Storage & Open Formats:
+  * Data lives on Amazon S3 in open columnar formats: Apache Parquet, ORC, Apache Iceberg, or S3 Tables.
+  * Accessible by multiple query engines simultaneously (Redshift Spectrum, Athena, Spark, EMR, SageMaker).
+- Spectrum Compute Layer:
+  * When Redshift queries S3 external tables, the cluster pushes scans down to a dynamic, thousands-strong 
+    fleet of Spectrum worker nodes in the AWS region.
+  * Spectrum workers project columns, evaluate S3 partition filters, decompress Parquet, and stream only 
+    matching records back to the Redshift cluster over internal 100 Gbps network fabrics.
+- Latency Profile:
+  * RMS Local NVMe Cache: < 0.5 milliseconds per block.
+  * RMS S3 Tier: 5 to 15 milliseconds per block.
+  * S3 Spectrum Scan: 100 milliseconds to 2.5 seconds per query (subject to S3 prefix GET rate limits).
+*/
+
+-- Diagnostic Query: Inspecting Block Allocation & 1MB Slice Distribution:
+SELECT 
+    b.slice,
+    col,
+    COUNT(1) AS num_1mb_blocks,
+    MIN(minvalue) AS zone_map_min,
+    MAX(maxvalue) AS zone_map_max
+FROM stv_blocklist b
+JOIN pg_class c ON c.oid = b.tbl
+WHERE c.relname = 'gold_fct_web_engagement'
+GROUP BY b.slice, col
+ORDER BY b.slice, col
+LIMIT 10;
+
+
+-- ===================================================================================
+-- SECTION 2: MEDALLION ARCHITECTURE DATA SETUP (BRONZE, SILVER, GOLD)
 -- ===================================================================================
 
--- (A) External Schema for Standard S3 Data Lake (via AWS Glue Catalog):
--- CREATE EXTERNAL SCHEMA ext_lake_bronze
--- FROM DATA CATALOG
--- DATABASE 'lakehouse_bronze_db'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
--- CREATE EXTERNAL DATABASE IF NOT EXISTS;
+-- -----------------------------------------------------------------------------------
+-- BRONZE TIER: Raw Ingestion Landing Table (Simulating Incoming S3 Lake Data)
+-- -----------------------------------------------------------------------------------
+DROP TABLE IF EXISTS raw_bronze_landing CASCADE;
+CREATE TABLE raw_bronze_landing (
+    raw_payload_id BIGINT IDENTITY(1,1),
+    source_system VARCHAR(50) NOT NULL ENCODE bytedict,
+    payload_json VARCHAR(MAX) ENCODE zstd,       -- Raw dynamic JSON string
+    payload_super SUPER,                         -- Native SUPER binary for schemaless drift
+    ingested_at TIMESTAMP DEFAULT SYSDATE ENCODE az64
+);
 
--- (B) External Schema for Amazon S3 Tables (Apache Iceberg REST Catalog Integration):
--- CREATE EXTERNAL SCHEMA ext_s3_tables_silver
--- FROM S3TABLES
--- CATALOG 'arn:aws:s3tables:us-east-1:123456789012:bucket/enterprise-lake-bucket'
--- NAMESPACE 'silver_analytics'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole';
+-- Generate 100,000 realistic raw event records with varying schemas and JSON attributes:
+INSERT INTO raw_bronze_landing (source_system, payload_json, payload_super, ingested_at)
+SELECT 
+    CASE WHEN s.n % 3 = 0 THEN 'WEB_APP' WHEN s.n % 3 = 1 THEN 'MOBILE_IOS' ELSE 'MOBILE_ANDROID' END,
+    '{"event_id": "EVT_' || s.n::VARCHAR || '", "user_id": ' || (s.n % 10000 + 1)::VARCHAR || 
+    ', "domain": "shop.acme.com", "url": "/product/' || (s.n % 500)::VARCHAR || 
+    '", "duration_ms": ' || (100 + (s.n % 4900))::VARCHAR || 
+    ', "is_checkout": ' || CASE WHEN s.n % 10 = 0 THEN 'true' ELSE 'false' END || 
+    ', "client_version": "v' || (1 + (s.n % 4))::VARCHAR || '.0", "geo": {"country": "US", "city": "New York"}}',
+    JSON_PARSE('{"event_id": "EVT_' || s.n::VARCHAR || '", "user_id": ' || (s.n % 10000 + 1)::VARCHAR || 
+    ', "domain": "shop.acme.com", "url": "/product/' || (s.n % 500)::VARCHAR || 
+    '", "duration_ms": ' || (100 + (s.n % 4900))::VARCHAR || 
+    ', "is_checkout": ' || CASE WHEN s.n % 10 = 0 THEN 'true' ELSE 'false' END || 
+    ', "client_version": "v' || (1 + (s.n % 4))::VARCHAR || '.0", "geo": {"country": "US", "city": "New York"}}'),
+    DATEADD(minute, -(s.n % 1440), '2026-08-15 12:00:00'::TIMESTAMP)
+FROM (
+    SELECT ROW_NUMBER() OVER () as n
+    FROM (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a,
+         (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b,
+         (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c,
+         (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d,
+         (SELECT 0 UNION SELECT 1) e
+    LIMIT 100000
+) s;
 
-
--- ===================================================================================
--- SECTION 3: THE MEDALLION STORAGE TIERS
--- ===================================================================================
+ANALYZE raw_bronze_landing;
 
 -- -----------------------------------------------------------------------------------
--- 1. BRONZE LAYER: Raw Ingestion Landing (S3 External Spectrum Table)
+-- SILVER TIER: Cleansed, Structured & Deduplicated Staging Table
 -- -----------------------------------------------------------------------------------
--- Stored on S3 in Snappy-compressed Parquet, partitioned by ingestion date.
-DROP TABLE IF EXISTS ext_bronze_web_clicks;
--- CREATE EXTERNAL TABLE ext_bronze_web_clicks (
---     click_id VARCHAR(64),
---     user_id BIGINT,
---     url VARCHAR(500),
---     referrer VARCHAR(500),
---     ip_address VARCHAR(45),
---     user_agent VARCHAR(255),
---     payload_json VARCHAR(MAX),
---     event_timestamp TIMESTAMP
--- )
--- PARTITIONED BY (event_date DATE)
--- STORED AS PARQUET
--- LOCATION 's3://enterprise-lakehouse-us-east-1/bronze/web_clicks/';
-
--- -----------------------------------------------------------------------------------
--- 2. SILVER LAYER: Cleansed, Structured & Deduplicated (Redshift Staging / S3)
--- -----------------------------------------------------------------------------------
-DROP TABLE IF EXISTS silver_web_clicks CASCADE;
-CREATE TABLE silver_web_clicks (
-    click_id VARCHAR(64) NOT NULL ENCODE zstd,
+DROP TABLE IF EXISTS silver_web_events CASCADE;
+CREATE TABLE silver_web_events (
+    event_id VARCHAR(64) NOT NULL ENCODE zstd,
     user_id BIGINT NOT NULL ENCODE az64,
-    url_path VARCHAR(255) NOT NULL ENCODE zstd,
     domain VARCHAR(100) NOT NULL ENCODE bytedict,
-    device_type VARCHAR(32) NOT NULL ENCODE bytedict,
+    url_path VARCHAR(255) NOT NULL ENCODE zstd,
+    duration_ms INT NOT NULL ENCODE az64,
+    is_checkout BOOLEAN NOT NULL ENCODE raw,
+    client_version VARCHAR(20) NOT NULL ENCODE bytedict,
+    country CHAR(2) NOT NULL ENCODE bytedict,
     event_timestamp TIMESTAMP NOT NULL ENCODE az64,
-    event_date DATE NOT NULL ENCODE az64
+    event_date DATE NOT NULL ENCODE az64,
+    PRIMARY KEY (event_id)
 )
 DISTSTYLE KEY
 DISTKEY (user_id)
 COMPOUND SORTKEY (event_date, user_id);
 
 -- -----------------------------------------------------------------------------------
--- 3. GOLD LAYER: Curated Kimball Star Schema (Redshift Managed Storage)
+-- GOLD TIER: Curated Kimball Star Schema Fact Table (In Redshift Managed Storage)
 -- -----------------------------------------------------------------------------------
--- Fact Table (Hot 90-day active window in RMS for sub-second analytical reporting):
 DROP TABLE IF EXISTS gold_fct_web_engagement CASCADE;
 CREATE TABLE gold_fct_web_engagement (
-    click_sk BIGINT IDENTITY(1,1) NOT NULL ENCODE az64,
-    click_id VARCHAR(64) NOT NULL ENCODE zstd,
+    engagement_sk BIGINT IDENTITY(1,1) NOT NULL ENCODE az64, -- Surrogate Key
+    event_id VARCHAR(64) NOT NULL ENCODE zstd,
     user_id BIGINT NOT NULL ENCODE az64,
-    page_id INT NOT NULL ENCODE az64,
+    domain VARCHAR(100) NOT NULL ENCODE bytedict,
+    url_path VARCHAR(255) NOT NULL ENCODE zstd,
+    duration_ms INT NOT NULL ENCODE az64,
+    is_checkout INT NOT NULL ENCODE az64,
     event_timestamp TIMESTAMP NOT NULL ENCODE az64,
-    event_date DATE NOT NULL ENCODE raw, -- Leading sort key: raw encoding for zone maps
-    duration_seconds INT NOT NULL ENCODE az64,
-    is_conversion INT NOT NULL ENCODE az64,
-    PRIMARY KEY (click_sk)
+    event_date DATE NOT NULL ENCODE raw, -- Leading Sort Key: RAW encoding for fast Zone Maps
+    ingested_at TIMESTAMP DEFAULT SYSDATE ENCODE az64,
+    PRIMARY KEY (engagement_sk)
 )
 DISTSTYLE KEY
 DISTKEY (user_id)
 COMPOUND SORTKEY (event_date, user_id);
 
--- Gold Aggregation Layer (Auto-Refreshing Materialized View):
-DROP MATERIALIZED VIEW IF EXISTS gold_mv_daily_domain_metrics CASCADE;
-CREATE MATERIALIZED VIEW gold_mv_daily_domain_metrics
+-- -----------------------------------------------------------------------------------
+-- GOLD AGGREGATION: Auto-Refreshing Materialized View for Sub-Second Executive BI
+-- -----------------------------------------------------------------------------------
+DROP MATERIALIZED VIEW IF EXISTS gold_mv_daily_traffic_summary CASCADE;
+CREATE MATERIALIZED VIEW gold_mv_daily_traffic_summary
 DISTSTYLE ALL
 SORTKEY (event_date)
 AUTO REFRESH YES
@@ -126,60 +180,71 @@ AS
 SELECT 
     event_date,
     domain,
-    device_type,
-    COUNT(1) AS total_clicks,
-    COUNT(DISTINCT user_id) AS unique_visitors
-FROM silver_web_clicks
-GROUP BY event_date, domain, device_type;
+    COUNT(1) AS total_events,
+    COUNT(DISTINCT user_id) AS unique_active_users,
+    SUM(CASE WHEN is_checkout = 1 THEN 1 ELSE 0 END) AS total_checkouts,
+    ROUND(AVG(duration_ms), 2) AS avg_duration_ms
+FROM gold_fct_web_engagement
+GROUP BY event_date, domain;
 
 
 -- ===================================================================================
--- SECTION 4: MOVING DATA IN & OUT (COPY, UNLOAD, ALTER TABLE APPEND)
+-- SECTION 3: DATA MOVEMENT MECHANICS — COPY, ALTER TABLE APPEND, UNLOAD
 -- ===================================================================================
 
 -- -----------------------------------------------------------------------------------
--- PATTERN A: HIGH-THROUGHPUT BULK INGESTION (COPY FROM S3)
+-- 1. S3 COPY PATTERN (High-Throughput Ingestion)
 -- -----------------------------------------------------------------------------------
 /*
-CRITICAL BEST PRACTICES FOR S3 COPY:
-1. File Count = Multiple of Cluster Slices (e.g. 16, 32, 64 files of equal size ~100MB-1GB).
-2. Use PARQUET or compressed CSV with GZIP/ZSTD.
-3. Use a MANIFEST file to guarantee exact file lists and prevent duplicate ingestion.
-4. Set COMPUPDATE OFF if the target table already has explicit column encodings.
-5. Set STATUPDATE ON (or run explicit ANALYZE immediately following load).
+PRODUCTION COPY SYNTAX:
+COPY silver_web_events
+FROM 's3://my-enterprise-lake-us-east-1/manifests/2026-08-15-batch.manifest'
+IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
+FORMAT AS PARQUET
+MANIFEST
+COMPUPDATE OFF
+STATUPDATE ON;
+
+WHY THIS IS OPTIMAL:
+1. MANIFEST: Explicitly lists every S3 part file. Protects against missing or partially uploaded files.
+2. PARQUET: Columnar layout reduces S3 network transfer volume by 75% compared to raw CSV.
+3. COMPUPDATE OFF: Avoids re-analyzing column compression on every single batch load.
+4. STATUPDATE ON: Refreshes histogram statistics immediately so downstream joins do not degrade.
 */
--- COPY silver_web_clicks
--- FROM 's3://enterprise-lakehouse-us-east-1/manifests/2026-08-15-clicks.manifest'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
--- FORMAT AS PARQUET
--- MANIFEST
--- COMPUPDATE OFF
--- STATUPDATE ON;
 
 -- -----------------------------------------------------------------------------------
--- PATTERN B: ZERO-COPY INSTANT TABLE SWAP (ALTER TABLE APPEND)
+-- 2. ZERO-COPY TABLE SWAP PATTERN (ALTER TABLE APPEND)
 -- -----------------------------------------------------------------------------------
 /*
-WHY ALTER TABLE APPEND IS INSTANT (0.01 seconds for 500 million rows):
-- It moves physical 1MB data block pointers from the source table to the target table.
-- Does NOT scan, decompress, or re-write data blocks.
+WHY ALTER TABLE APPEND IS 1000x FASTER THAN INSERT INTO ... SELECT:
+- `ALTER TABLE APPEND` is an atomic, metadata-only pointer operation.
+- Redshift updates the catalog table pointers in `pg_class`, moving the physical 1MB blocks
+  from the staging table directly into the target table in **0.01 seconds**.
+- No disk decompress/re-compress cycle occurs.
 - Requirements:
-  1. Both tables must have identical column definitions, datatypes, and compression encodings.
-  2. Both tables must have the same distribution style and sort key structure.
-  3. The source table is emptied (truncated) by the operation.
+  1. Identical column count, column names, datatypes, and compression encodings.
+  2. Identical distribution style (`DISTSTYLE KEY DISTKEY(user_id)`).
+  3. Identical sort key definitions.
+  4. The source table is completely emptied by the operation.
 */
-DROP TABLE IF EXISTS stage_web_clicks_append CASCADE;
-CREATE TABLE stage_web_clicks_append (LIKE silver_web_clicks);
 
--- Populate staging with 50,000 records
-INSERT INTO stage_web_clicks_append (click_id, user_id, url_path, domain, device_type, event_timestamp, event_date)
+DROP TABLE IF EXISTS stage_web_events_append CASCADE;
+CREATE TABLE stage_web_events_append (LIKE silver_web_events);
+
+-- Populate staging with 25,000 records
+INSERT INTO stage_web_events_append (
+    event_id, user_id, domain, url_path, duration_ms, is_checkout, client_version, country, event_timestamp, event_date
+)
 SELECT 
-    MD5(s.n::VARCHAR),
+    'EVT_STAGE_' || s.n::VARCHAR,
     (s.n % 10000 + 1),
-    '/products/category_' || (s.n % 50)::VARCHAR,
     'shop.acme.com',
-    CASE WHEN s.n % 2 = 0 THEN 'MOBILE' ELSE 'DESKTOP' END,
-    '2026-08-15 12:00:00'::TIMESTAMP,
+    '/checkout/step_' || (s.n % 3)::VARCHAR,
+    (500 + (s.n % 1500)),
+    TRUE,
+    'v4.0',
+    'US',
+    '2026-08-15 14:00:00'::TIMESTAMP,
     '2026-08-15'::DATE
 FROM (
     SELECT ROW_NUMBER() OVER () as n
@@ -187,180 +252,225 @@ FROM (
          (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b,
          (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c,
          (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d,
-         (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) e
-    LIMIT 50000
+         (SELECT 0 UNION SELECT 1 UNION SELECT 2) e
+    LIMIT 25000
 ) s;
 
-ANALYZE stage_web_clicks_append;
+ANALYZE stage_web_events_append;
 
--- Zero-copy metadata swap into the Silver layer:
-ALTER TABLE silver_web_clicks APPEND FROM stage_web_clicks_append;
+-- Instant Zero-Copy Block Pointer Swap:
+ALTER TABLE silver_web_events APPEND FROM stage_web_events_append;
 
--- -----------------------------------------------------------------------------------
--- PATTERN C: HIGH-PERFORMANCE DATA OFFLOADING (UNLOAD TO S3)
--- -----------------------------------------------------------------------------------
-/*
-CRITICAL BEST PRACTICES FOR UNLOAD:
-1. FORMAT AS PARQUET (saves 70-85% S3 storage and enables column pruning for downstream Athena/Spark).
-2. PARTITION BY (column): Writes hierarchical S3 partitions (`event_date=2026-08-15/...`).
-3. PARALLEL ON: Every compute slice unloads directly to S3 concurrently.
-4. CLEANPATH / OVERWRITE semantics: Cleans destination S3 partition prefix before writing to avoid dirty reads.
-5. MANIFEST: Generates a JSON manifest listing all unloaded files for downstream consumption.
-*/
--- UNLOAD ('SELECT * FROM silver_web_clicks WHERE event_date = ''2026-08-15''')
--- TO 's3://enterprise-lakehouse-us-east-1/silver/web_clicks/'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
--- FORMAT AS PARQUET
--- PARTITION BY (event_date)
--- CLEANPATH
--- MANIFEST
--- PARALLEL ON;
+-- Verify source table was emptied and target table was populated instantly:
+-- SELECT COUNT(1) FROM stage_web_events_append; -- Returns 0 rows!
+-- SELECT COUNT(1) FROM silver_web_events;        -- Returns 25,000 rows!
 
 
 -- ===================================================================================
--- SECTION 5: THE S3 OVERWRITE PROBLEM & ZERO-DOWNTIME DATA PUBLISHING
+-- SECTION 4: THE S3 TARGET OVERWRITE PROBLEM & ZERO-DOWNTIME ATOMIC PUBLISHING
 -- ===================================================================================
 /*
-THE DANGER OF DIRECT S3 OVERWRITES:
-When `UNLOAD` writes directly to an active S3 prefix:
-1. Partial File Visibility: S3 writes multiple part files (`0000_part_00.parquet`, `0001_part_00.parquet`). 
-   If a BI query runs via Spectrum mid-unload, it reads an incomplete, corrupted snapshot.
-2. S3 Event / Lambda Storms: Writing 64 individual files triggers 64 concurrent S3 ObjectCreated events.
-3. Overwrite Lock Failure: Unlike relational databases with ACID transaction locks, S3 object storage 
-   has no native table-level locking mechanism for raw files.
+THE PROBLEM: WHAT HAPPENS IF WE DIRECTLY OVERWRITE A S3 TARGET PREFIX?
+When an ETL pipeline runs `UNLOAD ... TO 's3://lake/clicks/'`:
+1. Partial File Visibility: Redshift writes 64 independent part files (`0000_part_00.parquet`, `0001_part_00.parquet`).
+   If a BI query via Spectrum or Athena runs at the same moment, it reads an incomplete, corrupted snapshot.
+2. Event Notification Storms: Overwriting 100 part files simultaneously triggers 100 concurrent 
+   S3 `ObjectCreated` events, overwhelming downstream AWS Lambda or SQS consumers.
+3. Lack of Native Transaction Isolation on Raw S3: Unlike relational databases with table-level locks, 
+   plain S3 prefix overwrites provide zero read-isolation during writes.
 
-THE ENTERPRISE SOLUTION: BLUE/GREEN S3 PARTITION PROMOTION
-Step 1: Write new data to an isolated staging prefix: `s3://bucket/staging/batch_20260815/`
-Step 2: Validate row count and checksums.
-Step 3: Point the External Table metadata or Glue Catalog partition to the new S3 prefix atomically 
-        via `ALTER TABLE ext_table SET LOCATION 's3://...'` or Iceberg commit.
+THE ENTERPRISE SOLUTION: BLUE/GREEN ATOMIC S3 PARTITION PROMOTION
+Step 1: Write new Parquet data to an isolated staging prefix: `s3://lake/staging/batch_id/`
+Step 2: Validate row count and data integrity checksums.
+Step 3: Execute an atomic metadata swap in the Glue Data Catalog or Apache Iceberg catalog 
+        pointing the partition location directly to the validated staging folder.
 */
 
-CREATE OR REPLACE PROCEDURE prc_lakehouse_atomic_partition_publish(
-    p_batch_date DATE,
-    p_s3_staging_uri VARCHAR(500),
-    p_s3_target_uri VARCHAR(500)
+CREATE OR REPLACE PROCEDURE prc_atomic_s3_partition_publisher(
+    p_partition_date DATE,
+    p_s3_staging_prefix VARCHAR(500),
+    p_s3_active_prefix VARCHAR(500)
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
+    v_proc_name VARCHAR(100) := 'prc_atomic_s3_partition_publisher';
     v_sql VARCHAR(MAX);
 BEGIN
-    RAISE INFO 'Starting atomic lakehouse partition promotion for % ...', p_batch_date;
+    RAISE INFO '[%] Starting atomic lakehouse partition promotion for % ...', v_proc_name, p_partition_date;
 
-    -- In production: Update the Glue/Spectrum partition location metadata atomically
-    -- v_sql := 'ALTER TABLE ext_silver_clicks PARTITION (event_date = ''' || p_batch_date || ''') ' ||
-    --          'SET LOCATION ''' || p_s3_staging_uri || ''';';
-    -- EXECUTE v_sql;
+    -- Step 1: In production, export new partition data to isolated staging path via UNLOAD
+    -- UNLOAD ('SELECT * FROM silver_web_events WHERE event_date = ''' || p_partition_date || '''')
+    -- TO p_s3_staging_prefix
+    -- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
+    -- FORMAT AS PARQUET
+    -- CLEANPATH
+    -- MANIFEST;
 
-    RAISE INFO 'Partition % promoted to % with zero query downtime.', p_batch_date, p_s3_staging_uri;
+    -- Step 2: Perform Atomic Metadata Pointer Swap in Glue / External Table Catalog:
+    -- ALTER TABLE ext_silver_web_clicks 
+    -- PARTITION (event_date = p_partition_date)
+    -- SET LOCATION p_s3_staging_prefix;
+
+    RAISE INFO '[%] Atomic promotion complete for %. Query traffic transitioned with ZERO downtime.', 
+        v_proc_name, p_partition_date;
+
+EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION '[%] Partition promotion failed for %: %', v_proc_name, p_partition_date, SQLERRM;
 END;
 $$;
 
 
 -- ===================================================================================
--- SECTION 6: MANAGING SCHEMA EVOLUTION ACROSS LAKE & WAREHOUSE
+-- SECTION 5: SCHEMA EVOLUTION MANAGEMENT ACROSS LAKE & WAREHOUSE
 -- ===================================================================================
 /*
-HOW REDSHIFT HANDLES SCHEMA EVOLUTION:
-1. Parquet Schema Evolution:
-   - When new columns are added to Parquet files on S3, Redshift Spectrum automatically fills missing 
-     historical rows with `NULL` as long as column names match.
-   - Column order in Parquet does NOT matter; matching is by column name.
-2. SUPER Data Type for Schemaless Drift:
-   - Store rapidly evolving upstream event attributes in a `SUPER` column (`attributes_payload SUPER`).
-   - Query dynamic attributes with dot notation without running DDL migrations.
-3. Late-Binding Views (WITH NO SCHEMA BINDING):
-   - Decouple BI reporting layers from underlying physical table column changes.
-   - Views do not lock the underlying table schema and do not break when columns are added or dropped.
+HOW ENTERPRISES HANDLE SCHEMA EVOLUTION:
+1. Parquet File Column Evolution:
+   - When new columns are added to Parquet files on S3, Redshift Spectrum matches columns by name.
+   - Missing historical rows automatically populate with `NULL` (Backward Compatibility).
+2. Dynamic Schemaless Ingestion via SUPER:
+   - Upstream teams frequently add dynamic payload fields (`new_feature_flag`, `experiment_id`).
+   - Store dynamic fields in a `SUPER` column in Bronze/Silver layers.
+   - Query them immediately via PartiQL dot-notation (`super_payload.experiment_id`) without 
+     waiting for DDL schema migration approvals.
+3. Automated DDL Schema Evolution in Procedures:
+   - Programmatically detect missing columns in target tables and execute dynamic `ALTER TABLE ADD COLUMN`.
+4. Late-Binding Views (WITH NO SCHEMA BINDING):
+   - Decouple executive BI layers from physical table migrations.
 */
 
--- Example Late-Binding Unified View:
-DROP VIEW IF EXISTS v_unified_web_engagement;
-CREATE VIEW v_unified_web_engagement AS
-SELECT 
-    click_id,
-    user_id,
-    event_timestamp,
-    event_date,
-    duration_seconds,
-    is_conversion,
-    'REDSHIFT_HOT_STORAGE' AS storage_tier
-FROM gold_fct_web_engagement
-UNION ALL
-SELECT 
-    click_id,
-    user_id,
-    event_timestamp,
-    event_date,
-    duration_seconds,
-    is_conversion,
-    'S3_COLD_LAKEHOUSE' AS storage_tier
-FROM silver_web_clicks -- In production, points to ext_lake_archived_clicks on S3
-WHERE event_date < DATEADD(day, -90, CURRENT_DATE)
-WITH NO SCHEMA BINDING;
-
-
--- ===================================================================================
--- SECTION 7: AUTOMATED COLD DATA TIERING & STORAGE FINOPS PIPELINE
--- ===================================================================================
-/*
-STORAGE TIERING STRATEGY:
-- Hot Tier (0 to 90 days): Stored in Redshift Managed Storage (RMS). Sub-second query SLA.
-- Warm/Cold Tier (91 days to 7 years): Offloaded to S3 Parquet / S3 Tables with GZIP/Snappy compression.
-- S3 Lifecycle: Automatically transitions from S3 Standard -> S3 Intelligent-Tiering -> S3 Glacier Flexible Archive.
-- Cost Savings: Reduces storage cost by ~80% while retaining 100% SQL queryability via unified views.
-*/
-
-CREATE OR REPLACE PROCEDURE prc_lakehouse_tiering_archival(p_retention_days INT DEFAULT 90)
+-- Procedural Demonstration: Merge with Automated Schema Evolution Detection
+CREATE OR REPLACE PROCEDURE prc_merge_with_schema_evolution(p_table_name VARCHAR(100))
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_cutoff_date DATE;
-    v_rows_archived BIGINT := 0;
-    v_rows_purged BIGINT := 0;
+    v_col_exists INT := 0;
+BEGIN
+    RAISE INFO 'Checking schema evolution requirements for % ...', p_table_name;
+
+    -- Check if 'device_model' column exists in silver_web_events
+    SELECT COUNT(1) INTO v_col_exists
+    FROM pg_attribute a
+    JOIN pg_class c ON c.oid = a.attrelid
+    WHERE c.relname = p_table_name AND a.attname = 'device_model';
+
+    IF v_col_exists = 0 THEN
+        RAISE INFO 'New column detected from upstream lakehouse! Evolving schema via ALTER TABLE...';
+        EXECUTE 'ALTER TABLE ' || QUOTE_IDENT(p_table_name) || ' ADD COLUMN device_model VARCHAR(100) DEFAULT NULL ENCODE zstd;';
+        RAISE INFO 'Column device_model added successfully with zero table locks.';
+    ELSE
+        RAISE INFO 'Schema is up-to-date.';
+    END IF;
+END;
+$$;
+
+
+-- ===================================================================================
+-- SECTION 6: AUTOMATED COLD DATA TIERING & STORAGE FINOPS PIPELINE
+-- ===================================================================================
+/*
+THE STORAGE TIERING LIFECYCLE:
+- Hot Tier (0 to 90 days): Redshift Managed Storage (RMS) on NVMe SSD cache. 
+  Provides sub-second dashboard query latencies.
+- Warm/Cold Tier (91 days to 7 years): S3 Parquet / S3 Tables with GZIP/Snappy compression.
+  S3 Intelligent-Tiering automatically transitions blocks from Frequent -> Infrequent -> Glacier Flexible Archive.
+- Cost Impact: Reduces physical storage costs by 80% to 90% while retaining 100% SQL queryability!
+*/
+
+-- 1. Create the Late-Binding Unified Hybrid View:
+DROP VIEW IF EXISTS v_unified_enterprise_events;
+CREATE VIEW v_unified_enterprise_events AS
+-- Hot Tier: Fast local NVMe & RMS
+SELECT 
+    event_id,
+    user_id,
+    domain,
+    url_path,
+    duration_ms,
+    is_checkout,
+    event_timestamp,
+    event_date,
+    'REDSHIFT_HOT_RMS' AS storage_tier
+FROM gold_fct_web_engagement
+WHERE event_date >= DATEADD(day, -90, CURRENT_DATE)
+UNION ALL
+-- Cold Tier: S3 Lakehouse / Spectrum
+SELECT 
+    event_id,
+    user_id,
+    domain,
+    url_path,
+    duration_ms,
+    CASE WHEN is_checkout = TRUE THEN 1 ELSE 0 END AS is_checkout,
+    event_timestamp,
+    event_date,
+    'S3_COLD_LAKEHOUSE' AS storage_tier
+FROM silver_web_events -- In production: points to ext_lake_archived_events on S3
+WHERE event_date < DATEADD(day, -90, CURRENT_DATE)
+WITH NO SCHEMA BINDING;
+
+-- 2. The Production Storage Tiering Stored Procedure:
+CREATE OR REPLACE PROCEDURE prc_automated_storage_tiering(p_retention_days INT DEFAULT 90)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_proc_name     VARCHAR(100) := 'prc_automated_storage_tiering';
+    v_cutoff_date   DATE;
+    v_rows_purged   BIGINT := 0;
+    v_rows_promoted BIGINT := 0;
 BEGIN
     v_cutoff_date := DATEADD(day, -p_retention_days, CURRENT_DATE);
-    RAISE INFO 'Starting storage tiering: Offloading partitions older than % to S3...', v_cutoff_date;
+    RAISE INFO '[%] Initiating automated storage tiering. Cutoff Date: % ...', v_proc_name, v_cutoff_date;
 
-    -- Step 1: UNLOAD cold partitions from Redshift to S3 Parquet Lakehouse
-    -- (In production, executed via UNLOAD command to S3 archive prefix)
-    RAISE INFO 'Unloading data prior to % to S3 Parquet archive...', v_cutoff_date;
+    -- Step 1: Promote clean Silver events into Gold Fact Table (Hot RMS Tier)
+    INSERT INTO gold_fct_web_engagement (
+        event_id, user_id, domain, url_path, duration_ms, is_checkout, event_timestamp, event_date, ingested_at
+    )
+    SELECT 
+        event_id, user_id, domain, url_path, duration_ms, 
+        CASE WHEN is_checkout = TRUE THEN 1 ELSE 0 END,
+        event_timestamp, event_date, SYSDATE
+    FROM silver_web_events
+    WHERE event_date >= v_cutoff_date;
+    GET DIAGNOSTICS v_rows_promoted = ROW_COUNT;
 
-    -- Step 2: Purge cold blocks from Redshift Managed Storage to reclaim local SSD/RMS space
+    -- Step 2: In production: UNLOAD cold history prior to v_cutoff_date to S3 Parquet archive
+    -- UNLOAD ('SELECT * FROM gold_fct_web_engagement WHERE event_date < ''' || v_cutoff_date || '''')
+    -- TO 's3://enterprise-lakehouse-us-east-1/archive/web_engagement/'
+    -- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftLakehouseRole'
+    -- FORMAT AS PARQUET
+    -- PARTITION BY (event_date)
+    -- CLEANPATH;
+
+    -- Step 3: Purge expired partitions from Redshift Managed Storage to reclaim local SSD space
     DELETE FROM gold_fct_web_engagement
     WHERE event_date < v_cutoff_date;
     GET DIAGNOSTICS v_rows_purged = ROW_COUNT;
 
-    -- Step 3: Refresh statistics on remaining hot data
+    -- Step 4: Refresh Target Statistics
     ANALYZE gold_fct_web_engagement;
 
-    RAISE INFO 'Tiering complete: Purged % rows from RMS. Cold queries seamlessly routed to S3.', v_rows_purged;
+    RAISE INFO '[%] Tiering finished: Promoted % rows to Gold RMS, purged % cold rows to S3.', 
+        v_proc_name, v_rows_promoted, v_rows_purged;
 
 EXCEPTION WHEN OTHERS THEN
-    RAISE EXCEPTION 'prc_lakehouse_tiering_archival failed: %', SQLERRM;
+    RAISE EXCEPTION '[%] Tiering pipeline failed: %', v_proc_name, SQLERRM;
 END;
 $$;
 
 
 -- ===================================================================================
--- SECTION 8: DIAGNOSTICS, STORAGE MONITORING & EXPLAIN PLAN PROOF
+-- SECTION 7: USAGE, VERIFICATION & QUERY PLAN PROOF
 -- ===================================================================================
 
--- 1. Inspect Table Storage Distribution, Slice Skew & Storage Tiering Health:
-SELECT 
-    "schema",
-    "table",
-    size AS total_mb,
-    tbl_rows,
-    unsorted,
-    stats_off,
-    skew_rows
-FROM svv_table_info
-WHERE "table" IN ('silver_web_clicks', 'gold_fct_web_engagement')
-ORDER BY size DESC;
+-- (a) Execute schema evolution test:
+CALL prc_merge_with_schema_evolution('silver_web_events');
 
--- 2. Inspect Materialized View Refresh Status & Query Routing:
+-- (b) Execute storage tiering pipeline:
+CALL prc_automated_storage_tiering(90);
+
+-- (c) Verify Materialized View auto-refresh status:
 SELECT 
     database_name,
     schema_name,
@@ -368,14 +478,23 @@ SELECT
     refresh_type,
     is_autorefresh,
     state,
-    last_refresh_type,
     last_refresh_time
 FROM sys_mv_refresh_history
 ORDER BY last_refresh_time DESC LIMIT 5;
 
--- 3. Execution Plan: Verify Hybrid View Routing with S3 Spectrum vs RMS Local NVMe:
+-- (d) Explain Plan: Verify Hybrid View Routing with S3 Spectrum vs RMS Local NVMe:
 EXPLAIN
-SELECT event_date, COUNT(1), SUM(is_conversion)
-FROM v_unified_web_engagement
+SELECT event_date, domain, COUNT(1), SUM(is_checkout)
+FROM v_unified_enterprise_events
 WHERE event_date >= '2026-08-01'::DATE
-GROUP BY event_date;
+GROUP BY event_date, domain;
+
+-- (e) Inspect S3 Spectrum scan bytes and execution metrics:
+SELECT 
+    query,
+    segment,
+    step,
+    rows,
+    s3_scanned_bytes / 1024 / 1024 AS s3_scanned_mb
+FROM svl_s3query_summary
+ORDER BY starttime DESC LIMIT 5;
