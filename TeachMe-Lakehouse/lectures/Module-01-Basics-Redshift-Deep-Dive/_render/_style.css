@@ -1,0 +1,52 @@
+@import url("../../_fonts/fonts.css");
+/* ══ TeachMe-Lakehouse · shared lecture slide style (see ../../LECTURE-STYLE.md) ══ */
+html,body{margin:0;padding:0;background:#0E1418}
+#slide{width:1920px;height:1080px}
+.eyebrow{font-family:'Asap',sans-serif;font-weight:800;font-size:22px;letter-spacing:4px;fill:#FF3B47}
+.title  {font-family:'Asap',sans-serif;font-weight:800;font-size:62px;fill:#FFFFFF}
+.title-s{font-family:'Asap',sans-serif;font-weight:800;font-size:54px;fill:#FFFFFF}
+.sub    {font-family:'Cabin',sans-serif;font-weight:500;font-size:27px;fill:#A9BAC6}
+.cap    {font-family:'Asap',sans-serif;font-weight:800;font-size:19px;letter-spacing:3.5px;fill:#7A8C99}
+.bxt    {font-family:'Asap',sans-serif;font-weight:800;font-size:31px;fill:#FFFFFF}
+.bxt-s  {font-family:'Asap',sans-serif;font-weight:800;font-size:26px;fill:#FFFFFF}
+.bxs    {font-family:'Cabin',sans-serif;font-weight:600;font-size:21px;fill:#D3DEE5}
+.bxs-s  {font-family:'Cabin',sans-serif;font-weight:600;font-size:19px;fill:#D3DEE5}
+.code   {font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:17px;fill:#6FD8C6}
+.code-s {font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;fill:#6FD8C6}
+.edge   {font-family:'Cabin',sans-serif;font-weight:700;font-size:20px;fill:#A9BAC6}
+.foot   {font-family:'Cabin',sans-serif;font-weight:600;font-size:19px;fill:#7A8C99}
+.footc  {font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:18px;fill:#5E7080}
+.plain  {font-family:'Cabin',sans-serif;font-weight:600;font-size:24px;fill:#D3DEE5}
+.plainb {font-family:'Asap',sans-serif;font-weight:800;font-size:24px;fill:#FFB84D}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CRITICAL AUTHORING RULE: a CSS class rule ALWAYS beats an SVG presentation
+   attribute.  <text class="bxt" fill="#FFB84D">   -> renders WHITE
+               <text class="bxt" style="fill:#FFB84D"> -> renders AMBER
+   Always override with inline style="fill:…", and CSS needs units on sizes.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.zwhat {font-family:'Asap',sans-serif;font-weight:800;font-size:19px;fill:#7A8C99;letter-spacing:3.5px}
+.zhow  {font-family:'Asap',sans-serif;font-weight:800;font-size:19px;fill:#5AA9FF;letter-spacing:3.5px}
+.zsql  {font-family:'Asap',sans-serif;font-weight:800;font-size:19px;fill:#3FD98A;letter-spacing:3.5px}
+.zgot  {font-family:'Asap',sans-serif;font-weight:800;font-size:19px;fill:#FF6B73;letter-spacing:3.5px}
+.th    {font-family:'Asap',sans-serif;font-weight:800;font-size:18px;fill:#7A8C99;letter-spacing:2.5px}
+.td    {font-family:'Cabin',sans-serif;font-weight:600;font-size:19px;fill:#D3DEE5}
+.tdk   {font-family:'Asap',sans-serif;font-weight:800;font-size:19px;fill:#FFFFFF}
+.tdn   {font-family:'Cabin',sans-serif;font-weight:600;font-size:18px;fill:#8296A3}
+
+/* ══ MODULE 01 · REDSHIFT DEEP DIVE ════════════════════════════════════════
+   Zone grammar:  1 WHAT IT IS · 2 HOW IT WORKS · 3 THE SQL · 4 GOTCHAS
+   Zone 3 is a code panel: 560px wide, so at 15px mono (~9px/char) keep SQL
+   lines under 52 characters or they escape the panel. Break them yourself —
+   the QA gate will fail the slide otherwise, which is the point.
+   Node.js developers are the audience, so the FROM-NODE column on comparison
+   slides always names the habit being replaced, never just the AWS term.     */
+.sql   {font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;fill:#8CE8B8}
+.sqlc  {font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;fill:#5E7080}
+.sqlk  {font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;fill:#FF8A92}
+.node  {font-family:'Asap',sans-serif;font-weight:800;font-size:18px;fill:#8CC44C}
+.warn  {font-family:'Asap',sans-serif;font-weight:800;font-size:19px;fill:#FF6B73}
+/* numbered step badge — used on ordered-playbook slides (L44).
+   circle r=15 at cx,cy; the text baseline sits at cy+6.                        */
+.badge {font-family:'Asap',sans-serif;font-weight:800;font-size:17px;fill:#FFFFFF}

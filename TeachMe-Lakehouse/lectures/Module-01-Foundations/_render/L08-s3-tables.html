@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8296A3"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 08</text>
+<text x="90" y="168" class="title">Amazon S3 Tables: Managed Iceberg</text>
+<text x="90" y="212" class="sub">Same Iceberg format — AWS owns the bucket and does the housekeeping. What that trade buys, and what it costs.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ═══ ZONE 1 · the hierarchy ═══ -->
+<text x="90" y="298" class="cap">1 · THE SHAPE — infra/modules/s3-data-lake/main.tf</text>
+
+<!-- A · table bucket (the thing being taught) -->
+<rect x="90" y="320" width="560" height="286" rx="16" fill="#2B1216" stroke="#E3000E" stroke-width="3"/>
+<rect x="90" y="320" width="560" height="7" rx="3.5" fill="#E3000E"/>
+<text x="118" y="364" class="bxt-s" style="fill:#FF6B72">TABLE BUCKET</text>
+<text x="118" y="396" class="bxs" style="fill:#E2A9AD">An Iceberg-native bucket</text>
+<line x1="118" y1="416" x2="622" y2="416" stroke="#5A2228" stroke-width="2"/>
+<text x="118" y="452" class="bxs-s">▪ Two of them: bronze and silver</text>
+<text x="118" y="484" class="bxs-s">▪ AWS-managed compaction inside</text>
+<text x="118" y="516" class="bxs-s">▪ Encrypted with our own KMS key</text>
+<text x="118" y="552" class="code">s3-data-lake/main.tf:11 · :30</text>
+<text x="118" y="584" class="bxs-s" style="fill:#FFB84D">File cleanup: 7d bronze · 30d silver</text>
+
+<!-- B · namespace -->
+<rect x="690" y="320" width="520" height="286" rx="16" fill="#1B2329" stroke="#4A5A66" stroke-width="3"/>
+<rect x="690" y="320" width="520" height="7" rx="3.5" fill="#8296A3"/>
+<text x="718" y="364" class="bxt-s">NAMESPACE</text>
+<text x="718" y="396" class="bxs" style="fill:#8FA2AF">A schema inside the bucket</text>
+<line x1="718" y1="416" x2="1182" y2="416" stroke="#2C3841" stroke-width="2"/>
+<text x="718" y="452" class="bxs-s">▪ sap · ncr · ecommerce</text>
+<text x="718" y="484" class="bxs-s">▪ Same three in both buckets</text>
+<text x="718" y="516" class="bxs-s">▪ Made by a Terraform for_each</text>
+<text x="718" y="552" class="code">main.tf:52 (bronze) · :59 (silver)</text>
+<text x="718" y="584" class="bxs-s" style="fill:#8296A3">bronze.sap.zsdcc → ns=sap, tbl=zsdcc</text>
+
+<!-- C · table (NOT created by terraform) -->
+<rect x="1250" y="320" width="580" height="286" rx="16" fill="#161B20" stroke="#3A4854" stroke-width="2.5" stroke-dasharray="11 8"/>
+<text x="1278" y="364" class="bxt-s" style="fill:#8296A3">TABLE</text>
+<text x="1278" y="396" class="bxs" style="fill:#8FA2AF">NOT created by Terraform</text>
+<line x1="1278" y1="416" x2="1802" y2="416" stroke="#2C3841" stroke-width="2"/>
+<text x="1278" y="452" class="bxs-s">▪ Tables register themselves on the</text>
+<text x="1278" y="480" class="bxs-s">   first write from a Glue job</text>
+<text x="1278" y="512" class="bxs-s">▪ Adding a table = one new YAML spec,</text>
+<text x="1278" y="540" class="bxs-s">   not a terraform apply</text>
+<text x="1278" y="576" class="code-s" style="fill:#5E7080">writers/s3_tables.py:143 _first_write_create</text>
+
+<line x1="654" y1="440" x2="686" y2="440" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+<line x1="1214" y1="440" x2="1246" y2="440" stroke="#8296A3" stroke-width="4" marker-end="url(#ag)"/>
+
+<!-- ═══ ZONE 2 · the trade ═══ -->
+<text x="90" y="654" class="cap">2 · WHAT AWS TAKES OVER — AND WHAT YOU GIVE UP</text>
+
+<!-- D · AWS runs this -->
+<rect x="90" y="676" width="560" height="210" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="716" class="bxt-s">AWS RUNS THIS FOR YOU</text>
+<line x1="118" y1="734" x2="622" y2="734" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="764" class="bxs-s">▪ Compaction — small files merged</text>
+<text x="118" y="792" class="bxs-s">▪ Unreferenced-file removal</text>
+<text x="118" y="820" class="bxs-s">▪ The physical bucket itself</text>
+<text x="118" y="848" class="bxs-s">▪ Encryption at rest, via KMS</text>
+<text x="118" y="872" class="code-s" style="fill:#5E7080">s3-data-lake/main.tf:14-27</text>
+
+<!-- E · you still own this -->
+<rect x="690" y="676" width="520" height="210" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="718" y="716" class="bxt-s">YOU STILL OWN THIS</text>
+<line x1="718" y1="734" x2="1182" y2="734" stroke="#2C3841" stroke-width="2"/>
+<text x="718" y="764" class="bxs-s">▪ The writes: MERGE, full refresh</text>
+<text x="718" y="792" class="bxs-s">▪ Snapshot EXPIRY — metadata</text>
+<text x="718" y="820" class="bxs-s">▪ Partitioning, schema, merge keys</text>
+<text x="718" y="848" class="bxs-s">▪ Getting Spark's catalog conf right</text>
+<text x="718" y="872" class="code-s" style="fill:#5E7080">writers/s3_tables.py:407</text>
+
+<!-- F · what you give up -->
+<rect x="1250" y="676" width="580" height="210" rx="16" fill="#161B20" stroke="#3A4854" stroke-width="2.5" stroke-dasharray="11 8"/>
+<text x="1278" y="716" class="bxt-s" style="fill:#8296A3">WHAT YOU GIVE UP</text>
+<line x1="1278" y1="734" x2="1802" y2="734" stroke="#2C3841" stroke-width="2"/>
+<text x="1278" y="764" class="bxs-s">▪ aws s3 ls on that bucket name gives</text>
+<text x="1278" y="792" class="bxs-s">   NoSuchBucket — no direct file access</text>
+<text x="1278" y="820" class="bxs-s">▪ AWS-only: Iceberg is portable, this</text>
+<text x="1278" y="848" class="bxs-s">   managed layer is not</text>
+<text x="1278" y="872" class="code-s" style="fill:#5E7080">writers/s3_tables.py:60-67</text>
+
+<!-- plain english -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Self-managed Iceberg is running your own DB server. S3 Tables is the managed instance — same engine, someone else does the chores.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 08</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8296A3"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 3 · ARCHITECTURE 13 · AS BUILT</text>
+<text x="90" y="168" class="title">Environments And Composition</text>
+<text x="90" y="212" class="sub">One set of modules, composed three times. What differs between environments should be values &#8212; never code.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- MODULES -->
+<rect x="90" y="316" width="500" height="454" rx="16" fill="#231114" stroke="#E3000E" stroke-width="3"/>
+<image href="../../_icons/aws/management/cloudformation.png" x="118" y="336" width="34" height="34"/>
+<text x="164" y="360" class="icb" style="fill:#FF6B73">TERRAFORM MODULES &#8212; WRITTEN ONCE</text>
+<line x1="118" y1="376" x2="562" y2="376" stroke="#6A2A30" stroke-width="2"/>
+<text x="118" y="412" class="icd" style="font-size:17px;fill:#E5B8BC">networking &#183; vpc, subnets, endpoints</text>
+<text x="118" y="446" class="icd" style="font-size:17px;fill:#E5B8BC">storage &#183; buckets, lifecycle, KMS</text>
+<text x="118" y="480" class="icd" style="font-size:17px;fill:#E5B8BC">catalog &#183; databases, LF permissions</text>
+<text x="118" y="514" class="icd" style="font-size:17px;fill:#E5B8BC">glue &#183; jobs, connections, triggers</text>
+<text x="118" y="548" class="icd" style="font-size:17px;fill:#E5B8BC">redshift &#183; workgroup, namespace, roles</text>
+<text x="118" y="582" class="icd" style="font-size:17px;fill:#E5B8BC">control-plane &#183; DynamoDB tables</text>
+<text x="118" y="616" class="icd" style="font-size:17px;fill:#E5B8BC">orchestration &#183; Step Functions, schedules</text>
+<text x="118" y="650" class="icd" style="font-size:17px;fill:#E5B8BC">observability &#183; log groups, alarms</text>
+<text x="118" y="684" class="icd" style="font-size:17px;fill:#E5B8BC">iam &#183; roles, OIDC trust, policies</text>
+<rect x="118" y="710" width="444" height="42" rx="8" fill="#0B1013" stroke="#6A2A30" stroke-width="2"/>
+<text x="138" y="738" class="code" style="font-size:17px;fill:#FF8A92">28 modules &#183; composed, not copied</text>
+
+<line x1="598" y1="540" x2="622" y2="540" stroke="#8296A3" stroke-width="3" marker-end="url(#aw)"/>
+
+<!-- DEV -->
+<rect x="630" y="316" width="380" height="454" rx="16" fill="#101A24" stroke="#2E4A66" stroke-width="2.5"/>
+<text x="656" y="356" class="grp" style="fill:#5AA9FF">DEV</text>
+<line x1="656" y1="372" x2="984" y2="372" stroke="#2E4A66" stroke-width="2"/>
+<image href="../../_icons/aws/management/organizations-account.png" x="656" y="392" width="48" height="48"/>
+<text x="716" y="420" class="icn" style="font-size:18px">Own account</text>
+<text x="716" y="442" class="icd" style="font-size:16px">blast radius of one</text>
+<text x="656" y="500" class="icd" style="font-size:17px">Smallest sizing</text>
+<text x="656" y="534" class="icd" style="font-size:17px">Synthetic and sampled data</text>
+<text x="656" y="568" class="icd" style="font-size:17px">Deployed from <tspan style="fill:#FFFFFF">develop</tspan></text>
+<text x="656" y="602" class="icd" style="font-size:17px">Destroy and rebuild freely</text>
+<line x1="656" y1="630" x2="984" y2="630" stroke="#2E4A66" stroke-width="2"/>
+<text x="656" y="662" class="th">DIFFERS BY</text>
+<text x="656" y="694" class="code" style="font-size:16px">tfvars only</text>
+<text x="656" y="726" class="icd" style="font-size:16px">sizes, retention, schedule</text>
+
+<!-- QA -->
+<rect x="1040" y="316" width="380" height="454" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1066" y="356" class="grp" style="fill:#FFB84D">QA</text>
+<line x1="1066" y1="372" x2="1394" y2="372" stroke="#8A6A3A" stroke-width="2"/>
+<image href="../../_icons/aws/management/organizations-account.png" x="1066" y="392" width="48" height="48"/>
+<text x="1126" y="420" class="icn" style="font-size:18px">Own account</text>
+<text x="1126" y="442" class="icd" style="font-size:16px">production-shaped</text>
+<text x="1066" y="500" class="icd" style="font-size:17px;fill:#E8D5B0">Realistic volumes</text>
+<text x="1066" y="534" class="icd" style="font-size:17px;fill:#E8D5B0">Where UAT actually happens</text>
+<text x="1066" y="568" class="icd" style="font-size:17px;fill:#E8D5B0">Same modules, bigger values</text>
+<text x="1066" y="602" class="icd" style="font-size:17px;fill:#E8D5B0">Rehearse the release here</text>
+<line x1="1066" y1="630" x2="1394" y2="630" stroke="#8A6A3A" stroke-width="2"/>
+<text x="1066" y="662" class="th" style="fill:#B99A6A">DIFFERS BY</text>
+<text x="1066" y="694" class="code" style="font-size:16px">tfvars only</text>
+<text x="1066" y="726" class="icd" style="font-size:16px">plus real source connections</text>
+
+<!-- PROD -->
+<rect x="1450" y="316" width="380" height="454" rx="16" fill="#0F1E17" stroke="#2A5A40" stroke-width="2.5"/>
+<text x="1476" y="356" class="grp" style="fill:#3FD98A">PROD</text>
+<line x1="1476" y1="372" x2="1804" y2="372" stroke="#2A5A40" stroke-width="2"/>
+<image href="../../_icons/aws/management/organizations-account.png" x="1476" y="392" width="48" height="48"/>
+<text x="1536" y="420" class="icn" style="font-size:18px">Own account</text>
+<text x="1536" y="442" class="icd" style="font-size:16px">nobody logs in to change</text>
+<text x="1476" y="500" class="icd" style="font-size:17px">Full sizing and retention</text>
+<text x="1476" y="534" class="icd" style="font-size:17px">Manual approval to apply</text>
+<text x="1476" y="568" class="code" style="font-size:16px;fill:#8CE8B8">prevent_destroy = true</text>
+<text x="1476" y="602" class="icd" style="font-size:17px">Every change via pipeline</text>
+<line x1="1476" y1="630" x2="1804" y2="630" stroke="#2A5A40" stroke-width="2"/>
+<text x="1476" y="662" class="th">DIFFERS BY</text>
+<text x="1476" y="694" class="code" style="font-size:16px">tfvars only</text>
+<text x="1476" y="726" class="icd" style="font-size:16px">plus the approval gate</text>
+
+<!-- VERIFY BAND -->
+<rect x="90" y="790" width="1740" height="100" rx="14" fill="#191F24" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="118" y="820" class="icb" style="fill:#FFB84D">VERIFY THESE THREE IN THE REPO &#8212; THEY DRIFT QUIETLY</text>
+<line x1="118" y1="834" x2="1802" y2="834" stroke="#4A3A20" stroke-width="2"/>
+<text x="118" y="868" class="bxs-s" style="font-size:18px;fill:#E8D5B0">1. Remote state is genuinely separate per environment &#8226; 2. OIDC trust pins each env to the branch that actually deploys it &#8226; 3. prevent_destroy is on every stateful prod resource</text>
+
+<!-- PLAIN ENGLISH -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">One set of blueprints, three buildings. If dev and prod need different blueprints, one of them is not really testing the other.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 3 · Architecture 13</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

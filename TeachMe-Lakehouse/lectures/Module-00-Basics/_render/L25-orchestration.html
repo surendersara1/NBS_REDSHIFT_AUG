@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 0 · LESSON 25</text>
+<text x="90" y="168" class="title">Making It Run In Order</text>
+<text x="90" y="212" class="sub">Four AWS options for the same job: run these things, in this order, retry what fails, and tell someone when it does.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · WHAT IT IS ══ -->
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">Orchestration is where a pipeline becomes something you can operate</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">Whichever tool you pick must answer four questions on demand: what ran, when it ran, how long it took, and whether it succeeded.</text>
+
+<!-- ══ ZONE 2 · HOW IT WORKS ══ -->
+<text x="90" y="462" class="zhow">2 · HOW IT WORKS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="520" class="bxt-s" style="font-size:24px">FOUR TOOLS, DIFFERENT CENTRES OF GRAVITY</text>
+<line x1="118" y1="538" x2="1182" y2="538" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="554" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="576" class="bxt-s" style="font-size:21px;fill:#5AA9FF">STEP FUNCTIONS</text>
+<text x="1182" y="576" class="code-s" text-anchor="end" style="fill:#5E7080">serverless · JSON</text>
+<text x="136" y="602" class="bxs-s" style="font-size:18px">A state machine with native retries, parallelism and error paths. Best when it is all AWS services.</text>
+<line x1="118" y1="608" x2="1182" y2="608" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="618" width="5" height="40" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="640" class="bxt-s" style="font-size:21px;fill:#3FD98A">MWAA &#183; AIRFLOW</text>
+<text x="1182" y="640" class="code-s" text-anchor="end" style="fill:#5E7080">Python DAGs</text>
+<text x="136" y="666" class="bxs-s" style="font-size:18px">Rich scheduling and a huge ecosystem — at the price of operating an Airflow environment.</text>
+<line x1="118" y1="672" x2="1182" y2="672" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="682" width="5" height="40" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="704" class="bxt-s" style="font-size:21px;fill:#FFB84D">GLUE WORKFLOWS</text>
+<text x="1182" y="704" class="code-s" text-anchor="end" style="fill:#5E7080">triggers · workflows</text>
+<text x="136" y="730" class="bxs-s" style="font-size:18px">Built into Glue. Simple, and entirely sufficient while every step really is a Glue job.</text>
+<line x1="118" y1="736" x2="1182" y2="736" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="746" width="5" height="40" rx="2.5" fill="#C9D6DE"/>
+<text x="136" y="768" class="bxt-s" style="font-size:21px">EVENTBRIDGE</text>
+<text x="1182" y="768" class="code-s" text-anchor="end" style="fill:#5E7080">schedules · event rules</text>
+<text x="136" y="794" class="bxs-s" style="font-size:18px">The clock and the tripwire. Usually sits in front of one of the other three, not instead of it.</text>
+
+<rect x="118" y="814" width="1064" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#8CE8B8">what ran  ·  when  ·  how long  ·  did it succeed  —  answer all four, or you are blind</text>
+
+<!-- ══ ZONE 3 · WHEN TO USE IT ══ -->
+<text x="1270" y="462" class="zwhen">3 · PICK BY WHAT YOU RUN</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="512" class="bxs-s" style="font-size:18px">All AWS services &#8594; Step Functions</text>
+<text x="1298" y="542" class="bxs-s" style="font-size:18px">Mixed and complex &#8594; MWAA</text>
+<text x="1298" y="572" class="bxs-s" style="font-size:18px">Only Glue jobs &#8594; Glue workflows</text>
+<line x1="1298" y1="592" x2="1802" y2="592" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="622" class="bxt-s" style="font-size:18px;fill:#FF6B73">NEVER</text>
+<text x="1298" y="654" class="bxs-s" style="font-size:18px;fill:#C69AA0">A cron job on a server nobody maintains</text>
+
+<!-- ══ ZONE 4 · IN PRACTICE ══ -->
+<text x="1270" y="710" class="zprac">4 · IN PRACTICE</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E8D5B0">EventBridge starts the day&#8217;s run.</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Step Functions sequences the phases.</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Run state is queryable, not just in logs.</text>
+<text x="1298" y="852" class="bxt-s" style="font-size:19px;fill:#FFB84D">Module 2 builds this properly</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">The kitchen needs more than good cooks. Someone has to call the order, know what is still on, and notice when a dish never came back.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 0 · Lesson 25</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundations for Data Engineers</text>
+</svg></div></body></html>

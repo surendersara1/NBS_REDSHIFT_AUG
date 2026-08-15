@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 10</text>
+<text x="90" y="168" class="title">When a Join Won't Do</text>
+<text x="90" y="212" class="sub">ZHOCIDC is a positional state machine, not a table. One receipt is an ordered H→S→T→F block, and every field changes meaning per row.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE TAPE ══ -->
+<text x="90" y="300" class="cap">1 · ONE RECEIPT · FOUR RECORD TYPES · ONE FIELD</text>
+
+<rect x="90" y="322" width="414" height="208" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="116" y="366" class="bxt-s">H · HEADER</text>
+<line x1="116" y1="382" x2="478" y2="382" stroke="#2C3841" stroke-width="2"/>
+<text x="116" y="414" class="bxs-s">Opens a basket, resets state</text>
+<text x="116" y="442" class="bxs-s">ZVARID1 → cashier no</text>
+<text x="116" y="470" class="bxs-s">ZCODE1='3' → skip the receipt</text>
+<text x="116" y="508" class="code-s" style="fill:#5E7080">abap/baskets.py:96-115</text>
+
+<rect x="532" y="322" width="414" height="208" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="558" y="366" class="bxt-s">S · SALE LINE</text>
+<line x1="558" y1="382" x2="920" y2="382" stroke="#2C3841" stroke-width="2"/>
+<text x="558" y="414" class="bxs-s">ZVARID4[9:18] → amount × 100</text>
+<text x="558" y="442" class="bxs-s">ZVARID4[0:8] → qty, [4]='.' flag</text>
+<text x="558" y="470" class="bxs-s">ZVARID3='-' → flips the sign</text>
+<text x="558" y="508" class="code-s" style="fill:#5E7080">abap/baskets.py:117-162</text>
+
+<rect x="974" y="322" width="414" height="208" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1000" y="366" class="bxt-s">T · TENDER</text>
+<line x1="1000" y1="382" x2="1362" y2="382" stroke="#2C3841" stroke-width="2"/>
+<text x="1000" y="414" class="bxs-s">ZVARID4[0:2] → tender code</text>
+<text x="1000" y="442" class="bxs-s">01 Cash · 02 Gift · 10-19 Card</text>
+<text x="1000" y="470" class="bxs-s">a 2nd T → 'Multiple Tender'</text>
+<text x="1000" y="508" class="code-s" style="fill:#5E7080">abap/baskets.py:164-172</text>
+
+<rect x="1416" y="322" width="414" height="208" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="1442" y="366" class="bxt-s" style="fill:#FF6A72">F · FOOTER = COMMIT</text>
+<line x1="1442" y1="382" x2="1804" y2="382" stroke="#5A2028" stroke-width="2"/>
+<text x="1442" y="414" class="bxs-s">Drop zero-price items, emit</text>
+<text x="1442" y="442" class="bxs-s">header + items. No F row →</text>
+<text x="1442" y="470" class="bxs-s">the receipt never happened.</text>
+<text x="1442" y="508" class="code-s" style="fill:#FFA0A6">abap/baskets.py:174-183</text>
+
+<line x1="90" y1="572" x2="1150" y2="572" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+<text x="1176" y="579" class="bxs" style="fill:#FF6A72">SEQNO order — each row reads the state the last one left</text>
+
+<!-- ══ ZONE 2 · WHY NOT A JOIN ══ -->
+<text x="90" y="616" class="cap">2 · WHY A SET-BASED JOIN CANNOT SAY THIS</text>
+
+<rect x="90" y="638" width="620" height="252" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="682" class="bxt-s" style="fill:#FF6A72">A JOIN SEES EACH ROW ALONE</text>
+<line x1="118" y1="698" x2="682" y2="698" stroke="#5A2028" stroke-width="2"/>
+<text x="118" y="730" class="bxs">Here row N's meaning depends on 1..N−1:</text>
+<text x="118" y="760" class="bxs">· basket_id comes from the last H seen</text>
+<text x="118" y="790" class="bxs">· ZVARID4 is re-read per ZTRNTYPE</text>
+<text x="118" y="820" class="bxs">· one barcode accumulates over lines</text>
+<text x="118" y="850" class="bxs">· nothing exists until F commits</text>
+<text x="118" y="876" class="bxs" style="fill:#FFB84D">No join key expresses "the row before".</text>
+
+<!-- ══ ZONE 3 · THE SPARK SHAPE ══ -->
+<text x="760" y="616" class="cap">3 · THE SPARK SHAPE — GROUP, FOLD, SPLIT</text>
+
+<rect x="760" y="638" width="650" height="252" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="788" y="682" class="bxt-s">GROUP → FOLD → SPLIT</text>
+<line x1="788" y1="698" x2="1382" y2="698" stroke="#2C3841" stroke-width="2"/>
+<rect x="788" y="708" width="594" height="132" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="806" y="732" class="code" xml:space="preserve">_RECEIPT_KEYS = ["werks","zdate","zptno","zreceipt"]</text>
+<text x="806" y="756" class="code" xml:space="preserve" style="fill:#8FA2AF">def _fold(pdf):          # plain pandas, no Spark</text>
+<text x="806" y="780" class="code" xml:space="preserve">    rows = pdf.sort_values("seqno").to_dict("records")</text>
+<text x="806" y="804" class="code" xml:space="preserve">    return build_baskets(rows, bukrs=…, vat_rate=…)</text>
+<text x="806" y="828" class="code" xml:space="preserve" style="fill:#7FB6EF">zhocidc.groupBy(*_RECEIPT_KEYS).applyInPandas(_fold,…)</text>
+<text x="788" y="860" class="bxs-s" style="fill:#FFB84D">Group on zdate, not budat — else one receipt splits in two.</text>
+<text x="788" y="876" class="code-s" style="fill:#5E7080">src/glue/glue_engine/abap/ops.py:41, 79-91</text>
+
+<rect x="1438" y="638" width="392" height="252" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1466" y="682" class="bxt-s">THE CORE IS PURE</text>
+<line x1="1466" y1="698" x2="1802" y2="698" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1466" y="730" class="bxs-s">build_baskets takes a list of</text>
+<text x="1466" y="754" class="bxs-s">dicts, returns two lists. No</text>
+<text x="1466" y="778" class="bxs-s">Spark, no AWS, no S3 — it runs</text>
+<text x="1466" y="802" class="bxs-s">in pytest in milliseconds, so</text>
+<text x="1466" y="826" class="bxs-s">every edge case has a test.</text>
+<text x="1466" y="856" class="code-s" style="fill:#6FD8A8">tests/unit/</text>
+<text x="1466" y="878" class="code-s" style="fill:#6FD8A8">test_phase3_abap_transform.py:108</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A receipt is a till roll, not a spreadsheet row. You have to read it top to bottom — the total at the bottom only means anything because of the lines above it.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 10</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 3 · ARCHITECTURE 19 · PROPOSED</text>
+<text x="90" y="168" class="title">PII And The Security Model</text>
+<text x="90" y="212" class="sub">Epsilon carries customer data. Four layers stand between it and someone who should not see it &#8212; and none of them is a filtered copy.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zhow">1 · FOUR LAYERS, OUTSIDE IN</text>
+
+<!-- IDENTITY -->
+<rect x="90" y="316" width="420" height="574" rx="16" fill="#101A24" stroke="#2E4A66" stroke-width="2.5"/>
+<text x="118" y="356" class="grp" style="fill:#5AA9FF">1 &#183; IDENTITY</text>
+<line x1="118" y1="372" x2="482" y2="372" stroke="#2E4A66" stroke-width="2"/>
+<image href="../../_icons/aws/security/identity-and-access-management-iam.png" x="118" y="396" width="56" height="56"/>
+<text x="188" y="424" class="icn" style="font-size:18px">IAM roles</text>
+<text x="188" y="446" class="icd" style="font-size:16px">no user has a password</text>
+<image href="../../_icons/aws/security/single-sign-on.png" x="118" y="486" width="56" height="56"/>
+<text x="188" y="514" class="icn" style="font-size:18px">Identity Center</text>
+<text x="188" y="536" class="icd" style="font-size:16px">federated login only</text>
+<image href="../../_icons/aws/security/identity-and-access-management-iam-role.png" x="118" y="576" width="56" height="56"/>
+<text x="188" y="604" class="icn" style="font-size:18px">OIDC for CI</text>
+<text x="188" y="626" class="icd" style="font-size:16px">no long-lived keys</text>
+<line x1="118" y1="670" x2="482" y2="670" stroke="#2E4A66" stroke-width="2"/>
+<text x="118" y="704" class="th">THE RULE</text>
+<text x="118" y="738" class="icd" style="font-size:17px">Grant to roles, never to people.</text>
+<text x="118" y="770" class="icd" style="font-size:17px">A leaver is removed from a role,</text>
+<text x="118" y="802" class="icd" style="font-size:17px">not hunted through grants.</text>
+<text x="118" y="852" class="bxt-s" style="font-size:19px;fill:#5AA9FF">WHO YOU ARE</text>
+
+<!-- ENCRYPTION -->
+<rect x="530" y="316" width="420" height="574" rx="16" fill="#0F1E17" stroke="#2A5A40" stroke-width="2.5"/>
+<text x="558" y="356" class="grp" style="fill:#3FD98A">2 &#183; ENCRYPTION</text>
+<line x1="558" y1="372" x2="922" y2="372" stroke="#2A5A40" stroke-width="2"/>
+<image href="../../_icons/aws/security/key-management-service.png" x="558" y="396" width="56" height="56"/>
+<text x="628" y="424" class="icn" style="font-size:18px">KMS</text>
+<text x="628" y="446" class="icd" style="font-size:16px">a key per bucket</text>
+<image href="../../_icons/aws/security/secrets-manager.png" x="558" y="486" width="56" height="56"/>
+<text x="628" y="514" class="icn" style="font-size:18px">Secrets Manager</text>
+<text x="628" y="536" class="icd" style="font-size:16px">source credentials</text>
+<image href="../../_icons/aws/general/ssl-padlock.png" x="558" y="576" width="56" height="56"/>
+<text x="628" y="604" class="icn" style="font-size:18px">TLS everywhere</text>
+<text x="628" y="626" class="icd" style="font-size:16px">in transit, no exceptions</text>
+<line x1="558" y1="670" x2="922" y2="670" stroke="#2A5A40" stroke-width="2"/>
+<text x="558" y="704" class="th">THE RULE</text>
+<text x="558" y="738" class="icd" style="font-size:17px">Bucket policy denies any</text>
+<text x="558" y="770" class="icd" style="font-size:17px">unencrypted write, so nobody</text>
+<text x="558" y="802" class="icd" style="font-size:17px">has to remember.</text>
+<text x="558" y="852" class="bxt-s" style="font-size:19px;fill:#3FD98A">AT REST AND IN TRANSIT</text>
+
+<!-- DATA ACCESS -->
+<rect x="970" y="316" width="420" height="574" rx="16" fill="#231114" stroke="#E3000E" stroke-width="3.5"/>
+<text x="998" y="356" class="grp" style="fill:#FF3B47">3 &#183; DATA ACCESS</text>
+<line x1="998" y1="372" x2="1362" y2="372" stroke="#6A2A30" stroke-width="2"/>
+<image href="../../_icons/aws/analytics/lake-formation.png" x="998" y="396" width="56" height="56"/>
+<text x="1068" y="424" class="icn" style="font-size:18px">Lake Formation</text>
+<text x="1068" y="446" class="icd" style="font-size:16px;fill:#C08A90">column-level grants</text>
+<image href="../../_icons/aws/analytics/redshift.png" x="998" y="486" width="56" height="56"/>
+<text x="1068" y="514" class="icn" style="font-size:18px">RLS and CLS</text>
+<text x="1068" y="536" class="icd" style="font-size:16px;fill:#C08A90">inside the warehouse</text>
+<image href="../../_icons/aws/security/macie.png" x="998" y="576" width="56" height="56"/>
+<text x="1068" y="604" class="icn" style="font-size:18px">Macie</text>
+<text x="1068" y="626" class="icd" style="font-size:16px;fill:#C08A90">finds PII you missed</text>
+<line x1="998" y1="670" x2="1362" y2="670" stroke="#6A2A30" stroke-width="2"/>
+<text x="998" y="704" class="th" style="fill:#C08A90">THE RULE</text>
+<text x="998" y="738" class="icd" style="font-size:17px;fill:#E5B8BC">Mask at the column, never by</text>
+<text x="998" y="770" class="icd" style="font-size:17px;fill:#E5B8BC">keeping a second filtered copy.</text>
+<text x="998" y="802" class="icd" style="font-size:17px;fill:#E5B8BC">A copy is a second thing to leak.</text>
+<text x="998" y="852" class="bxt-s" style="font-size:19px;fill:#FF3B47">WHAT YOU MAY SEE</text>
+
+<!-- AUDIT -->
+<rect x="1410" y="316" width="420" height="574" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1438" y="356" class="grp" style="fill:#FFB84D">4 &#183; AUDIT</text>
+<line x1="1438" y1="372" x2="1802" y2="372" stroke="#8A6A3A" stroke-width="2"/>
+<image href="../../_icons/aws/management/cloudtrail.png" x="1438" y="396" width="56" height="56"/>
+<text x="1508" y="424" class="icn" style="font-size:18px">CloudTrail</text>
+<text x="1508" y="446" class="icd" style="font-size:16px">who did what, when</text>
+<image href="../../_icons/aws/security/guardduty.png" x="1438" y="486" width="56" height="56"/>
+<text x="1508" y="514" class="icn" style="font-size:18px">GuardDuty</text>
+<text x="1508" y="536" class="icd" style="font-size:16px">unusual behaviour</text>
+<image href="../../_icons/aws/management/config.png" x="1438" y="576" width="56" height="56"/>
+<text x="1508" y="604" class="icn" style="font-size:18px">AWS Config</text>
+<text x="1508" y="626" class="icd" style="font-size:16px">has it drifted?</text>
+<line x1="1438" y1="670" x2="1802" y2="670" stroke="#8A6A3A" stroke-width="2"/>
+<text x="1438" y="704" class="th" style="fill:#B99A6A">THE RULE</text>
+<text x="1438" y="738" class="icd" style="font-size:17px;fill:#E8D5B0">Every grant is Terraform, so</text>
+<text x="1438" y="770" class="icd" style="font-size:17px;fill:#E8D5B0">access has an author, a reason</text>
+<text x="1438" y="802" class="icd" style="font-size:17px;fill:#E8D5B0">and a reviewer.</text>
+<text x="1438" y="852" class="bxt-s" style="font-size:19px;fill:#FFB84D">PROVE IT LATER</text>
+
+<!-- PLAIN ENGLISH -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Four locks, not one big one. The important one is the third: people get a view of the same table, never their own private copy of it.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 3 · Architecture 19</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

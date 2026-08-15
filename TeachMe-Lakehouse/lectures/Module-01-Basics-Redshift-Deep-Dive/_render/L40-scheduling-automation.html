@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 01 · LESSON 40</text>
+<text x="90" y="168" class="title">Scheduling and Automation</text>
+<text x="90" y="212" class="sub">Four ways to make a load run at 2 a.m. They differ mainly in what happens when step four fails at 2:40.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">Choose by failure behaviour, not by convenience</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">Anything can start a job on a timer. What separates these options is retry, branching, visibility and what you can see at 8 a.m. when the report is empty.</text>
+
+<text x="90" y="462" class="zhow">2 · HOW IT WORKS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="520" class="bxt-s" style="font-size:24px">FOUR OPTIONS, WEAKEST TO STRONGEST</text>
+<line x1="118" y1="538" x2="1182" y2="538" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="554" width="5" height="40" rx="2.5" fill="#5E7080"/>
+<text x="136" y="576" class="bxt-s" style="font-size:21px;fill:#8FA3B0">QUERY EDITOR SCHEDULE</text>
+<text x="1182" y="576" class="code-s" text-anchor="end" style="fill:#5E7080">one statement, no branching</text>
+<text x="136" y="602" class="bxs-s" style="font-size:18px">Fine for a nightly VACUUM or a single CALL. No dependencies, no retry logic, and easy to forget it exists.</text>
+<line x1="118" y1="608" x2="1182" y2="608" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="618" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="640" class="bxt-s" style="font-size:21px;fill:#5AA9FF">EVENTBRIDGE &#8594; LAMBDA</text>
+<text x="1182" y="640" class="code-s" text-anchor="end" style="fill:#5E7080">code, logs, alarms</text>
+<text x="136" y="666" class="bxs-s" style="font-size:18px">A cron rule invoking your Node handler. Real logging and error handling, but you write the orchestration yourself.</text>
+<line x1="118" y1="672" x2="1182" y2="672" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="682" width="5" height="40" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="704" class="bxt-s" style="font-size:21px;fill:#3FD98A">STEP FUNCTIONS &#8212; THE DEFAULT</text>
+<text x="1182" y="704" class="code-s" text-anchor="end" style="fill:#5E7080">retry, catch, parallel, visible</text>
+<text x="136" y="730" class="bxs-s" style="font-size:18px">Declarative retry and catch per step, a picture of last night&#8217;s run, and it calls the Data API directly with no Lambda in between.</text>
+<line x1="118" y1="736" x2="1182" y2="736" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="746" width="5" height="40" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="768" class="bxt-s" style="font-size:21px;fill:#FFB84D">MWAA / AIRFLOW</text>
+<text x="1182" y="768" class="code-s" text-anchor="end" style="fill:#5E7080">powerful, and a cluster to run</text>
+<text x="136" y="794" class="bxs-s" style="font-size:18px">Worth it once you have cross-system dependencies and a team that already knows it. Otherwise it is infrastructure you now own.</text>
+
+<rect x="118" y="814" width="1064" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#8CE8B8">a job that cannot be safely rerun is not scheduled, it is gambled</text>
+
+<text x="1270" y="462" class="zsql">3 · THE PATTERN</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#0B1013" stroke="#2A4A3A" stroke-width="2.5"/>
+<text x="1298" y="506" class="sqlc">// Step Functions calls this directly</text>
+<text x="1298" y="530" class="sql"><tspan class="sqlk">"Resource"</tspan>: "arn:aws:states:::</text>
+<text x="1298" y="554" class="sql">   aws-sdk:redshiftdata:</text>
+<text x="1298" y="578" class="sql">   executeStatement",</text>
+<text x="1298" y="608" class="sqlc">// then poll describeStatement</text>
+<text x="1298" y="632" class="sql"><tspan class="sqlk">"Retry"</tspan>: [{ IntervalSeconds: 60,</text>
+<text x="1298" y="656" class="sql">            MaxAttempts: 3 }]</text>
+
+<text x="1270" y="710" class="zgot">4 · GOTCHAS</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#231519" stroke="#7A3A40" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E5B8BC">A retry only helps if the job is idempotent.</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Alert on the job that did not run at all &#8212;</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E5B8BC">silence is the failure you will miss.</text>
+<text x="1298" y="852" class="warn">schedules are UTC. always.</text>
+
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Starting the job is the easy part. You are choosing who wakes up, what they can see, and whether it is safe to simply press play again.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 01 · Lesson 40</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Redshift Deep Dive</text>
+</svg></div></body></html>

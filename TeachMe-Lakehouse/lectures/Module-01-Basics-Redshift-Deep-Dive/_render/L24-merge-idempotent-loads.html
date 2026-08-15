@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 01 · LESSON 24</text>
+<text x="90" y="168" class="title">MERGE and Idempotent Loads</text>
+<text x="90" y="212" class="sub">Re-running yesterday must produce exactly yesterday&#8217;s table. That property turns every incident into a retry instead of a repair.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#231114" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">Insert-or-update on a key, in one statement</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Because nothing enforces uniqueness here (Lesson 18), a second run of an appending load simply doubles the day. MERGE is what prevents that.</text>
+
+<text x="90" y="462" class="zhow">2 · HOW IT WORKS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="520" class="bxt-s" style="font-size:24px">FOUR THINGS THAT MAKE A LOAD RE-RUNNABLE</text>
+<line x1="118" y1="538" x2="1182" y2="538" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="554" width="5" height="40" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="576" class="bxt-s" style="font-size:21px;fill:#3FD98A">A REAL MERGE KEY</text>
+<text x="1182" y="576" class="code-s" text-anchor="end" style="fill:#5E7080">deterministic</text>
+<text x="136" y="602" class="bxs-s" style="font-size:18px">One column that identifies a row uniquely and identically every time it is computed. Usually a hash of the natural key columns.</text>
+<line x1="118" y1="608" x2="1182" y2="608" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="618" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="640" class="bxt-s" style="font-size:21px;fill:#5AA9FF">STAGE, THEN MERGE</text>
+<text x="1182" y="640" class="code-s" text-anchor="end" style="fill:#5E7080">never COPY into the target</text>
+<text x="136" y="666" class="bxs-s" style="font-size:18px">COPY lands in staging, where you can count and validate it. Only then does it move into the table people query.</text>
+<line x1="118" y1="672" x2="1182" y2="672" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="682" width="5" height="40" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="704" class="bxt-s" style="font-size:21px;fill:#FFB84D">DEDUPLICATE THE SOURCE FIRST</text>
+<text x="1182" y="704" class="code-s" text-anchor="end" style="fill:#5E7080">MERGE needs one match</text>
+<text x="136" y="730" class="bxs-s" style="font-size:18px">Two staging rows with the same key make the result undefined. Collapse them with ROW_NUMBER before merging.</text>
+<line x1="118" y1="736" x2="1182" y2="736" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="746" width="5" height="40" rx="2.5" fill="#C9D6DE"/>
+<text x="136" y="768" class="bxt-s" style="font-size:21px">ONE TRANSACTION</text>
+<text x="1182" y="768" class="code-s" text-anchor="end" style="fill:#5E7080">all of it, or none</text>
+<text x="136" y="794" class="bxs-s" style="font-size:18px">Wrap staging into target so a reader never sees the table half-loaded, and a failure leaves nothing behind.</text>
+
+<rect x="118" y="814" width="1064" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#8CE8B8">test it: run the load twice on purpose, then diff the table</text>
+
+<text x="1270" y="462" class="zsql">3 · THE SQL</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#0B1013" stroke="#2A4A3A" stroke-width="2.5"/>
+<text x="1298" y="508" class="sql"><tspan class="sqlk">MERGE INTO</tspan> gold.fct_sales_line <tspan class="sqlk">AS</tspan> t</text>
+<text x="1298" y="530" class="sql"><tspan class="sqlk">USING</tspan> staging.sales_dedup <tspan class="sqlk">AS</tspan> s</text>
+<text x="1298" y="552" class="sql"><tspan class="sqlk">ON</tspan> t.merge_key = s.merge_key</text>
+<text x="1298" y="574" class="sql"><tspan class="sqlk">WHEN MATCHED THEN UPDATE SET</tspan></text>
+<text x="1298" y="596" class="sql">  net_amount = s.net_amount,</text>
+<text x="1298" y="618" class="sql">  quantity   = s.quantity</text>
+<text x="1298" y="640" class="sql"><tspan class="sqlk">WHEN NOT MATCHED THEN INSERT</tspan> <tspan class="sqlk">VALUES</tspan> (</text>
+<text x="1298" y="662" class="sql">  s.sale_date, s.store_sk, ... );</text>
+
+<text x="1270" y="710" class="zgot">4 · GOTCHAS</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#231519" stroke="#7A3A40" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Duplicate keys in the source make MERGE</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E5B8BC">non-deterministic. Dedup first, every time.</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E5B8BC">A merge key built from a timestamp is not one.</text>
+<text x="1298" y="852" class="warn">idempotent, or it is not finished</text>
+
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Filing by reference number rather than adding to the pile. Deliver the same box twice and you replace the entry &#8212; you do not count it twice.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 01 · Lesson 24</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Redshift Deep Dive</text>
+</svg></div></body></html>

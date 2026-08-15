@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 01 · LESSON 30</text>
+<text x="90" y="168" class="title">Window Functions</text>
+<text x="90" y="212" class="sub">The warehouse workhorse. Anything you would have written as a loop in Node is almost always one window function here.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">A calculation across related rows, without collapsing them</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">GROUP BY reduces many rows to one. A window keeps every row and adds the group calculation alongside it &#8212; which is what reporting almost always needs.</text>
+
+<text x="90" y="462" class="zhow">2 · THE FOUR YOU WILL USE DAILY</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="520" class="bxt-s" style="font-size:24px">PARTITION BY = the group &#183; ORDER BY = the sequence</text>
+<line x1="118" y1="538" x2="1182" y2="538" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="554" width="5" height="40" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="576" class="bxt-s" style="font-size:21px;fill:#3FD98A">ROW_NUMBER()</text>
+<text x="1182" y="576" class="code-s" text-anchor="end" style="fill:#5E7080">deduplication</text>
+<text x="136" y="602" class="bxs-s" style="font-size:18px">Numbers rows within a partition. Keep rn = 1 and you have picked one row per key &#8212; the dedup step every load needs (Lesson 24).</text>
+<line x1="118" y1="608" x2="1182" y2="608" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="618" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="640" class="bxt-s" style="font-size:21px;fill:#5AA9FF">LAG() and LEAD()</text>
+<text x="1182" y="640" class="code-s" text-anchor="end" style="fill:#5E7080">the previous row</text>
+<text x="136" y="666" class="bxs-s" style="font-size:18px">The value from the row before or after. This is how you get day-on-day change without joining a table to itself.</text>
+<line x1="118" y1="672" x2="1182" y2="672" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="682" width="5" height="40" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="704" class="bxt-s" style="font-size:21px;fill:#FFB84D">SUM() OVER</text>
+<text x="1182" y="704" class="code-s" text-anchor="end" style="fill:#5E7080">running totals, shares</text>
+<text x="136" y="730" class="bxs-s" style="font-size:18px">A running total with ORDER BY, or a group total without it &#8212; which is how you compute each row&#8217;s share of its group in one pass.</text>
+<line x1="118" y1="736" x2="1182" y2="736" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="746" width="5" height="40" rx="2.5" fill="#C9D6DE"/>
+<text x="136" y="768" class="bxt-s" style="font-size:21px">RANK vs DENSE_RANK</text>
+<text x="1182" y="768" class="code-s" text-anchor="end" style="fill:#5E7080">ties behave differently</text>
+<text x="136" y="794" class="bxs-s" style="font-size:18px">RANK leaves gaps after a tie (1,2,2,4); DENSE_RANK does not (1,2,2,3). Pick deliberately &#8212; the business cares which.</text>
+
+<rect x="118" y="814" width="1064" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#8CE8B8">writing a loop over rows? it is a window function.</text>
+
+<text x="1270" y="462" class="zsql">3 · THE SQL</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#0B1013" stroke="#2A4A3A" stroke-width="2.5"/>
+<text x="1298" y="508" class="sqlc">-- dedup: one row per key</text>
+<text x="1298" y="530" class="sql"><tspan class="sqlk">SELECT</tspan> * <tspan class="sqlk">FROM</tspan> (</text>
+<text x="1298" y="552" class="sql">  <tspan class="sqlk">SELECT</tspan> s.*, <tspan class="sqlk">ROW_NUMBER</tspan>() <tspan class="sqlk">OVER</tspan> (</text>
+<text x="1298" y="574" class="sql">    <tspan class="sqlk">PARTITION BY</tspan> merge_key</text>
+<text x="1298" y="596" class="sql">    <tspan class="sqlk">ORDER BY</tspan> updated_at <tspan class="sqlk">DESC</tspan>) <tspan class="sqlk">AS</tspan> rn</text>
+<text x="1298" y="618" class="sql">  <tspan class="sqlk">FROM</tspan> staging.sales_line s)</text>
+<text x="1298" y="640" class="sql"><tspan class="sqlk">WHERE</tspan> rn = 1;</text>
+<text x="1298" y="672" class="sqlc">-- the most useful five lines here</text>
+
+<text x="1270" y="710" class="zgot">4 · GOTCHAS</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#231519" stroke="#7A3A40" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E5B8BC">You cannot filter on a window in WHERE &#8212;</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E5B8BC">wrap it in a subquery or CTE first.</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E5B8BC">A non-deterministic ORDER BY gives random rows.</text>
+<text x="1298" y="852" class="warn">always break ties explicitly</text>
+
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Everyone keeps their seat, and each person is told their position in the queue. GROUP BY would have sent the whole queue home as one number.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 01 · Lesson 30</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Redshift Deep Dive</text>
+</svg></div></body></html>

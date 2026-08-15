@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 15</text>
+<text x="90" y="168" class="title">One Engine, N YAML Files</text>
+<text x="90" y="212" class="sub">We did not write 58 download jobs — we wrote one job and 58 specs. Adding a table is a YAML file, not a deployment.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE SPEC ══ -->
+<text x="90" y="300" class="cap">1 · THE SPEC IS THE CONTRACT</text>
+<rect x="90" y="322" width="760" height="320" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="366" class="bxt-s" style="fill:#FF6A72">The whole job, declared</text>
+<text x="822" y="366" class="code-s" text-anchor="end" style="fill:#B06068">specs/download/sap_mara.yaml</text>
+<rect x="118" y="384" width="704" height="250" rx="10" fill="#0B1013" stroke="#3A1A20" stroke-width="2"/>
+<text x="138" y="406" class="code" xml:space="preserve" style="fill:#FFA0A6">table: sap.mara</text>
+<text x="138" y="430" class="code" xml:space="preserve" style="fill:#FFA0A6">source_type: sap_hana</text>
+<text x="138" y="454" class="code" xml:space="preserve" style="fill:#FFA0A6">source_config:</text>
+<text x="138" y="478" class="code" xml:space="preserve" style="fill:#FFA0A6">  jdbc_schema: SAPHANADB</text>
+<text x="138" y="502" class="code" xml:space="preserve" style="fill:#FFA0A6">  jdbc_table: MARA</text>
+<text x="138" y="526" class="code" xml:space="preserve" style="fill:#FFA0A6">  watermark_column: LAEDA        <tspan fill="#8A6A3A"># pull only the delta</tspan></text>
+<text x="138" y="550" class="code" xml:space="preserve" style="fill:#FFA0A6">  jdbc_hash_partitions: "8"      <tspan fill="#8A6A3A"># 8 parallel readers</tspan></text>
+<text x="138" y="574" class="code" xml:space="preserve" style="fill:#FFA0A6">landing_prefix: "sap/sap.mara"</text>
+<text x="138" y="598" class="code" xml:space="preserve" style="fill:#FFA0A6">schema:</text>
+<text x="138" y="622" class="code" xml:space="preserve" style="fill:#FFA0A6">  - { name: MATNR, type: string, pii_class: internal }</text>
+
+<!-- ══ ZONE 2 · THE ENGINE ══ -->
+<text x="890" y="300" class="cap">2 · ONE ENGINE, MANY SPECS</text>
+<rect x="890" y="322" width="440" height="320" rx="16" fill="#1B2A33" stroke="#3A5766" stroke-width="3"/>
+<text x="918" y="366" class="bxt-s">ONE ENGINE</text>
+<text x="918" y="396" class="code">src/glue/glue_engine/</text>
+<line x1="918" y1="416" x2="1302" y2="416" stroke="#2C3841" stroke-width="2"/>
+<text x="918" y="450" class="bxs-s">Four jobs cover every table:</text>
+<text x="918" y="482" class="bxs-s" style="fill:#A9BAC6">source_download · bronze_pull</text>
+<text x="918" y="510" class="bxs-s" style="fill:#A9BAC6">bronze_to_silver · abap_transform</text>
+<line x1="918" y1="536" x2="1302" y2="536" stroke="#2C3841" stroke-width="2"/>
+<text x="918" y="578" class="bxt">145 spec files</text>
+<text x="918" y="610" class="bxs-s" style="fill:#7A8C99">58 dl · 67 bronze · 6 slv · 14 tf</text>
+
+<!-- ══ ZONE 3 · VALIDATION ══ -->
+<text x="1370" y="300" class="cap">3 · THE SPEC IS VALIDATED</text>
+<rect x="1370" y="322" width="460" height="320" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1398" y="366" class="bxt-s">PYDANTIC IS THE GATE</text>
+<text x="1398" y="396" class="code" style="fill:#6FD8A8">glue_engine/spec.py</text>
+<line x1="1398" y1="416" x2="1802" y2="416" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1398" y="452" class="bxs-s">A spec is parsed into a typed</text>
+<text x="1398" y="480" class="bxs-s">model — extra='forbid', so a</text>
+<text x="1398" y="508" class="bxs-s">typo is an error, not silence.</text>
+<line x1="1398" y1="532" x2="1802" y2="532" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1398" y="566" class="bxs-s" style="fill:#FFB84D">Refused at load time:</text>
+<text x="1398" y="596" class="bxs-s">▪ merge_key not in the schema</text>
+<text x="1398" y="624" class="bxs-s">▪ a PII column used as a key</text>
+
+<!-- ══ BAND · ADDING THE NEXT TABLE ══ -->
+<text x="90" y="688" class="cap">ADDING THE 59th TABLE — CONFIG vs CODE</text>
+
+<rect x="90" y="710" width="850" height="178" rx="16" fill="#141A20" stroke="#3A4854" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="118" y="752" class="bxt-s" style="fill:#8296A3">THE WAY WE DIDN'T</text>
+<text x="912" y="752" class="code-s" text-anchor="end" style="fill:#5E7080">one job per table</text>
+<line x1="118" y1="768" x2="912" y2="768" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="800" class="bxs-s" style="fill:#8FA2AF">▪ One Python job per table — 145 near-identical scripts to drift apart</text>
+<text x="118" y="830" class="bxs-s" style="fill:#8FA2AF">▪ A Terraform resource and a deploy pipeline run for every new table</text>
+<text x="118" y="860" class="bxs-s" style="fill:#8FA2AF">▪ Reviewers read code to find out which column is the watermark</text>
+
+<rect x="980" y="710" width="850" height="178" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="1008" y="752" class="bxt-s" style="fill:#FF6A72">THE WAY WE DO</text>
+<text x="1802" y="752" class="code-s" text-anchor="end" style="fill:#B06068">specs/bronze/sap_zncr01.yaml:18</text>
+<line x1="1008" y1="768" x2="1802" y2="768" stroke="#5A2028" stroke-width="2"/>
+<text x="1008" y="800" class="bxs-s">▪ Add specs/download/sap_xyz.yaml — the engine already knows how</text>
+<text x="1008" y="830" class="bxs-s">▪ The Bronze spec adds one line: merge_key: [MANDT, DATUM, WERKS]</text>
+<text x="1008" y="860" class="bxs-s" style="fill:#FFB84D">▪ That single line stopped 7,966 duplicate rows in bronze.sap.zncr01</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">The engine is the printer; the YAML is the document. You don't build a new printer every time you want to print a different page.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 15</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

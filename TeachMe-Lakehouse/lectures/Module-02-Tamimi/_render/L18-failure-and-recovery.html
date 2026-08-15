@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 18</text>
+<text x="90" y="168" class="title">When It Breaks at 3 AM</text>
+<text x="90" y="212" class="sub">Re-running is the normal move, not the desperate one. Here is exactly why that is safe — and what to re-run.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · IDEMPOTENCY ══ -->
+<text x="90" y="300" class="cap">1 · WHY A RETRY CANNOT DOUBLE-BUILD THE DAY</text>
+
+<rect x="90" y="322" width="1040" height="284" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="114" y="362" class="bxt-s" style="font-size:26px">FIVE THINGS THAT MAKE A SECOND ATTEMPT A NO-OP</text>
+<line x1="114" y1="378" x2="1106" y2="378" stroke="#2C3841" stroke-width="2"/>
+
+<text x="114" y="410" class="bxt-s" style="font-size:20px">EXEC NAME</text>
+<text x="352" y="410" class="bxs-s" style="font-size:18px">Deterministic &lt;source&gt;-&lt;cycle_id&gt;; a dead prior run re-fires as -rHHMMSS.</text>
+
+<text x="114" y="448" class="bxt-s" style="font-size:20px">THE MANIFEST</text>
+<text x="352" y="448" class="bxs-s" style="font-size:18px">put_cycle is create-only — it can never reset a concluded cycle.</text>
+
+<text x="114" y="486" class="bxt-s" style="font-size:20px">THE LOCKS</text>
+<text x="352" y="486" class="bxs-s" style="font-size:18px">One conditional write per phase; the loser returns and does nothing.</text>
+
+<text x="114" y="524" class="bxt-s" style="font-size:20px">THE WRITES</text>
+<text x="352" y="524" class="bxs-s" style="font-size:18px">Bronze overwrites its snapshot, Silver MERGEs on key — never duplicates.</text>
+
+<text x="114" y="562" class="bxt-s" style="fill:#FFB84D;font-size:20px">PARTIAL FAIL</text>
+<text x="352" y="562" class="bxs-s" style="fill:#FFB84D;font-size:18px">One table's failure is isolated in the Map — then skips Gold for all.</text>
+
+<text x="114" y="592" class="code-s" style="fill:#5E7080">handler.py:972-1024 · coordination.py:371-392 · per_source_ingestion.tf:185-190</text>
+
+<!-- ── the post-submit timeout ── -->
+<rect x="1180" y="322" width="650" height="284" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="1206" y="364" class="bxt-s" style="fill:#FF6A72;font-size:26px">WHY GOLD LOOKS BEFORE IT LEAPS</text>
+<line x1="1206" y1="380" x2="1804" y2="380" stroke="#5A2028" stroke-width="2"/>
+
+<rect x="1206" y="396" width="598" height="106" rx="8" fill="#0B1013" stroke="#3A1A20" stroke-width="2"/>
+<text x="1222" y="422" class="code" xml:space="preserve" style="font-size:15px">03:12:04  StartJobRun → Glue ACCEPTS r-8821</text>
+<text x="1222" y="446" class="code" xml:space="preserve" style="font-size:15px">03:12:34  the response never comes back</text>
+<text x="1222" y="470" class="code" xml:space="preserve" style="font-size:15px">03:12:35  SFN retries → a fresh lock claim</text>
+<text x="1222" y="489" class="code" xml:space="preserve" style="fill:#FF6A72;font-size:15px">          → a SECOND Gold build, same day</text>
+
+<text x="1206" y="530" class="bxs-s" style="font-size:18px">StartJobRun has no idempotency token, so the barrier</text>
+<text x="1206" y="554" class="bxs-s" style="font-size:18px">scans the last 50 runs for this --cycle_id in a live</text>
+<text x="1206" y="578" class="bxs-s" style="fill:#FFB84D;font-size:18px">or done state — and skips. Any error → fails OPEN.</text>
+<text x="1206" y="593" class="code-s" style="fill:#FFA0A6">gold_barrier/handler.py:50, 83-111, 253-263</text>
+
+<!-- ══ ZONE 2 · THE SWEEPER ══ -->
+<text x="90" y="644" class="cap">2 · THE SAFETY NET UNDER EVERY BARRIER</text>
+
+<rect x="90" y="666" width="1040" height="224" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="114" y="704" class="bxt-s" style="font-size:26px">cycle_sweeper — LEVEL-TRIGGERED, EVERY 15 MINUTES</text>
+<line x1="114" y1="718" x2="1106" y2="718" stroke="#2C3841" stroke-width="2"/>
+
+<text x="114" y="748" class="bxt-s" style="fill:#6FE0A6;font-size:21px">RESUME</text>
+<text x="234" y="748" class="bxs-s" style="font-size:18px">every pass, no deadline — re-invoke the barrier the state implies.</text>
+<text x="234" y="774" class="code" xml:space="preserve" style="font-size:16px">running → download   download_built → transform   transform_built → gold</text>
+
+<text x="114" y="808" class="bxt-s" style="fill:#FF6A72;font-size:21px">CONCLUDE</text>
+<text x="262" y="808" class="bxs-s" style="font-size:18px">only when overdue AND stopped moving. 12 h opens the question,</text>
+<text x="262" y="834" class="bxs-s" style="font-size:18px">3 h idle answers it, 96 h is the ceiling → force-fail, then gold_skipped.</text>
+
+<text x="114" y="862" class="bxs-s" style="fill:#FFB84D;font-size:18px">It ignores rows it wrote itself — or a force-fail pass reads its own timestamps back as signs of life.</text>
+<text x="114" y="876" class="code-s" style="fill:#5E7080">cycle_sweeper/handler.py:77-81 resume map · :145-170 _should_conclude · :107-142 _last_activity</text>
+
+<!-- ══ ZONE 3 · WHICH RECOVERY ══ -->
+<text x="1180" y="644" class="cap">3 · WHICH RECOVERY?</text>
+
+<rect x="1180" y="666" width="650" height="224" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1206" y="704" class="bxt-s" style="font-size:25px">FOUR MODES, ONE DISPATCHER</text>
+<line x1="1206" y1="718" x2="1804" y2="718" stroke="#2C3841" stroke-width="2"/>
+
+<text x="1206" y="750" class="bxs-s" style="font-size:17px"><tspan style="fill:#6FD8C6;font-family:'IBM Plex Mono',monospace">rerun</tspan> — today's table failed. Reopens cycle, frees locks.</text>
+<text x="1206" y="788" class="bxs-s" style="font-size:17px"><tspan style="fill:#6FD8C6;font-family:'IBM Plex Mono',monospace">rerun_download</tspan> — the raw pull failed. P1 only; P2 re-gates.</text>
+<text x="1206" y="826" class="bxs-s" style="font-size:17px"><tspan style="fill:#6FD8C6;font-family:'IBM Plex Mono',monospace">rerun + dates</tspan> — backfill: own bf- cycle, watermark untouched.</text>
+<text x="1206" y="864" class="bxs-s" style="font-size:17px"><tspan style="fill:#6FD8C6;font-family:'IBM Plex Mono',monospace">initial_load</tspan> — re-baseline: own init- cycle, full_refresh.</text>
+<text x="1206" y="876" class="code-s" style="fill:#5E7080">dispatcher/handler.py:1027 · :1144 · :1701 · :1417</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">At 3 AM you don't debug — you read the runs table, pick a mode, and re-run. Every write here is safe to repeat, so a re-run is never the risk.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 18</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

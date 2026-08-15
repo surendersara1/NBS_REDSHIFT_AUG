@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+  <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#7A8C99"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 16</text>
+<text x="90" y="168" class="title">Make Phase Hand-offs Safe</text>
+<text x="90" y="212" class="sub">Parallel sources finish together. Two callers will race the same hand-off — exactly one must act.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE DECISION ══ -->
+<text x="90" y="298" class="cap">1 · THE DECISION</text>
+<rect x="90" y="312" width="1740" height="84" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="348" class="bxt-s" style="font-size:25px">How does the next phase start &#8212; and start only once?</text>
+<text x="118" y="378" class="bxs-s" style="fill:#8FA2AF">Every source ends at the same hand-off, and on a busy night they arrive together.</text>
+
+<rect x="1000" y="328" width="380" height="52" rx="12" fill="#171C21" stroke="#4A5A66" stroke-width="2.5" stroke-dasharray="9 6"/>
+<text x="1190" y="360" class="bxs-s" text-anchor="middle" style="fill:#8296A3">&#215; poll, or &#8220;is anything running?&#8221;</text>
+<line x1="1386" y1="354" x2="1414" y2="354" stroke="#3FD98A" stroke-width="3.5" marker-end="url(#ag)"/>
+<rect x="1420" y="328" width="384" height="52" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1612" y="360" class="doit" text-anchor="middle" style="font-size:19px">ONE CONDITIONAL WRITE</text>
+
+<!-- ══ ZONE 2 · DO THIS ══ -->
+<text x="90" y="430" class="cap">2 · DO THIS</text>
+<rect x="90" y="444" width="1086" height="316" rx="16" fill="#101A15" stroke="#2F6B4C" stroke-width="2.5"/>
+<text x="116" y="478" class="doit">GATE EVERY PHASE WITH A SINGLE-FLIGHT LOCK</text>
+<line x1="116" y1="488" x2="1150" y2="488" stroke="#274438" stroke-width="2"/>
+
+<!-- caller A -->
+<rect x="116" y="500" width="190" height="62" rx="12" fill="#1B2329" stroke="#4A5A66" stroke-width="2.5"/>
+<text x="211" y="527" class="bxt-s" text-anchor="middle" style="font-size:19px">CALLER A</text>
+<text x="211" y="549" class="bxs-s" text-anchor="middle" style="fill:#8FA2AF;font-size:15px">Oracle SIM ends</text>
+<!-- caller B -->
+<rect x="116" y="572" width="190" height="62" rx="12" fill="#1B2329" stroke="#4A5A66" stroke-width="2.5"/>
+<text x="211" y="599" class="bxt-s" text-anchor="middle" style="font-size:19px">CALLER B</text>
+<text x="211" y="621" class="bxs-s" text-anchor="middle" style="fill:#8FA2AF;font-size:15px">Magento ends</text>
+
+<!-- the lock -->
+<rect x="386" y="500" width="390" height="134" rx="14" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="581" y="528" class="bxt-s" text-anchor="middle" style="fill:#FF6A72;font-size:20px">ONE CONDITIONAL WRITE</text>
+<rect x="404" y="538" width="354" height="88" rx="8" fill="#0B1013" stroke="#3A1A20" stroke-width="2"/>
+<text x="418" y="558" class="code" xml:space="preserve" style="font-size:14px">put_item(</text>
+<text x="418" y="578" class="code" xml:space="preserve" style="font-size:14px">  Item={"pk": "lock#gold#&lt;cycle&gt;"},</text>
+<text x="418" y="598" class="code" xml:space="preserve" style="font-size:14px">  ConditionExpression=</text>
+<text x="418" y="611" class="code" xml:space="preserve" style="fill:#FFB84D;font-size:14px">    "attribute_not_exists(pk)")</text>
+
+<!-- winner / loser -->
+<rect x="856" y="500" width="294" height="62" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1003" y="527" class="bxt-s" text-anchor="middle" style="fill:#6FE0A6;font-size:19px">EXACTLY ONE ACTS</text>
+<text x="1003" y="549" class="bxs-s" text-anchor="middle" style="font-size:15px">starts the next phase</text>
+
+<rect x="856" y="572" width="294" height="62" rx="12" fill="#191F24" stroke="#3A4854" stroke-width="2.5" stroke-dasharray="9 6"/>
+<text x="1003" y="599" class="bxt-s" text-anchor="middle" style="fill:#A9BAC6;font-size:19px">THE OTHER STANDS DOWN</text>
+<text x="1003" y="621" class="bxs-s" text-anchor="middle" style="fill:#FFB84D;font-size:15px">lock lost &#8212; a SUCCESS</text>
+
+<!-- arrows -->
+<line x1="310" y1="531" x2="380" y2="531" stroke="#C9D6DE" stroke-width="3.5" marker-end="url(#a)"/>
+<line x1="310" y1="603" x2="380" y2="603" stroke="#C9D6DE" stroke-width="3.5" marker-end="url(#a)"/>
+<text x="345" y="522" class="edge-s" text-anchor="middle" style="font-size:15px">write</text>
+<text x="345" y="594" class="edge-s" text-anchor="middle" style="font-size:15px">write</text>
+<line x1="780" y1="531" x2="850" y2="531" stroke="#3FD98A" stroke-width="3.5" marker-end="url(#ag)"/>
+<line x1="780" y1="603" x2="850" y2="603" stroke="#7A8C99" stroke-width="3.5" marker-end="url(#am)"/>
+<text x="815" y="522" class="edge-s" text-anchor="middle" style="fill:#3FD98A;font-size:15px">true</text>
+<text x="815" y="594" class="edge-s" text-anchor="middle" style="fill:#7A8C99;font-size:15px">false</text>
+
+<line x1="116" y1="652" x2="1150" y2="652" stroke="#274438" stroke-width="2"/>
+<text x="116" y="682" class="doit" style="font-size:19px">1</text>
+<text x="142" y="682" class="bxs-s">Hold before you claim &#8212; every &#8220;not ready yet&#8221; return sits above the lock.</text>
+<text x="116" y="710" class="doit" style="font-size:19px">2</text>
+<text x="142" y="710" class="bxs-s">Decide on TERMINAL states, never on &#8220;is it running&#8221;. A cycle advances.</text>
+<text x="116" y="738" class="doit" style="font-size:19px">3</text>
+<text x="142" y="738" class="bxs-s">Losing the lock is SUCCESS. Half a healthy night's calls end that way.</text>
+
+<!-- ══ ZONE 3 · WHY ══ -->
+<text x="1206" y="430" class="cap">3 · WHY</text>
+<rect x="1206" y="444" width="624" height="316" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1232" y="482" class="bxt-s" style="font-size:24px">LET THE STORE DO THE ORDERING</text>
+<line x1="1232" y1="494" x2="1804" y2="494" stroke="#2C3841" stroke-width="2"/>
+
+<circle cx="1238" cy="520" r="4" fill="#3FD98A"/>
+<text x="1256" y="526" class="bxs-s">One item, one writer: the database serialises it.</text>
+<circle cx="1238" cy="552" r="4" fill="#3FD98A"/>
+<text x="1256" y="558" class="bxs-s">No queue, no election, no lease to tune.</text>
+<circle cx="1238" cy="584" r="4" fill="#3FD98A"/>
+<text x="1256" y="590" class="bxs-s">A phase advances: running &#8594; built &#8594; concluded.</text>
+<circle cx="1238" cy="616" r="4" fill="#3FD98A"/>
+<text x="1256" y="622" class="bxs-s">The lock is what makes a re-check free and safe.</text>
+
+<rect x="1226" y="650" width="584" height="94" rx="12" fill="#2A1216" stroke="#7A2A32" stroke-width="2.5"/>
+<text x="1246" y="678" class="avoid" style="font-size:17px">WHAT BREAKS IF YOU DON'T</text>
+<text x="1246" y="706" class="bxs-s" style="font-size:18px">Two builders publish the same day twice &#8212; or every</text>
+<text x="1246" y="730" class="bxs-s" style="font-size:18px">hand-off after the first quietly stops firing.</text>
+
+<!-- ══ ZONE 4 · ON APPAREL GROUP ══ -->
+<text x="90" y="794" class="cap">4 · ON APPAREL GROUP</text>
+<rect x="90" y="806" width="1740" height="84" rx="14" fill="#1F1A10" stroke="#7A5F26" stroke-width="2.5"/>
+<text x="118" y="854" class="agbox">ON APPAREL GROUP</text>
+<line x1="360" y1="820" x2="360" y2="876" stroke="#5A4720" stroke-width="2"/>
+<text x="390" y="838" class="bxs" style="font-size:20px">All eight reach the hand-off together, and RMS, SIM and XStore rarely finish in the same order twice.</text>
+<text x="390" y="870" class="bxs" style="font-size:20px">One lock item per phase per cycle &#8212; landing, bronze, silver, gold. Identical code four times, on purpose.</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Two people reach for one latch. It turns once. Whoever turns it does the work — the other walking away is the design working.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 16</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

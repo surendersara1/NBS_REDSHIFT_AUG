@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8296A3"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 3 · ARCHITECTURE 11 · AS BUILT</text>
+<text x="90" y="168" class="title">ABAP To Glue, Stage By Stage</text>
+<text x="90" y="212" class="sub">Twenty years of receipt logic, moved to Spark without changing a single number. The order of the lines <tspan style="fill:#FFFFFF">is</tspan> the business rule.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zhow">1 · FIVE STAGES, ONE INVARIANT</text>
+
+<!-- 1 RAW -->
+<rect x="90" y="316" width="324" height="454" rx="14" fill="#14181B" stroke="#3A4854" stroke-width="2.5"/>
+<text x="116" y="352" class="grp" style="font-size:18px;fill:#A9BAC6">1 &#183; RAW ROWS</text>
+<line x1="116" y1="366" x2="388" y2="366" stroke="#2C3841" stroke-width="2"/>
+<image href="../../_icons/aws/storage/simple-storage-service-s3.png" x="224" y="392" width="56" height="56"/>
+<text x="252" y="478" class="nlb" text-anchor="middle">ZHOCIDC extract</text>
+<text x="252" y="500" class="dlb" text-anchor="middle">one row per printed line</text>
+<line x1="116" y1="524" x2="388" y2="524" stroke="#2C3841" stroke-width="2"/>
+<text x="116" y="558" class="icd" style="font-size:17px">One flat table</text>
+<text x="116" y="592" class="icd" style="font-size:17px">Line type in a column</text>
+<text x="116" y="626" class="icd" style="font-size:17px">Order carries meaning</text>
+<text x="116" y="660" class="icd" style="font-size:17px">No keys, no types</text>
+<text x="116" y="712" class="code" style="font-size:16px">raw/sap/zhocidc/</text>
+
+<line x1="422" y1="540" x2="436" y2="540" stroke="#8296A3" stroke-width="3" marker-end="url(#aw)"/>
+
+<!-- 2 GROUP -->
+<rect x="444" y="316" width="324" height="454" rx="14" fill="#101A24" stroke="#2E4A66" stroke-width="2.5"/>
+<text x="470" y="352" class="grp" style="font-size:18px;fill:#5AA9FF">2 &#183; GROUP</text>
+<line x1="470" y1="366" x2="742" y2="366" stroke="#2E4A66" stroke-width="2"/>
+<image href="../../_icons/aws/analytics/glue.png" x="578" y="392" width="56" height="56"/>
+<text x="606" y="478" class="nlb" text-anchor="middle">groupBy receipt</text>
+<text x="606" y="500" class="dlb" text-anchor="middle">applyInPandas</text>
+<line x1="470" y1="524" x2="742" y2="524" stroke="#2E4A66" stroke-width="2"/>
+<text x="470" y="558" class="icd" style="font-size:17px">Partition by receipt id</text>
+<text x="470" y="592" class="icd" style="font-size:17px">One group = one receipt</text>
+<text x="470" y="626" class="icd" style="font-size:17px">Python runs per group</text>
+<text x="470" y="660" class="icd" style="font-size:17px">Line order preserved</text>
+<text x="470" y="712" class="code" style="font-size:16px">applyInPandas(fold)</text>
+
+<line x1="776" y1="540" x2="790" y2="540" stroke="#8296A3" stroke-width="3" marker-end="url(#aw)"/>
+
+<!-- 3 FOLD -->
+<rect x="798" y="316" width="324" height="454" rx="14" fill="#231114" stroke="#E3000E" stroke-width="3"/>
+<text x="824" y="352" class="grp" style="font-size:18px;fill:#FF3B47">3 &#183; FOLD</text>
+<line x1="824" y1="366" x2="1096" y2="366" stroke="#6A2A30" stroke-width="2"/>
+<image href="../../_icons/aws/analytics/emr.png" x="932" y="392" width="56" height="56"/>
+<text x="960" y="478" class="nlb" text-anchor="middle">State machine</text>
+<text x="960" y="500" class="dlb" text-anchor="middle">walk the lines in order</text>
+<line x1="824" y1="524" x2="1096" y2="524" stroke="#6A2A30" stroke-width="2"/>
+<text x="824" y="558" class="icd" style="font-size:17px;fill:#E5B8BC">Header sets the context</text>
+<text x="824" y="592" class="icd" style="font-size:17px;fill:#E5B8BC">Item lines accumulate</text>
+<text x="824" y="626" class="icd" style="font-size:17px;fill:#E5B8BC">Tender lines close it</text>
+<text x="824" y="660" class="icd" style="font-size:17px;fill:#E5B8BC">Exactly the ABAP order</text>
+<text x="824" y="712" class="code" style="font-size:16px;fill:#FF8A92">for line in receipt:</text>
+
+<line x1="1130" y1="540" x2="1144" y2="540" stroke="#8296A3" stroke-width="3" marker-end="url(#aw)"/>
+
+<!-- 4 DERIVE -->
+<rect x="1152" y="316" width="324" height="454" rx="14" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1178" y="352" class="grp" style="font-size:18px;fill:#FFB84D">4 &#183; DERIVE</text>
+<line x1="1178" y1="366" x2="1450" y2="366" stroke="#8A6A3A" stroke-width="2"/>
+<image href="../../_icons/aws/analytics/glue.png" x="1286" y="392" width="56" height="56"/>
+<text x="1314" y="478" class="nlb" text-anchor="middle">Business rules</text>
+<text x="1314" y="500" class="dlb" text-anchor="middle">the ABAP arithmetic</text>
+<line x1="1178" y1="524" x2="1450" y2="524" stroke="#8A6A3A" stroke-width="2"/>
+<text x="1178" y="558" class="code" style="font-size:17px;fill:#FFD08A">vat_split</text>
+<text x="1178" y="592" class="code" style="font-size:17px;fill:#FFD08A">resolve_store_type</text>
+<text x="1178" y="626" class="code" style="font-size:17px;fill:#FFD08A">parse_pack_size</text>
+<text x="1178" y="660" class="icd" style="font-size:17px;fill:#E8D5B0">each one unit-tested</text>
+<text x="1178" y="712" class="code" style="font-size:16px">transforms/*.py</text>
+
+<line x1="1484" y1="540" x2="1498" y2="540" stroke="#8296A3" stroke-width="3" marker-end="url(#aw)"/>
+
+<!-- 5 SILVER -->
+<rect x="1506" y="316" width="324" height="454" rx="14" fill="#0F1E17" stroke="#2A5A40" stroke-width="2.5"/>
+<text x="1532" y="352" class="grp" style="font-size:18px;fill:#3FD98A">5 &#183; SILVER</text>
+<line x1="1532" y1="366" x2="1804" y2="366" stroke="#2A5A40" stroke-width="2"/>
+<image href="../../_icons/aws/storage/simple-storage-service-s3.png" x="1640" y="392" width="56" height="56"/>
+<text x="1668" y="478" class="nlb" text-anchor="middle">Iceberg table</text>
+<text x="1668" y="500" class="dlb" text-anchor="middle">one row per sale line</text>
+<line x1="1532" y1="524" x2="1804" y2="524" stroke="#2A5A40" stroke-width="2"/>
+<text x="1532" y="558" class="icd" style="font-size:17px">Typed and conformed</text>
+<text x="1532" y="592" class="icd" style="font-size:17px">MERGE on the key</text>
+<text x="1532" y="626" class="icd" style="font-size:17px">Safe to re-run</text>
+<text x="1532" y="660" class="icd" style="font-size:17px">Reconciled to the ABAP</text>
+<text x="1532" y="712" class="code" style="font-size:16px">silver.sales_line</text>
+
+<!-- BAND -->
+<rect x="90" y="790" width="1740" height="100" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="820" class="icb">THE ONLY ACCEPTANCE TEST THAT MATTERS</text>
+<line x1="118" y1="834" x2="1802" y2="834" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="868" class="bxs-s" style="font-size:18px">Feed a day of real receipts through both the ABAP report and the Glue job. <tspan style="fill:#3FD98A">Row for row, the totals must match</tspan> &#8212; anything else is a rewrite, not a migration.</text>
+
+<!-- PLAIN ENGLISH -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A till roll only makes sense read top to bottom. Shuffle the lines and the receipt stops meaning anything &#8212; which is why we fold, not aggregate.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 3 · Architecture 11</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

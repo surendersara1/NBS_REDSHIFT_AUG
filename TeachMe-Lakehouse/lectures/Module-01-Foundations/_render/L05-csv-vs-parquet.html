@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 05</text>
+<text x="90" y="168" class="title">Why Parquet, Not CSV</text>
+<text x="90" y="212" class="sub">Same rows, different byte order — and that one choice decides whether 638 M rows is a query or a coffee break.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · the byte layout ══ -->
+<text x="90" y="300" class="cap">1 · HOW THE BYTES ACTUALLY SIT</text>
+<rect x="90" y="322" width="1080" height="300" rx="16" fill="#141A20" stroke="#2C3841" stroke-width="2.5"/>
+
+<text x="118" y="358" class="edge">CSV — one whole row, then the next row</text>
+<text x="1142" y="400" class="bxs-s" text-anchor="end" style="fill:#FF6B72">read all 29</text>
+
+<!-- record 1 -->
+<rect x="130" y="372" width="64" height="44" rx="5" fill="#1F2A33" stroke="#35434E" stroke-width="2"/><text x="162" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">SPTAG</text>
+<rect x="194" y="372" width="64" height="44" rx="5" fill="#2A2430" stroke="#453B4E" stroke-width="2"/><text x="226" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">MATNR</text>
+<rect x="258" y="372" width="64" height="44" rx="5" fill="#14331F" stroke="#3FD98A" stroke-width="2"/><text x="290" y="400" class="code" text-anchor="middle" style="fill:#3FD98A">MATKL</text>
+<rect x="322" y="372" width="64" height="44" rx="5" fill="#2E2A20" stroke="#4E4636" stroke-width="2"/><text x="354" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">KUNAG</text>
+<!-- record 2 -->
+<rect x="402" y="372" width="64" height="44" rx="5" fill="#1F2A33" stroke="#35434E" stroke-width="2"/><text x="434" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">SPTAG</text>
+<rect x="466" y="372" width="64" height="44" rx="5" fill="#2A2430" stroke="#453B4E" stroke-width="2"/><text x="498" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">MATNR</text>
+<rect x="530" y="372" width="64" height="44" rx="5" fill="#14331F" stroke="#3FD98A" stroke-width="2"/><text x="562" y="400" class="code" text-anchor="middle" style="fill:#3FD98A">MATKL</text>
+<rect x="594" y="372" width="64" height="44" rx="5" fill="#2E2A20" stroke="#4E4636" stroke-width="2"/><text x="626" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">KUNAG</text>
+<!-- record 3 -->
+<rect x="674" y="372" width="64" height="44" rx="5" fill="#1F2A33" stroke="#35434E" stroke-width="2"/><text x="706" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">SPTAG</text>
+<rect x="738" y="372" width="64" height="44" rx="5" fill="#2A2430" stroke="#453B4E" stroke-width="2"/><text x="770" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">MATNR</text>
+<rect x="802" y="372" width="64" height="44" rx="5" fill="#14331F" stroke="#3FD98A" stroke-width="2"/><text x="834" y="400" class="code" text-anchor="middle" style="fill:#3FD98A">MATKL</text>
+<rect x="866" y="372" width="64" height="44" rx="5" fill="#2E2A20" stroke="#4E4636" stroke-width="2"/><text x="898" y="400" class="code" text-anchor="middle" style="fill:#C9D6DE">KUNAG</text>
+
+<text x="258" y="444" class="edge-s" text-anchor="middle" style="fill:#7A8C99">record 1</text>
+<text x="530" y="444" class="edge-s" text-anchor="middle" style="fill:#7A8C99">record 2</text>
+<text x="802" y="444" class="edge-s" text-anchor="middle" style="fill:#7A8C99">record 3</text>
+
+<line x1="118" y1="468" x2="1142" y2="468" stroke="#2C3841" stroke-width="2"/>
+
+<text x="118" y="502" class="edge">PARQUET — one whole column, then the next</text>
+<text x="1142" y="544" class="bxs-s" text-anchor="end" style="fill:#3FD98A">read 1 chunk</text>
+
+<!-- column chunk 1 -->
+<rect x="130" y="516" width="64" height="44" rx="5" fill="#1F2A33" stroke="#35434E" stroke-width="2"/><text x="162" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">SPTAG</text>
+<rect x="194" y="516" width="64" height="44" rx="5" fill="#1F2A33" stroke="#35434E" stroke-width="2"/><text x="226" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">SPTAG</text>
+<rect x="258" y="516" width="64" height="44" rx="5" fill="#1F2A33" stroke="#35434E" stroke-width="2"/><text x="290" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">SPTAG</text>
+<!-- column chunk 2 -->
+<rect x="338" y="516" width="64" height="44" rx="5" fill="#2A2430" stroke="#453B4E" stroke-width="2"/><text x="370" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">MATNR</text>
+<rect x="402" y="516" width="64" height="44" rx="5" fill="#2A2430" stroke="#453B4E" stroke-width="2"/><text x="434" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">MATNR</text>
+<rect x="466" y="516" width="64" height="44" rx="5" fill="#2A2430" stroke="#453B4E" stroke-width="2"/><text x="498" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">MATNR</text>
+<!-- column chunk 3 — the one we need -->
+<rect x="546" y="516" width="64" height="44" rx="5" fill="#14331F" stroke="#3FD98A" stroke-width="2"/><text x="578" y="544" class="code" text-anchor="middle" style="fill:#3FD98A">MATKL</text>
+<rect x="610" y="516" width="64" height="44" rx="5" fill="#14331F" stroke="#3FD98A" stroke-width="2"/><text x="642" y="544" class="code" text-anchor="middle" style="fill:#3FD98A">MATKL</text>
+<rect x="674" y="516" width="64" height="44" rx="5" fill="#14331F" stroke="#3FD98A" stroke-width="2"/><text x="706" y="544" class="code" text-anchor="middle" style="fill:#3FD98A">MATKL</text>
+<!-- column chunk 4 -->
+<rect x="754" y="516" width="64" height="44" rx="5" fill="#2E2A20" stroke="#4E4636" stroke-width="2"/><text x="786" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">KUNAG</text>
+<rect x="818" y="516" width="64" height="44" rx="5" fill="#2E2A20" stroke="#4E4636" stroke-width="2"/><text x="850" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">KUNAG</text>
+<rect x="882" y="516" width="64" height="44" rx="5" fill="#2E2A20" stroke="#4E4636" stroke-width="2"/><text x="914" y="544" class="code" text-anchor="middle" style="fill:#C9D6DE">KUNAG</text>
+
+<text x="226" y="588" class="edge-s" text-anchor="middle" style="fill:#7A8C99">SPTAG chunk</text>
+<text x="434" y="588" class="edge-s" text-anchor="middle" style="fill:#7A8C99">MATNR chunk</text>
+<text x="642" y="588" class="edge-s" text-anchor="middle" style="fill:#3FD98A">MATKL chunk</text>
+<text x="850" y="588" class="edge-s" text-anchor="middle" style="fill:#7A8C99">KUNAG chunk</text>
+
+<!-- ══ ZONE 2 · what columnar buys ══ -->
+<text x="1200" y="300" class="cap">2 · WHAT COLUMNAR BUYS YOU</text>
+
+<rect x="1200" y="322" width="630" height="92" rx="14" fill="#1B2329" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1228" y="362" class="bxt-s">COMPRESSION</text>
+<text x="1228" y="394" class="bxs-s">Same-type values sit together — they squash hard</text>
+
+<rect x="1200" y="426" width="630" height="92" rx="14" fill="#1B2329" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1228" y="466" class="bxt-s">COLUMN PRUNING</text>
+<text x="1228" y="498" class="bxs-s">Need 1 column of 29? Read 1 column of 29.</text>
+
+<rect x="1200" y="530" width="630" height="92" rx="14" fill="#1B2329" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1228" y="570" class="bxt-s">PREDICATE PUSHDOWN</text>
+<text x="1228" y="602" class="bxs-s">Each chunk carries min/max — skip it unopened</text>
+
+<!-- ══ ZONE 3 · the comparison ══ -->
+<text x="90" y="654" class="cap">3 · THE SAME 638 M ROWS, BOTH WAYS</text>
+
+<rect x="90" y="676" width="560" height="210" rx="16" fill="#1B2329" stroke="#4A5A66" stroke-width="3" stroke-dasharray="9 6"/>
+<text x="118" y="718" class="bxt" style="fill:#8FA2AF">CSV</text>
+<text x="622" y="718" class="edge-s" text-anchor="end" style="fill:#7A8C99">not used here</text>
+<line x1="118" y1="736" x2="622" y2="736" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="770" class="edge-s" style="fill:#7A8C99">Layout</text>
+<text x="622" y="770" class="bxs-s" text-anchor="end">row after row, interleaved</text>
+<text x="118" y="802" class="edge-s" style="fill:#7A8C99">Types</text>
+<text x="622" y="802" class="bxs-s" text-anchor="end">none — every field is text</text>
+<text x="118" y="834" class="edge-s" style="fill:#7A8C99">One column</text>
+<text x="622" y="834" class="bxs-s" text-anchor="end">still reads the whole file</text>
+<text x="118" y="866" class="edge-s" style="fill:#7A8C99">Compressed</text>
+<text x="622" y="866" class="bxs-s" text-anchor="end">gzip: one lump, unsplittable</text>
+
+<rect x="680" y="676" width="560" height="210" rx="16" fill="#2A1418" stroke="#E3000E" stroke-width="3"/>
+<text x="708" y="718" class="bxt" style="fill:#FF3B47">PARQUET</text>
+<text x="1212" y="718" class="edge-s" text-anchor="end" style="fill:#FF8A92">what we write</text>
+<line x1="708" y1="736" x2="1212" y2="736" stroke="#5A2A30" stroke-width="2"/>
+<text x="708" y="770" class="edge-s" style="fill:#A08088">Layout</text>
+<text x="1212" y="770" class="bxs-s" text-anchor="end">column chunk, then the next</text>
+<text x="708" y="802" class="edge-s" style="fill:#A08088">Types</text>
+<text x="1212" y="802" class="bxs-s" text-anchor="end">typed, encoded, dictionary</text>
+<text x="708" y="834" class="edge-s" style="fill:#A08088">One column</text>
+<text x="1212" y="834" class="bxs-s" text-anchor="end">reads 1 chunk of 29</text>
+<text x="708" y="866" class="edge-s" style="fill:#A08088">Compressed</text>
+<text x="1212" y="866" class="bxs-s" text-anchor="end">snappy, per chunk, splittable</text>
+
+<rect x="1270" y="676" width="560" height="210" rx="16" fill="#141A20" stroke="#2C3841" stroke-width="2.5"/>
+<text x="1298" y="716" class="bxt-s">WHY IT IS NOT OPTIONAL</text>
+<text x="1298" y="756" class="bxs-s">S611  638,035,208 rows × 29 columns</text>
+<text x="1298" y="786" class="bxs-s">S603  648,802,247 rows</text>
+<text x="1298" y="816" class="bxs-s">ZHOCIDC  1,377,080,716 rows</text>
+<text x="1298" y="850" class="bxs" style="fill:#FFB84D">In CSV, this pipeline never finishes.</text>
+<text x="1298" y="876" class="code-s" style="fill:#5E7080">glue_engine/writers/raw_landing.py:227</text>
+
+<!-- plain english -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">CSV is handwritten lines in a notebook. Parquet is a spreadsheet sorted into columns — so reading one column is cheap.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 05</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

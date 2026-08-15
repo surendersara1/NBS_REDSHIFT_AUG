@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 24</text>
+<text x="90" y="168" class="title">Add a Source Without Touching the Engine</text>
+<text x="90" y="212" class="sub">Seven artifacts, in order. None of them is engine code. Walked end-to-end on Oracle Retail RMS ITEM_MASTER.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE SEVEN ARTIFACTS ══ -->
+<text x="90" y="300" class="cap">1 · SEVEN ARTIFACTS — AMBER = ONLY IF NEEDED</text>
+
+<!-- 1 CONNECTOR (conditional) -->
+<rect x="90" y="314" width="229" height="126" rx="14" fill="#221B10" stroke="#C0902E" stroke-width="2.5" stroke-dasharray="9 6"/>
+<rect x="106" y="328" width="30" height="26" rx="7" fill="#C0902E"/>
+<text x="121" y="348" class="bxt-s" text-anchor="middle" style="font-size:18px;fill:#1A1408">1</text>
+<text x="106" y="376" class="bxt-s" style="font-size:21px;fill:#FFB84D">CONNECTOR</text>
+<text x="106" y="402" class="bxs-s" style="font-size:17px">Oracle: +1 branch</text>
+<text x="106" y="428" class="code-s" style="fill:#D8B85E">sources/rds_jdbc.py</text>
+
+<!-- 2 DOWNLOAD SPEC -->
+<rect x="342" y="314" width="229" height="126" rx="14" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<rect x="358" y="328" width="30" height="26" rx="7" fill="#E3000E"/>
+<text x="373" y="348" class="bxt-s" text-anchor="middle" style="font-size:18px">2</text>
+<text x="358" y="376" class="bxt-s" style="font-size:21px;fill:#FF6A72">DOWNLOAD SPEC</text>
+<text x="358" y="402" class="bxs-s" style="font-size:17px">schema · watermark</text>
+<text x="358" y="428" class="code-s" style="fill:#FFA0A6">download/*.yaml</text>
+
+<!-- 3 BRONZE SPEC -->
+<rect x="594" y="314" width="229" height="126" rx="14" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<rect x="610" y="328" width="30" height="26" rx="7" fill="#E3000E"/>
+<text x="625" y="348" class="bxt-s" text-anchor="middle" style="font-size:18px">3</text>
+<text x="610" y="376" class="bxt-s" style="font-size:21px;fill:#FF6A72">BRONZE SPEC</text>
+<text x="610" y="402" class="bxs-s" style="font-size:17px">merge_key = the PK</text>
+<text x="610" y="428" class="code-s" style="fill:#FFA0A6">bronze/*.yaml</text>
+
+<!-- 4 CATALOG ROW -->
+<rect x="846" y="314" width="229" height="126" rx="14" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<rect x="862" y="328" width="30" height="26" rx="7" fill="#E3000E"/>
+<text x="877" y="348" class="bxt-s" text-anchor="middle" style="font-size:18px">4</text>
+<text x="862" y="376" class="bxt-s" style="font-size:21px;fill:#FF6A72">CATALOG ROW</text>
+<text x="862" y="402" class="bxs-s" style="font-size:17px">driver_by_mode</text>
+<text x="862" y="428" class="code-s" style="fill:#FFA0A6">ingestion_tables.yaml</text>
+
+<!-- 5 dbt STAGING -->
+<rect x="1098" y="314" width="229" height="126" rx="14" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<rect x="1114" y="328" width="30" height="26" rx="7" fill="#E3000E"/>
+<text x="1129" y="348" class="bxt-s" text-anchor="middle" style="font-size:18px">5</text>
+<text x="1114" y="376" class="bxt-s" style="font-size:21px;fill:#FF6A72">dbt STAGING</text>
+<text x="1114" y="402" class="bxs-s" style="font-size:17px">one view + tests</text>
+<text x="1114" y="428" class="code-s" style="fill:#FFA0A6">stg_&lt;table&gt;.sql</text>
+
+<!-- 6 GOLD MODEL (conditional) -->
+<rect x="1350" y="314" width="229" height="126" rx="14" fill="#221B10" stroke="#C0902E" stroke-width="2.5" stroke-dasharray="9 6"/>
+<rect x="1366" y="328" width="30" height="26" rx="7" fill="#C0902E"/>
+<text x="1381" y="348" class="bxt-s" text-anchor="middle" style="font-size:18px;fill:#1A1408">6</text>
+<text x="1366" y="376" class="bxt-s" style="font-size:21px;fill:#FFB84D">GOLD MODEL</text>
+<text x="1366" y="402" class="bxs-s" style="font-size:17px">only if reported</text>
+<text x="1366" y="428" class="code-s" style="fill:#D8B85E">marts/gold/*.sql</text>
+
+<!-- 7 DEPLOY -->
+<rect x="1601" y="314" width="229" height="126" rx="14" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<rect x="1617" y="328" width="30" height="26" rx="7" fill="#E3000E"/>
+<text x="1632" y="348" class="bxt-s" text-anchor="middle" style="font-size:18px">7</text>
+<text x="1617" y="376" class="bxt-s" style="font-size:21px;fill:#FF6A72">DEPLOY</text>
+<text x="1617" y="402" class="bxs-s" style="font-size:17px">sync + re-seed</text>
+<text x="1617" y="428" class="code-s" style="fill:#FFA0A6">seed_control_plane.py</text>
+
+<line x1="322" y1="377" x2="339" y2="377" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+<line x1="574" y1="377" x2="591" y2="377" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+<line x1="826" y1="377" x2="843" y2="377" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+<line x1="1078" y1="377" x2="1095" y2="377" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+<line x1="1330" y1="377" x2="1347" y2="377" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+<line x1="1582" y1="377" x2="1598" y2="377" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+
+<!-- ══ ZONE 2 · THE WORKED EXAMPLE ══ -->
+<text x="90" y="474" class="cap">2 · WORKED ONCE — ORACLE RETAIL RMS · ITEM_MASTER</text>
+
+<!-- panel A -->
+<rect x="90" y="488" width="560" height="312" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="524" class="bxt-s" style="font-size:24px">STEP 2 · THE DOWNLOAD SPEC</text>
+<text x="118" y="548" class="code-s" style="fill:#5E7080">specs/download/sap_mara.yaml — the template</text>
+<rect x="106" y="568" width="528" height="222" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="118" y="592" class="code" xml:space="preserve">table: rms.item_master</text>
+<text x="118" y="609" class="code" xml:space="preserve">source_type: rds_jdbc</text>
+<text x="118" y="630" class="code" xml:space="preserve">source_config:</text>
+<text x="118" y="651" class="code" xml:space="preserve">  jdbc_schema: RMS</text>
+<text x="118" y="672" class="code" xml:space="preserve">  jdbc_table: ITEM_MASTER</text>
+<text x="118" y="693" class="code" xml:space="preserve" style="fill:#FFB84D">  watermark_column: LAST_UPDATE_DATETIME</text>
+<text x="118" y="714" class="code" xml:space="preserve">  jdbc_hash_field: ITEM</text>
+<text x="118" y="735" class="code" xml:space="preserve">  jdbc_hash_partitions: "8"</text>
+<text x="118" y="756" class="code" xml:space="preserve">landing_prefix: "rms/rms.item_master"</text>
+<text x="118" y="777" class="code" xml:space="preserve">schema: [ITEM, ITEM_DESC, DEPT, CLASS, ...]</text>
+
+<!-- panel B -->
+<rect x="680" y="488" width="560" height="312" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="708" y="524" class="bxt-s" style="font-size:24px">STEP 3 + 4 · BRONZE, CATALOG</text>
+<text x="708" y="548" class="code-s" style="fill:#5E7080">specs/bronze/ · config/ingestion_tables.yaml</text>
+<rect x="696" y="568" width="528" height="222" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="708" y="592" class="code" xml:space="preserve">table: rms.item_master</text>
+<text x="708" y="609" class="code" xml:space="preserve">source_type: s3_landing</text>
+<text x="708" y="630" class="code" xml:space="preserve" style="fill:#FFB84D">merge_key: [ITEM]      # the VERIFIED PK</text>
+<text x="708" y="651" class="code" xml:space="preserve">schema: (mirrors the download spec)</text>
+<text x="708" y="672" class="code" xml:space="preserve" style="fill:#5E7080">- - - - - - - - - - - - - - - - - - - - -</text>
+<text x="708" y="693" class="code" xml:space="preserve">- name: rms.item_master</text>
+<text x="708" y="714" class="code" xml:space="preserve">  source: rms</text>
+<text x="708" y="735" class="code" xml:space="preserve">  bronze_spec: bronze/rms_item_master.yaml</text>
+<text x="708" y="756" class="code" xml:space="preserve">  download_spec: download/rms_item_mas...</text>
+<text x="708" y="777" class="code" xml:space="preserve" style="fill:#FFB84D">  driver_by_mode: { full: rds_jdbc, ... }</text>
+
+<!-- panel C -->
+<rect x="1270" y="488" width="560" height="312" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="524" class="bxt-s" style="font-size:24px">STEP 5 · dbt STAGING + TEST</text>
+<text x="1298" y="548" class="code-s" style="fill:#5E7080">src/dbt/models/staging/ + _staging.yml</text>
+<rect x="1286" y="568" width="528" height="222" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="1298" y="592" class="code" xml:space="preserve">-- stg_rms_item_master.sql</text>
+<text x="1298" y="609" class="code" xml:space="preserve">{{ config(materialized='view') }}</text>
+<text x="1298" y="630" class="code" xml:space="preserve">SELECT item      AS item_id,</text>
+<text x="1298" y="651" class="code" xml:space="preserve">       item_desc AS item_name,</text>
+<text x="1298" y="672" class="code" xml:space="preserve">       dept, class, subclass</text>
+<text x="1298" y="693" class="code" xml:space="preserve">FROM {{ source('silver','rms_item_master') }}</text>
+<text x="1298" y="714" class="code" xml:space="preserve" style="fill:#5E7080">- - - - - - - - - - - - - - - - - - - - -</text>
+<text x="1298" y="735" class="code" xml:space="preserve">- name: item_id           # _staging.yml</text>
+<text x="1298" y="756" class="code" xml:space="preserve" style="fill:#FFB84D">  tests: [not_null, unique]</text>
+<text x="1298" y="777" class="code" xml:space="preserve" style="fill:#5E7080"># Silver, Gold and Power BI never noticed.</text>
+
+<!-- ══ ZONE 3 · WHAT NEVER MOVES ══ -->
+<text x="90" y="826" class="cap">3 · WHAT YOU NEVER TOUCH</text>
+
+<rect x="90" y="840" width="1080" height="50" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="112" y="872" class="bxs-s" style="font-size:18px;fill:#8CE8B8">glue_engine/jobs · writers · dispatcher · barriers · control plane · Silver + Gold contracts</text>
+
+<rect x="1210" y="840" width="620" height="50" rx="12" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="1232" y="872" class="bxt-s" style="font-size:20px;fill:#FFB84D">THIS IS YOUR CAPSTONE</text>
+<text x="1478" y="872" class="bxs-s" style="font-size:18px">— one source, one PR.</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">You are not building a pipeline. You are filling in seven forms — and the machine that reads them was finished months ago.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 24</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

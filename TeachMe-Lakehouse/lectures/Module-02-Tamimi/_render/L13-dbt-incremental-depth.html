@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 13</text>
+<text x="90" y="168" class="title">Incremental on Redshift, Properly</text>
+<text x="90" y="212" class="sub">merge + unique_key, a 45-day window that silently drops older restatements, and the dist/sort you will get wrong first.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · MERGE ══ -->
+<text x="90" y="300" class="cap">1 · MERGE ON THE GRAIN</text>
+<rect x="90" y="322" width="820" height="298" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="366" class="bxt-s">unique_key IS THE GRAIN</text>
+<line x1="118" y1="382" x2="882" y2="382" stroke="#2C3841" stroke-width="2"/>
+<rect x="118" y="394" width="764" height="112" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="136" y="418" class="code" xml:space="preserve">materialized='incremental',</text>
+<text x="136" y="442" class="code" xml:space="preserve">incremental_strategy='merge',</text>
+<text x="136" y="466" class="code" xml:space="preserve" style="fill:#FFB84D">unique_key=['site','date','aagm','scenario'],</text>
+<text x="136" y="490" class="code" xml:space="preserve">on_schema_change='fail', dist='date', sort=['date','site']</text>
+<text x="118" y="534" class="bxs-s">unique_key MUST equal the model's real grain. Too wide and MERGE inserts</text>
+<text x="118" y="558" class="bxs-s">duplicates; too narrow and Redshift raises a cardinality error.</text>
+<text x="118" y="584" class="bxs-s" style="fill:#FFB84D">All-Dept rows carry aagm='__ALL__' — a NULL key never matches itself.</text>
+<text x="118" y="608" class="code-s" style="fill:#5E7080">src/dbt/models/marts/gold/unified_sales.sql:76-83</text>
+
+<!-- ══ ZONE 2 · THE WINDOW ══ -->
+<text x="950" y="300" class="cap">2 · THE WINDOW — AND WHAT IT DROPS</text>
+<rect x="950" y="322" width="880" height="298" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="978" y="366" class="bxt-s" style="fill:#FF6A72">THE 45-DAY REPROCESS WINDOW</text>
+<line x1="978" y1="382" x2="1802" y2="382" stroke="#5A2028" stroke-width="2"/>
+<rect x="978" y="394" width="824" height="64" rx="8" fill="#0B1013" stroke="#3A2028" stroke-width="2"/>
+<text x="996" y="418" class="code" xml:space="preserve">WHERE date &gt;= COALESCE(</text>
+<text x="996" y="442" class="code" xml:space="preserve">  (SELECT MAX(date) - INTERVAL '45 days' FROM {{ this }}), '1900-01-01')</text>
+
+<text x="1120" y="480" class="bxs-s" text-anchor="middle" style="fill:#FF6A72">a June restatement lands here</text>
+<line x1="1120" y1="488" x2="1120" y2="508" stroke="#FF3B47" stroke-width="3"/>
+<line x1="1000" y1="522" x2="1300" y2="522" stroke="#4A5A66" stroke-width="4" stroke-dasharray="10 8"/>
+<line x1="1300" y1="522" x2="1786" y2="522" stroke="#3FD98A" stroke-width="6"/>
+<circle cx="1120" cy="522" r="9" fill="#FF3B47"/>
+<line x1="1300" y1="506" x2="1300" y2="538" stroke="#3FD98A" stroke-width="3"/>
+<text x="1110" y="562" class="bxs-s" text-anchor="middle" style="fill:#8296A3">never re-read</text>
+<text x="1320" y="562" class="bxs-s" style="fill:#8CE8B8">MAX(date) − 45d … re-merged every run</text>
+<text x="978" y="584" class="bxs-s">Only --full-refresh recovers it: monthly, and after any SAP month-end re-open.</text>
+<text x="978" y="608" class="code-s" style="fill:#FFA0A6">src/dbt/macros/scenario_helpers.sql:61-68 · var gold_reprocess_days</text>
+
+<!-- ══ ZONE 3 · THE OTHER THREE SETTINGS ══ -->
+<text x="90" y="650" class="cap">3 · THREE SETTINGS THAT BITE LATER</text>
+
+<rect x="90" y="672" width="560" height="218" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="716" class="bxt-s">on_schema_change='fail'</text>
+<line x1="118" y1="732" x2="622" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="760" class="bxs-s">A new Silver column does not</text>
+<text x="118" y="784" class="bxs-s">silently widen Gold — the build</text>
+<text x="118" y="808" class="bxs-s">FAILS and a human decides.</text>
+<text x="118" y="832" class="bxs-s">M-28: every UNION leg pre-casts cc</text>
+<text x="118" y="856" class="bxs-s">to NUMERIC(38,4) so it cannot drift.</text>
+<text x="118" y="876" class="code-s" style="fill:#5E7080">gold/unified_customer_count.sql:36-42</text>
+
+<rect x="680" y="672" width="560" height="218" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="708" y="716" class="bxt-s">LATE-BINDING VIEWS</text>
+<line x1="708" y1="732" x2="1212" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="708" y="760" class="bxs-s">Staging selects from an EXTERNAL</text>
+<text x="708" y="784" class="bxs-s">schema, silver_external. A normal</text>
+<text x="708" y="808" class="bxs-s">Redshift view refuses: "External</text>
+<text x="708" y="832" class="bxs-s">tables are not supported in views".</text>
+<text x="708" y="856" class="bxs-s" style="fill:#FFB84D">+bind: false → NO SCHEMA BINDING.</text>
+<text x="708" y="876" class="code-s" style="fill:#5E7080">src/dbt/dbt_project.yml:63-72</text>
+
+<rect x="1270" y="672" width="560" height="218" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="716" class="bxt-s">DIST / SORT</text>
+<line x1="1298" y1="732" x2="1802" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="760" class="bxs-s">dist='date' co-locates a day;</text>
+<text x="1298" y="784" class="bxs-s">sort=['date','site'] makes range</text>
+<text x="1298" y="808" class="bxs-s">scans cheap — right for BI by date.</text>
+<text x="1298" y="832" class="bxs-s">Wrong the moment you join on site:</text>
+<text x="1298" y="856" class="bxs-s">unified_sales_by_am reshuffles it.</text>
+<text x="1298" y="876" class="code-s" style="fill:#5E7080">gold/unified_sales_by_am.sql:47-49</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">"Incremental" means "only redo the recent part". That is a promise about time — so anything the source corrects outside the window stays wrong until you rebuild.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 13</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

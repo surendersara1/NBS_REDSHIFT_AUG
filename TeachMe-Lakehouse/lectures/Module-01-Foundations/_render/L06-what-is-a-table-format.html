@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 06</text>
+<text x="90" y="168" class="title-s">A Folder of Files Is Not a Table</text>
+<text x="90" y="212" class="sub">Parquet on S3 takes an afternoon. Making it behave like a table is the whole problem.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · what you have ══ -->
+<text x="90" y="300" class="cap">1 · WHAT YOU HAVE</text>
+<rect x="90" y="322" width="430" height="278" rx="16" fill="#141A20" stroke="#2C3841" stroke-width="2.5"/>
+<text x="118" y="354" class="edge-s" style="fill:#7A8C99">A PREFIX ON S3</text>
+<text x="118" y="386" class="code">sap/sap.s611/cycle=2026-08-10/</text>
+<text x="134" y="420" class="code" style="fill:#8FA2AF">part-00000-….parquet</text>
+<text x="134" y="446" class="code" style="fill:#8FA2AF">part-00001-….parquet</text>
+<text x="134" y="472" class="code" style="fill:#8FA2AF">part-00002-….parquet</text>
+<text x="134" y="498" class="code" style="fill:#5E7080">…  9 more files</text>
+<text x="134" y="524" class="code" style="fill:#3FD98A">_SUCCESS</text>
+<text x="118" y="556" class="bxs" style="fill:#FFB84D">Nothing here says “table”.</text>
+<text x="118" y="582" class="code-s" style="fill:#5E7080">glue_engine/writers/raw_landing.py</text>
+
+<!-- ══ ZONE 2 · what breaks ══ -->
+<text x="560" y="300" class="cap">2 · WHAT BREAKS</text>
+
+<rect x="560" y="322" width="620" height="134" rx="16" fill="#22171A" stroke="#7A3238" stroke-width="2.5"/>
+<text x="588" y="364" class="bxt-s" style="fill:#FF6B72">NO ATOMICITY</text>
+<text x="1152" y="364" class="bxt-s" text-anchor="end" style="fill:#7A3238">✗</text>
+<text x="588" y="398" class="bxs-s">A reader can arrive halfway through a write</text>
+<text x="588" y="430" class="bxs-s" style="fill:#8FA2AF">Half the files is not half the truth</text>
+
+<rect x="1210" y="322" width="620" height="134" rx="16" fill="#22171A" stroke="#7A3238" stroke-width="2.5"/>
+<text x="1238" y="364" class="bxt-s" style="fill:#FF6B72">NO SCHEMA</text>
+<text x="1802" y="364" class="bxt-s" text-anchor="end" style="fill:#7A3238">✗</text>
+<text x="1238" y="398" class="bxs-s">Types live inside each file, not the set</text>
+<text x="1238" y="430" class="bxs-s" style="fill:#8FA2AF">File 9 renames a column — who wins?</text>
+
+<rect x="560" y="466" width="620" height="134" rx="16" fill="#22171A" stroke="#7A3238" stroke-width="2.5"/>
+<text x="588" y="508" class="bxt-s" style="fill:#FF6B72">NO UPDATES</text>
+<text x="1152" y="508" class="bxt-s" text-anchor="end" style="fill:#7A3238">✗</text>
+<text x="588" y="542" class="bxs-s">S3 objects are immutable — there is no UPDATE</text>
+<text x="588" y="574" class="bxs-s" style="fill:#8FA2AF">Change one row = rewrite the whole file</text>
+
+<rect x="1210" y="466" width="620" height="134" rx="16" fill="#22171A" stroke="#7A3238" stroke-width="2.5"/>
+<text x="1238" y="508" class="bxt-s" style="fill:#FF6B72">NO CONCURRENCY</text>
+<text x="1802" y="508" class="bxt-s" text-anchor="end" style="fill:#7A3238">✗</text>
+<text x="1238" y="542" class="bxs-s">Two writers, no lock — last one wins</text>
+<text x="1238" y="574" class="bxs-s" style="fill:#8FA2AF">Readers watch the file list move</text>
+
+<!-- ══ ZONE 3 · the missing layer ══ -->
+<text x="90" y="630" class="cap">3 · THE MISSING LAYER — METADATA ABOUT THE FILES</text>
+
+<rect x="90" y="652" width="380" height="234" rx="16" fill="#1B2329" stroke="#4A5A66" stroke-width="3"/>
+<text x="280" y="696" class="bxt-s" text-anchor="middle">DATA FILES</text>
+<text x="280" y="734" class="bxs-s" text-anchor="middle">The same Parquet as before</text>
+<text x="280" y="766" class="bxs-s" text-anchor="middle">Immutable — only added</text>
+<text x="280" y="798" class="bxs-s" text-anchor="middle">Never edited in place</text>
+<text x="280" y="846" class="code-s" text-anchor="middle" style="fill:#5E7080">cycle=&lt;id&gt;/part-*.parquet</text>
+
+<line x1="476" y1="769" x2="510" y2="769" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+
+<rect x="516" y="652" width="380" height="234" rx="16" fill="#2A1418" stroke="#E3000E" stroke-width="3"/>
+<text x="706" y="696" class="bxt-s" text-anchor="middle" style="fill:#FF3B47">MANIFESTS</text>
+<text x="706" y="734" class="bxs-s" text-anchor="middle">A list of which files</text>
+<text x="706" y="766" class="bxs-s" text-anchor="middle">belong to the table</text>
+<text x="706" y="798" class="bxs-s" text-anchor="middle">+ row counts, min/max</text>
+<text x="706" y="836" class="bxs-s" text-anchor="middle" style="fill:#FFB84D">so files can be skipped</text>
+<text x="706" y="866" class="bxs-s" text-anchor="middle" style="fill:#7A8C99">without being opened</text>
+
+<line x1="902" y1="769" x2="936" y2="769" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+
+<rect x="942" y="652" width="380" height="234" rx="16" fill="#2A1418" stroke="#E3000E" stroke-width="3"/>
+<text x="1132" y="696" class="bxt-s" text-anchor="middle" style="fill:#FF3B47">SNAPSHOT</text>
+<text x="1132" y="734" class="bxs-s" text-anchor="middle">One pointer = the table</text>
+<text x="1132" y="766" class="bxs-s" text-anchor="middle">Swap it = atomic commit</text>
+<text x="1132" y="798" class="bxs-s" text-anchor="middle">Old pointer still reads</text>
+<text x="1132" y="836" class="bxs-s" text-anchor="middle" style="fill:#FFB84D">the old set of files</text>
+<text x="1132" y="866" class="bxs-s" text-anchor="middle" style="fill:#7A8C99">nobody sees half a write</text>
+
+<rect x="1390" y="652" width="440" height="234" rx="16" fill="#141A20" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1418" y="696" class="bxt-s">WHAT THAT FIXES</text>
+<text x="1418" y="736" class="bxs-s"><tspan fill="#3FD98A">✓</tspan> Atomic: all of a write, or none</text>
+<text x="1418" y="768" class="bxs-s"><tspan fill="#3FD98A">✓</tspan> Schema travels with the table</text>
+<text x="1418" y="800" class="bxs-s"><tspan fill="#3FD98A">✓</tspan> Row-level updates and deletes</text>
+<text x="1418" y="832" class="bxs-s"><tspan fill="#3FD98A">✓</tspan> Many readers, one stable view</text>
+<text x="1418" y="868" class="code-s" style="fill:#5E7080">glue_engine/writers/s3_tables.py</text>
+
+<!-- plain english -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A folder of files is a pile of receipts. A table format is the index card saying which receipts count — and as of when.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 06</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

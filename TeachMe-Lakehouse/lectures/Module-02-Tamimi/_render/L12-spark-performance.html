@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 12</text>
+<text x="90" y="168" class="title">Partitions, Shuffles, Skew, Cache</text>
+<text x="90" y="212" class="sub">Four levers that decide whether a Glue job finishes in twenty minutes or dies at the 120-minute timeout.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · CACHE ══ -->
+<text x="90" y="300" class="cap">1 · ONE PULL, THREE ACTIONS</text>
+<rect x="90" y="322" width="820" height="258" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="362" class="bxt-s">EVERY ACTION RE-EXECUTES THE READ</text>
+<line x1="118" y1="376" x2="882" y2="376" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="402" width="170" height="96" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="203" y="442" class="bxt-s" text-anchor="middle" style="font-size:22px">SAP HANA</text>
+<text x="203" y="470" class="bxs-s" text-anchor="middle" style="fill:#8CE8B8">ngdbc JDBC</text>
+
+<rect x="330" y="402" width="120" height="96" rx="12" fill="#1B2A33" stroke="#4A5A66" stroke-width="3"/>
+<text x="390" y="444" class="bxt" text-anchor="middle">df</text>
+<text x="390" y="476" class="code-s" text-anchor="middle" style="fill:#6FD8A8">.cache()</text>
+
+<line x1="292" y1="450" x2="326" y2="450" stroke="#C9D6DE" stroke-width="3.5"/>
+
+<rect x="512" y="388" width="330" height="40" rx="8" fill="#12181D" stroke="#5A2028" stroke-width="2"/>
+<text x="532" y="414" class="code" xml:space="preserve" style="fill:#FFA0A6">df.count()</text>
+<rect x="512" y="430" width="330" height="40" rx="8" fill="#12181D" stroke="#5A2028" stroke-width="2"/>
+<text x="532" y="456" class="code" xml:space="preserve" style="fill:#FFA0A6">df.agg(MAX(watermark))</text>
+<rect x="512" y="472" width="330" height="40" rx="8" fill="#12181D" stroke="#5A2028" stroke-width="2"/>
+<text x="532" y="498" class="code" xml:space="preserve" style="fill:#FFA0A6">writer → Bronze</text>
+
+<line x1="456" y1="446" x2="506" y2="410" stroke="#FF3B47" stroke-width="3" marker-end="url(#ar)"/>
+<line x1="456" y1="450" x2="506" y2="450" stroke="#FF3B47" stroke-width="3" marker-end="url(#ar)"/>
+<line x1="456" y1="454" x2="506" y2="490" stroke="#FF3B47" stroke-width="3" marker-end="url(#ar)"/>
+
+<text x="118" y="540" class="bxs" style="fill:#FF6A72">Without .cache() each one re-issues the SELECT — 3× the SAP load.</text>
+<text x="118" y="566" class="code-s" style="fill:#5E7080">src/glue/glue_engine/sources/sap_hana.py:1151-1160</text>
+
+<!-- ══ ZONE 2 · PARTITIONS ══ -->
+<text x="950" y="300" class="cap">2 · SPLIT THE READ, OR IT TIMES OUT</text>
+<rect x="950" y="322" width="880" height="258" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="978" y="362" class="bxt-s">ONE CONNECTION IS NOT A PLAN</text>
+<line x1="978" y1="376" x2="1802" y2="376" stroke="#2C3841" stroke-width="2"/>
+<rect x="978" y="386" width="824" height="84" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="996" y="410" class="code" xml:space="preserve">jdbc_hash_partitions: "8"      specs/download/sap_zhocidc.yaml</text>
+<text x="996" y="434" class="code" xml:space="preserve" style="fill:#7FB6EF">preds = ['"BUDAT" BETWEEN …', …]   # one JDBC connection each</text>
+<text x="996" y="458" class="code" xml:space="preserve">self._read(spark, query, run_id, tag, predicates=preds)</text>
+<text x="978" y="494" class="bxs-s">R45 · the daily zhocidc delta ran on ONE connection: four consecutive Glue</text>
+<text x="978" y="518" class="bxs-s">runs blew the 120-minute timeout and the cycle never reached its barrier.</text>
+<text x="978" y="542" class="bxs-s" style="fill:#FFB84D">More is not better — MBEW at 16 saturated HANA; tuned to 4 (≈9M rows each).</text>
+<text x="978" y="568" class="code-s" style="fill:#5E7080">sap_hana.py:800-833 · specs/download/sap_mbew.yaml:33-36</text>
+
+<!-- ══ ZONE 3 · SHUFFLE + SKEW ══ -->
+<text x="90" y="612" class="cap">3 · WHAT applyInPandas ACTUALLY COSTS</text>
+
+<rect x="90" y="634" width="820" height="256" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="678" class="bxt-s">THE SHUFFLE YOU ASKED FOR</text>
+<line x1="118" y1="694" x2="882" y2="694" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="726" class="bxs-s">groupBy(werks, zdate, zptno, zreceipt) moves EVERY ZHOCIDC row across</text>
+<text x="118" y="754" class="bxs-s">the network, so one receipt's rows land together on one partition.</text>
+<text x="118" y="782" class="bxs-s">applyInPandas then materialises each group as a pandas DataFrame in a</text>
+<text x="118" y="810" class="bxs-s">Python worker — the whole group in memory, serialised both ways.</text>
+<text x="118" y="838" class="bxs-s">That is the price of ordered logic. Pay it once, on the smallest key.</text>
+<text x="118" y="878" class="code-s" style="fill:#5E7080">src/glue/glue_engine/abap/ops.py:86</text>
+
+<rect x="950" y="634" width="880" height="256" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="978" y="678" class="bxt-s" style="fill:#FF6A72">SKEW, AND THE SECOND CACHE</text>
+<line x1="978" y1="694" x2="1802" y2="694" stroke="#5A2028" stroke-width="2"/>
+<text x="978" y="726" class="bxs-s">A stage ends when its SLOWEST partition ends. One store-day with 10× the</text>
+<text x="978" y="754" class="bxs-s">receipts holds the whole stage — that is skew, and no config setting fixes it.</text>
+<text x="978" y="782" class="bxs-s">folded.cache() exists because folded is consumed TWICE: once filtered to</text>
+<text x="978" y="810" class="bxs-s">_kind='H', once to _kind='I'. Without it the entire fold runs twice.</text>
+<text x="978" y="844" class="bxs-s" style="fill:#FFB84D">Rule of thumb: persist any DataFrame you read more than once.</text>
+<text x="978" y="878" class="code-s" style="fill:#FFA0A6">src/glue/glue_engine/abap/ops.py:87-91</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A Spark job costs whatever its slowest slice costs. Read once, cut the work into even pieces, and never make the database do the same job three times.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 12</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

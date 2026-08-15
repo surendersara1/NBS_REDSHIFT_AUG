@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 14</text>
+<text x="90" y="168" class="title">Two Bugs That Doubled the Numbers</text>
+<text x="90" y="212" class="sub">Both were silent. Both produced a plausible number that was exactly twice the truth. Both are now pinned by a test.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · FAN-OUT ══ -->
+<text x="90" y="300" class="cap">1 · THE LANGUAGE FAN-OUT</text>
+<rect x="90" y="322" width="870" height="330" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="366" class="bxt-s" style="fill:#FF6A72">JOIN A TEXT TABLE ON ITS KEY — GET ITS LANGUAGES</text>
+<line x1="118" y1="382" x2="932" y2="382" stroke="#5A2028" stroke-width="2"/>
+
+<rect x="118" y="404" width="230" height="112" rx="12" fill="#1B2A33" stroke="#4A5A66" stroke-width="3"/>
+<text x="233" y="438" class="bxt-s" text-anchor="middle" style="font-size:22px">ZDSALES</text>
+<text x="233" y="468" class="code" text-anchor="middle">KTGRM = '12'</text>
+<text x="233" y="494" class="code" text-anchor="middle">sale = 1,000</text>
+
+<rect x="396" y="396" width="290" height="44" rx="8" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="416" y="424" class="code" xml:space="preserve" style="fill:#6FD8A8">SPRAS='E'   GROCERY</text>
+<rect x="396" y="448" width="290" height="44" rx="8" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="416" y="476" class="code" xml:space="preserve" style="fill:#6FD8A8">SPRAS='A'   (Arabic)</text>
+<rect x="396" y="500" width="290" height="44" rx="8" fill="#12181D" stroke="#3A4854" stroke-width="2.5" stroke-dasharray="8 6"/>
+<text x="416" y="528" class="code" xml:space="preserve" style="fill:#7A8C99">SPRAS='D'   (German)</text>
+
+<line x1="352" y1="452" x2="390" y2="424" stroke="#FF3B47" stroke-width="3" marker-end="url(#ar)"/>
+<line x1="352" y1="460" x2="390" y2="474" stroke="#FF3B47" stroke-width="3" marker-end="url(#ar)"/>
+<line x1="690" y1="466" x2="718" y2="466" stroke="#FF3B47" stroke-width="3" marker-end="url(#ar)"/>
+
+<rect x="724" y="404" width="204" height="112" rx="12" fill="#3A1219" stroke="#FF3B47" stroke-width="3"/>
+<text x="826" y="440" class="bxt-s" text-anchor="middle" style="fill:#FF6A72;font-size:22px">2 ROWS OUT</text>
+<text x="826" y="470" class="code" text-anchor="middle" style="fill:#FFA0A6">sale = 2,000</text>
+<text x="826" y="498" class="bxs-s" text-anchor="middle" style="fill:#FFB84D">every measure ×2</text>
+
+<text x="118" y="588" class="code" xml:space="preserve" style="fill:#6FD8A8">right_where: SPRAS = 'E'    # REQUIRED — restores 1:1</text>
+<text x="118" y="616" class="bxs-s">TVKMT is language-keyed (MANDT, SPRAS, KTGRM): 43 EN · 43 AR · 3 DE rows.</text>
+<text x="118" y="639" class="code-s" style="fill:#FFA0A6">src/glue/specs/transform/zsdcc.yaml:22-30, 59</text>
+
+<!-- ══ ZONE 2 · ALL DEPT ══ -->
+<text x="990" y="300" class="cap">2 · THE SYNTHETIC 'ALL DEPT' ROW</text>
+<rect x="990" y="322" width="840" height="330" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="1018" y="366" class="bxt-s" style="fill:#FF6A72">ONE TABLE, TWO GRAINS, ON PURPOSE</text>
+<line x1="1018" y1="382" x2="1802" y2="382" stroke="#5A2028" stroke-width="2"/>
+
+<rect x="1018" y="396" width="480" height="40" rx="8" fill="#12181D" stroke="#3A4854" stroke-width="2"/>
+<text x="1038" y="423" class="bxs-s">GROCERY</text>
+<text x="1478" y="423" class="code" text-anchor="end">400</text>
+<rect x="1018" y="440" width="480" height="40" rx="8" fill="#12181D" stroke="#3A4854" stroke-width="2"/>
+<text x="1038" y="467" class="bxs-s">FRESH</text>
+<text x="1478" y="467" class="code" text-anchor="end">350</text>
+<rect x="1018" y="484" width="480" height="40" rx="8" fill="#12181D" stroke="#3A4854" stroke-width="2"/>
+<text x="1038" y="511" class="bxs-s">BAKERY</text>
+<text x="1478" y="511" class="code" text-anchor="end">250</text>
+<rect x="1018" y="528" width="480" height="40" rx="8" fill="#3A1219" stroke="#FF3B47" stroke-width="2.5"/>
+<text x="1038" y="555" class="bxs-s" style="fill:#FFB84D">All Dept  (aagm='__ALL__')</text>
+<text x="1478" y="555" class="code" text-anchor="end" style="fill:#FFB84D">1,000</text>
+
+<line x1="1506" y1="482" x2="1526" y2="482" stroke="#FF3B47" stroke-width="3" marker-end="url(#ar)"/>
+
+<rect x="1530" y="396" width="272" height="172" rx="12" fill="#3A1219" stroke="#FF3B47" stroke-width="3"/>
+<text x="1666" y="438" class="bxt-s" text-anchor="middle" style="fill:#FF6A72;font-size:22px">SUM(sale)</text>
+<text x="1666" y="468" class="bxs-s" text-anchor="middle">across ALL rows</text>
+<text x="1666" y="512" class="bxt" text-anchor="middle" style="fill:#FFB84D">= 2,000</text>
+<text x="1666" y="546" class="bxs-s" text-anchor="middle" style="fill:#FFB84D">every KPI ×2</text>
+
+<text x="1018" y="588" class="code" xml:space="preserve" style="fill:#6FD8A8">WHERE dept != 'All Dept'    -- CRIT-04, in every roll-up</text>
+<text x="1018" y="616" class="bxs-s">Both grains are wanted: Power BI filters [Dept] = "All Dept" directly.</text>
+<text x="1018" y="639" class="code-s" style="fill:#FFA0A6">gold/unified_sales.sql:159-188 · unified_sales_by_am.sql:62-66</text>
+
+<!-- ══ ZONE 3 · GUARDS ══ -->
+<text x="90" y="690" class="cap">3 · WHAT STOPS THEM COMING BACK</text>
+
+<rect x="90" y="712" width="560" height="178" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="752" class="bxt-s">GRAIN DISCIPLINE</text>
+<line x1="118" y1="766" x2="622" y2="766" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="794" class="bxs-s">Write the grain in the header, then</text>
+<text x="118" y="818" class="bxs-s">make unique_key equal it. A table</text>
+<text x="118" y="842" class="bxs-s">with two grains must say so, loudly.</text>
+<text x="118" y="878" class="code-s" style="fill:#5E7080">gold/unified_sales.sql:6-10</text>
+
+<rect x="680" y="712" width="560" height="178" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="708" y="752" class="bxt-s">THE TEST FOR BUG 2</text>
+<line x1="708" y1="766" x2="1212" y2="766" stroke="#2A4A3A" stroke-width="2"/>
+<text x="708" y="794" class="bxs-s">The All-Dept row must equal SUM of</text>
+<text x="708" y="818" class="bxs-s">the per-dept rows for that site+date.</text>
+<text x="708" y="842" class="bxs-s">Tolerance 1.0. Zero rows = pass.</text>
+<text x="708" y="878" class="code-s" style="fill:#6FD8A8">tests/assert_all_dept_reconciles_to_per_dept.sql</text>
+
+<rect x="1270" y="712" width="560" height="178" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1298" y="752" class="bxt-s">THE TEST FOR BUG 1</text>
+<line x1="1298" y1="766" x2="1802" y2="766" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1298" y="794" class="bxs-s">A unit test pins the SPEC, not the</text>
+<text x="1298" y="818" class="bxs-s">data: the diagnostic op must use the</text>
+<text x="1298" y="842" class="bxs-s">SAME SPRAS as zsdcc's right_where.</text>
+<text x="1298" y="878" class="code-s" style="fill:#6FD8A8">tests/unit/test_phase3_abap_transform.py:797</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Two ways to count the same money twice: matching a row to a translation of itself, and adding a subtotal back into its own total.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 14</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

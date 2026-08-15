@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 05</text>
+<text x="90" y="168" class="title">Full, Windowed, Backfill</text>
+<text x="90" y="212" class="sub">Three read modes chosen by one line — plus the policies that stop a half-loaded table from calling itself done.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · MODE SELECTION ══ -->
+<text x="90" y="300" class="cap">1 · MODE SELECTION — THE WHOLE RULE IS ONE LINE</text>
+
+<rect x="90" y="322" width="1740" height="238" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="364" class="bxt-s" style="font-size:24px">PRECEDENCE</text>
+<text x="1802" y="364" class="code-s" text-anchor="end" style="fill:#5E7080">glue_engine/jobs/source_download.py:222</text>
+<line x1="118" y1="382" x2="1802" y2="382" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="396" width="1684" height="40" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="138" y="423" class="code" xml:space="preserve">read_mode = "range" if date_from else ("full" if full_snapshot else "incremental")</text>
+
+<!-- chip A · RANGE -->
+<rect x="118" y="450" width="540" height="94" rx="12" fill="#161C22" stroke="#4A5A66" stroke-width="2.5"/>
+<text x="142" y="482" class="bxt-s" style="font-size:22px">RANGE · a bounded window</text>
+<text x="142" y="512" class="bxs-s">--date_from beats --full_snapshot.</text>
+<text x="142" y="532" class="bxs-s">read_range(); the watermark never advances.</text>
+
+<!-- chip B · FULL -->
+<rect x="690" y="450" width="540" height="94" rx="12" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="714" y="482" class="bxt-s" style="font-size:22px;fill:#FF6A72">FULL · the whole table</text>
+<text x="714" y="512" class="bxs-s">--full_snapshot, or DERIVED when the</text>
+<text x="714" y="532" class="bxs-s">mapping declares only 'full' (:205-213).</text>
+
+<!-- chip C · INCREMENTAL -->
+<rect x="1262" y="450" width="540" height="94" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1286" y="482" class="bxt-s" style="font-size:22px">INCREMENTAL · the default</text>
+<text x="1286" y="512" class="bxs-s">wm_col &gt; stored watermark; returns</text>
+<text x="1286" y="532" class="bxs-s">(df, new_wm). Empty keeps the old value.</text>
+
+<!-- ══ ZONE 2 · THE POLICIES ══ -->
+<text x="90" y="596" class="cap">2 · THE TWO POLICIES</text>
+
+<!-- policy 1 -->
+<rect x="90" y="618" width="560" height="272" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="660" class="bxt-s" style="font-size:23px;fill:#FF6A72">AN INITIAL LOAD IS FULL</text>
+<line x1="118" y1="676" x2="622" y2="676" stroke="#5A2028" stroke-width="2"/>
+<text x="118" y="708" class="bxs-s">A full-only mapping never reaches the delta</text>
+<text x="118" y="736" class="bxs-s">path: full_snapshot=True, date_from cleared.</text>
+<text x="118" y="770" class="bxs-s">It protects the Bronze parity invariant —</text>
+<text x="118" y="798" class="bxs-s">Bronze's count MUST equal SAP's, in horizon.</text>
+<text x="118" y="834" class="bxs-s" style="fill:#FFB84D">2026-07-16: tvfkt · twewt · twtyt · zzz_mc2t</text>
+<text x="118" y="860" class="bxs-s" style="fill:#FFB84D">landed EMPTY from a meaningless window.</text>
+<text x="118" y="876" class="code-s" style="fill:#A0666A">source_download.py:205-213 · CLAUDE.md:114</text>
+
+<!-- policy 2 -->
+<rect x="690" y="618" width="520" height="272" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="718" y="660" class="bxt-s" style="font-size:23px">AN EMPTY PULL</text>
+<line x1="718" y1="676" x2="1182" y2="676" stroke="#2C3841" stroke-width="2"/>
+<text x="718" y="708" class="bxs-s" style="fill:#8CE8B8">incremental / backfill → SUCCEED</text>
+<text x="718" y="736" class="bxs-s">a quiet window is normal; failing</text>
+<text x="718" y="762" class="bxs-s">would break every daily cycle.</text>
+<text x="718" y="800" class="bxs-s" style="fill:#FF8A90">full snapshot → FAIL</text>
+<text x="718" y="828" class="bxs-s">an empty full extract is almost</text>
+<text x="718" y="854" class="bxs-s">always broken. Refuse to land it.</text>
+<text x="718" y="876" class="code-s" style="fill:#5E7080">bronze_pull.py:393 · spec on_empty wins</text>
+
+<!-- ══ ZONE 3 · init_state ══ -->
+<text x="1250" y="596" class="cap">3 · init_state LIFECYCLE</text>
+
+<rect x="1250" y="618" width="580" height="272" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1278" y="660" class="bxt-s" style="font-size:23px">GATE 0 REMEMBERS</text>
+<text x="1802" y="660" class="code-s" text-anchor="end" style="fill:#5E9E7C">:340-345</text>
+<line x1="1278" y1="676" x2="1802" y2="676" stroke="#2A4A3A" stroke-width="2"/>
+
+<rect x="1278" y="690" width="200" height="32" rx="8" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1378" y="712" class="code" text-anchor="middle" style="fill:#8CE8B8">(none)</text>
+<text x="1500" y="712" class="bxs-s">nothing finished yet</text>
+
+<line x1="1378" y1="724" x2="1378" y2="740" stroke="#3FD98A" stroke-width="3" marker-end="url(#ag)"/>
+
+<rect x="1278" y="742" width="200" height="32" rx="8" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1378" y="764" class="code" text-anchor="middle" style="fill:#8CE8B8">initial_loaded</text>
+<text x="1500" y="764" class="bxs-s">un-windowed initial</text>
+
+<line x1="1378" y1="776" x2="1378" y2="792" stroke="#3FD98A" stroke-width="3" marker-end="url(#ag)"/>
+
+<rect x="1278" y="794" width="200" height="32" rx="8" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1378" y="816" class="code" text-anchor="middle" style="fill:#8CE8B8">cdc</text>
+<text x="1500" y="816" class="bxs-s">first plain daily delta</text>
+
+<text x="1278" y="856" class="bxs-s" style="fill:#FFB84D">A windowed chunk NEVER flips it — its</text>
+<text x="1278" y="876" class="bxs-s" style="fill:#FFB84D">siblings are still landing. The barrier does.</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Move in before you tidy up. Load the whole house first, then take deliveries daily — and never say "moved in" while the van is still outside.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 05</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

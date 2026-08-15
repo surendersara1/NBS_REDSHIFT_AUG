@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 22</text>
+<text x="90" y="168" class="title">Connect to On-Prem Sources Safely</text>
+<text x="90" y="212" class="sub">Private subnets, endpoints instead of NAT, TLS on both switches — and enough IP addresses.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE DECISION ══ -->
+<text x="90" y="302" class="cap">1 · THE DECISION</text>
+<rect x="90" y="316" width="1740" height="94" rx="14" fill="#141A20" stroke="#2C3841" stroke-width="2.5"/>
+<rect x="90" y="316" width="7" height="94" rx="3.5" fill="#FF3B47"/>
+<text x="122" y="356" class="bxt-s">Your compute is in AWS. Oracle is not. What must be true before a byte moves?</text>
+<text x="122" y="390" class="bxs-s" style="fill:#8FA2AF">Four things: a route to the source, an encrypted session, a private path to AWS APIs, and a free IP address.</text>
+
+<!-- ══ ZONE 2 · DO THIS ══ -->
+<text x="90" y="452" class="cap">2 · DO THIS</text>
+<rect x="90" y="466" width="1108" height="424" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="118" y="506" class="doit">PRIVATE COMPUTE · PRIVATE PATH · ENOUGH ADDRESSES</text>
+<line x1="118" y1="520" x2="1170" y2="520" stroke="#2A4A3A" stroke-width="2"/>
+
+<rect x="118" y="538" width="248" height="112" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2.5"/>
+<text x="242" y="574" class="bxs" text-anchor="middle">PRIVATE SUBNETS</text>
+<text x="242" y="602" class="edge-s" text-anchor="middle" style="fill:#7FBF9C">Glue + Lambda run here</text>
+<text x="242" y="626" class="edge-s" text-anchor="middle" style="fill:#7FBF9C">endpoints, not NAT</text>
+
+<rect x="392" y="538" width="248" height="112" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2.5"/>
+<text x="516" y="574" class="bxs" text-anchor="middle">DATA SUBNETS</text>
+<text x="516" y="602" class="edge-s" text-anchor="middle" style="fill:#7FBF9C">one ENI per worker</text>
+<text x="516" y="626" class="edge-s" text-anchor="middle" style="fill:#7FBF9C">sized for peak lanes</text>
+
+<rect x="666" y="538" width="196" height="112" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2.5"/>
+<text x="764" y="574" class="bxs" text-anchor="middle">TGW / DX</text>
+<text x="764" y="602" class="edge-s" text-anchor="middle" style="fill:#7FBF9C">source CIDR only</text>
+<text x="764" y="626" class="edge-s" text-anchor="middle" style="fill:#7FBF9C">no default route</text>
+
+<rect x="888" y="538" width="280" height="112" rx="10" fill="#2A1F14" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1028" y="574" class="bxs" text-anchor="middle" style="fill:#E8A54D">ORACLE · ON-PREM</text>
+<text x="1028" y="602" class="edge-s" text-anchor="middle" style="fill:#C39A62">RMS · SIM · XStore</text>
+<text x="1028" y="626" class="edge-s" text-anchor="middle" style="fill:#C39A62">TLS on both switches</text>
+
+<line x1="370" y1="594" x2="388" y2="594" stroke="#3FD98A" stroke-width="3.5" marker-end="url(#ag)"/>
+<line x1="644" y1="594" x2="662" y2="594" stroke="#3FD98A" stroke-width="3.5" marker-end="url(#ag)"/>
+<line x1="866" y1="594" x2="884" y2="594" stroke="#3FD98A" stroke-width="3.5" marker-end="url(#ag)"/>
+
+<rect x="118" y="686" width="10" height="10" fill="#3FD98A"/>
+<text x="142" y="696" class="bxs">Put compute in private subnets; reach AWS APIs through interface endpoints, not NAT.</text>
+<rect x="118" y="726" width="10" height="10" fill="#3FD98A"/>
+<text x="142" y="736" class="bxs">Enforce TLS twice — on the JDBC URL and on the connection object.</text>
+<rect x="118" y="766" width="10" height="10" fill="#3FD98A"/>
+<text x="142" y="776" class="bxs">Route only the specific source CIDR. A /32 in Prod beats a /16 everywhere.</text>
+<rect x="118" y="806" width="10" height="10" fill="#3FD98A"/>
+<text x="142" y="816" class="bxs">Size the subnet to peak ENIs, cap job concurrency to match, and turn on flow logs.</text>
+
+<text x="118" y="868" class="code" style="fill:#6FD8A8">lanes × runs × workers ≈ peak ENIs  ·  a /26 gives 59 usable addresses</text>
+
+<!-- ══ ZONE 3 · WHY ══ -->
+<text x="1226" y="452" class="cap">3 · WHY</text>
+<rect x="1226" y="466" width="604" height="192" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1252" y="504" class="bxt-s">THE NETWORK GIVES OUT FIRST</text>
+<line x1="1252" y1="518" x2="1804" y2="518" stroke="#2C3841" stroke-width="2"/>
+<text x="1252" y="546" class="bxs-s">Addresses run out before the database does,</text>
+<text x="1252" y="574" class="bxs-s">and the failure reads as a database problem.</text>
+<rect x="1252" y="588" width="552" height="62" rx="10" fill="#2A1416" stroke="#7A2F35" stroke-width="2"/>
+<text x="1274" y="614" class="avoid" style="font-size:17px">WHAT BREAKS IF YOU DON'T</text>
+<text x="1274" y="640" class="bxs-s" style="fill:#FFB9BD">Jobs die on zero free IPs, not on the query.</text>
+
+<!-- ══ ZONE 4 · ON APPAREL GROUP ══ -->
+<text x="1226" y="690" class="cap">4 · ON APPAREL GROUP</text>
+<rect x="1226" y="704" width="604" height="186" rx="16" fill="#221B10" stroke="#C0902E" stroke-width="3"/>
+<text x="1252" y="740" class="agbox">AG · THREE ORACLE SOURCES</text>
+<line x1="1252" y1="754" x2="1804" y2="754" stroke="#5A4626" stroke-width="2"/>
+<text x="1252" y="784" class="bxs-s">RMS, SIM and XStore all cross the same</text>
+<text x="1252" y="812" class="bxs-s">link — size it for XStore. Epsilon, MoEngage</text>
+<text x="1252" y="840" class="bxs-s">and Magento are egress, not on-prem.</text>
+<text x="1252" y="874" class="code-s" style="fill:#5E7080">one route per source CIDR · TLS everywhere</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">The pipe to the warehouse is not the problem — the loading bay is. Count the parking spaces before you send the trucks.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 22</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

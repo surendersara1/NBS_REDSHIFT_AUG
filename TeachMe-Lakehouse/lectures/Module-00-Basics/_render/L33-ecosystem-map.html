@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 0 · LESSON 33</text>
+<text x="90" y="168" class="title">The Whole AWS Analytics Stack</text>
+<text x="90" y="212" class="sub">Every service in this module, grouped by what it is for, each with a one-line &#8220;use this when&#8221;. This is the poster for the wall.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zhow">1 · EIGHT GROUPS &#8212; EVERY SERVICE HAS A JOB</text>
+
+<!-- ══ ROW 1 ══ -->
+<!-- STORAGE -->
+<rect x="90" y="316" width="420" height="278" rx="14" fill="#231114" stroke="#E3000E" stroke-width="3"/>
+<text x="114" y="356" class="bxt-s" style="font-size:21px;fill:#FF3B47">STORAGE</text>
+<line x1="114" y1="374" x2="486" y2="374" stroke="#6A2A30" stroke-width="2"/>
+<text x="114" y="406" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Amazon S3 &#8212; the raw substrate</text>
+<text x="114" y="436" class="bxs-s" style="font-size:18px;fill:#E5B8BC">S3 Tables &#8212; managed Iceberg</text>
+<text x="114" y="466" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Redshift Managed Storage</text>
+<text x="114" y="496" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Storage classes &#8212; hot to archive</text>
+<line x1="114" y1="521" x2="486" y2="521" stroke="#6A2A30" stroke-width="2"/>
+<text x="114" y="551" class="th" style="fill:#C08A90">USE WHEN</text>
+<text x="114" y="576" class="bxs-s" style="font-size:17px;fill:#C08A90">always &#8212; everything ends up here</text>
+
+<!-- CATALOG & GOVERNANCE -->
+<rect x="530" y="316" width="420" height="278" rx="14" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="554" y="356" class="bxt-s" style="font-size:21px;fill:#FFB84D">CATALOG &amp; GOVERNANCE</text>
+<line x1="554" y1="374" x2="926" y2="374" stroke="#2C3841" stroke-width="2"/>
+<text x="554" y="406" class="bxs-s" style="font-size:18px">Glue Data Catalog (federated)</text>
+<text x="554" y="436" class="bxs-s" style="font-size:18px">Lake Formation &#8212; who sees what</text>
+<text x="554" y="466" class="bxs-s" style="font-size:18px">AWS RAM &#8212; cross-account shares</text>
+<text x="554" y="496" class="bxs-s" style="font-size:18px">SageMaker Lakehouse</text>
+<line x1="554" y1="521" x2="926" y2="521" stroke="#2C3841" stroke-width="2"/>
+<text x="554" y="551" class="th">USE WHEN</text>
+<text x="554" y="576" class="bxs-s" style="font-size:17px;fill:#8296A3">more than one engine or team reads</text>
+
+<!-- INGEST -->
+<rect x="970" y="316" width="420" height="278" rx="14" fill="#101A24" stroke="#2E4A66" stroke-width="2.5"/>
+<text x="994" y="356" class="bxt-s" style="font-size:21px;fill:#5AA9FF">INGEST</text>
+<line x1="994" y1="374" x2="1366" y2="374" stroke="#2E4A66" stroke-width="2"/>
+<text x="994" y="406" class="bxs-s" style="font-size:18px">AWS Glue &#183; EMR &#8212; batch ETL</text>
+<text x="994" y="436" class="bxs-s" style="font-size:18px">AWS DMS &#8212; CDC replication</text>
+<text x="994" y="466" class="bxs-s" style="font-size:18px">Zero-ETL &#8212; no pipeline at all</text>
+<text x="994" y="496" class="bxs-s" style="font-size:18px">AppFlow &#183; Transfer Family &#183; DataSync</text>
+<line x1="994" y1="521" x2="1366" y2="521" stroke="#2E4A66" stroke-width="2"/>
+<text x="994" y="551" class="th">USE WHEN</text>
+<text x="994" y="576" class="bxs-s" style="font-size:17px;fill:#8296A3">data has to move at all &#8212; Lesson 20</text>
+
+<!-- STREAMING -->
+<rect x="1410" y="316" width="420" height="278" rx="14" fill="#14181B" stroke="#3A4854" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="1434" y="356" class="bxt-s" style="font-size:21px;fill:#8296A3">STREAMING</text>
+<line x1="1434" y1="374" x2="1806" y2="374" stroke="#2C3841" stroke-width="2"/>
+<text x="1434" y="406" class="bxs-s" style="font-size:18px;fill:#8296A3">Kinesis Data Streams</text>
+<text x="1434" y="436" class="bxs-s" style="font-size:18px;fill:#8296A3">Amazon MSK &#183; Kafka</text>
+<text x="1434" y="466" class="bxs-s" style="font-size:18px;fill:#8296A3">Data Firehose &#8212; managed delivery</text>
+<text x="1434" y="496" class="bxs-s" style="font-size:18px;fill:#8296A3">Managed Flink &#183; Glue streaming</text>
+<line x1="1434" y1="521" x2="1806" y2="521" stroke="#2C3841" stroke-width="2"/>
+<text x="1434" y="551" class="th">USE WHEN</text>
+<text x="1434" y="576" class="bxs-s" style="font-size:17px;fill:#8296A3">seconds change a decision &#8212; rarely</text>
+
+<!-- ══ ROW 2 ══ -->
+<!-- QUERY & COMPUTE -->
+<rect x="90" y="612" width="420" height="278" rx="14" fill="#0F1E17" stroke="#2A5A40" stroke-width="2.5"/>
+<text x="114" y="652" class="bxt-s" style="font-size:21px;fill:#3FD98A">QUERY &amp; COMPUTE</text>
+<line x1="114" y1="670" x2="486" y2="670" stroke="#2A5A40" stroke-width="2"/>
+<text x="114" y="702" class="bxs-s" style="font-size:18px">Amazon Redshift &#8212; the warehouse</text>
+<text x="114" y="732" class="bxs-s" style="font-size:18px">Athena &#8212; serverless SQL, read+write</text>
+<text x="114" y="762" class="bxs-s" style="font-size:18px">EMR &#183; Glue Spark &#8212; big transforms</text>
+<text x="114" y="792" class="bxs-s" style="font-size:18px">Spectrum &#183; federated query</text>
+<line x1="114" y1="817" x2="486" y2="817" stroke="#2A5A40" stroke-width="2"/>
+<text x="114" y="847" class="th">USE WHEN</text>
+<text x="114" y="872" class="bxs-s" style="font-size:17px;fill:#8296A3">someone asks a question</text>
+
+<!-- ORCHESTRATION -->
+<rect x="530" y="612" width="420" height="278" rx="14" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="554" y="652" class="bxt-s" style="font-size:21px;fill:#5AA9FF">ORCHESTRATION</text>
+<line x1="554" y1="670" x2="926" y2="670" stroke="#2C3841" stroke-width="2"/>
+<text x="554" y="702" class="bxs-s" style="font-size:18px">Step Functions &#8212; AWS-native flows</text>
+<text x="554" y="732" class="bxs-s" style="font-size:18px">MWAA (Airflow) &#8212; Python DAGs</text>
+<text x="554" y="762" class="bxs-s" style="font-size:18px">Glue workflows &#8212; Glue-only jobs</text>
+<text x="554" y="792" class="bxs-s" style="font-size:18px">EventBridge &#8212; clock and tripwire</text>
+<line x1="554" y1="817" x2="926" y2="817" stroke="#2C3841" stroke-width="2"/>
+<text x="554" y="847" class="th">USE WHEN</text>
+<text x="554" y="872" class="bxs-s" style="font-size:17px;fill:#8296A3">more than one step has to run in order</text>
+
+<!-- CONSUMPTION -->
+<rect x="970" y="612" width="420" height="278" rx="14" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="994" y="652" class="bxt-s" style="font-size:21px;fill:#FFB84D">CONSUMPTION</text>
+<line x1="994" y1="670" x2="1366" y2="670" stroke="#8A6A3A" stroke-width="2"/>
+<text x="994" y="702" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Power BI &#183; Tableau &#8212; via JDBC</text>
+<text x="994" y="732" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Amazon QuickSight</text>
+<text x="994" y="762" class="bxs-s" style="font-size:18px;fill:#E8D5B0">SageMaker &#183; Redshift ML</text>
+<text x="994" y="792" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Redshift Data API &#8212; applications</text>
+<line x1="994" y1="817" x2="1366" y2="817" stroke="#8A6A3A" stroke-width="2"/>
+<text x="994" y="847" class="th" style="fill:#B99A6A">USE WHEN</text>
+<text x="994" y="872" class="bxs-s" style="font-size:17px;fill:#B99A6A">a human or an app needs the answer</text>
+
+<!-- OPERATIONS -->
+<rect x="1410" y="612" width="420" height="278" rx="14" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1434" y="652" class="bxt-s" style="font-size:21px">OPERATIONS</text>
+<line x1="1434" y1="670" x2="1806" y2="670" stroke="#2C3841" stroke-width="2"/>
+<text x="1434" y="702" class="bxs-s" style="font-size:18px">CloudWatch &#8212; metrics, logs, alarms</text>
+<text x="1434" y="732" class="bxs-s" style="font-size:18px">CloudTrail &#8212; who did what</text>
+<text x="1434" y="762" class="bxs-s" style="font-size:18px">Cost Explorer &#183; budgets</text>
+<text x="1434" y="792" class="bxs-s" style="font-size:18px">Terraform &#8212; every box above, as code</text>
+<line x1="1434" y1="817" x2="1806" y2="817" stroke="#2C3841" stroke-width="2"/>
+<text x="1434" y="847" class="th">USE WHEN</text>
+<text x="1434" y="872" class="bxs-s" style="font-size:17px;fill:#8296A3">from day one, not after go-live</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Nobody memorises forty services. You memorise eight jobs, and then look up which tool does the job you actually have today.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 0 · Lesson 33</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundations for Data Engineers</text>
+</svg></div></body></html>

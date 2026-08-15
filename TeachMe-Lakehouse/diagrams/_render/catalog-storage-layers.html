@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Asap:wght@500;600;700&family=Cabin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;background:#fff}
+  #wrap{width:1400px;height:840px}
+  .t   {font-family:'Asap',sans-serif;font-weight:700;fill:#283034}
+  .st  {font-family:'Cabin',sans-serif;fill:#5C666E}
+  .bx  {font-family:'Asap',sans-serif;font-weight:600;fill:#fff}
+  .bxd {font-family:'Asap',sans-serif;font-weight:600;fill:#283034}
+  .sm  {font-family:'Cabin',sans-serif;fill:#fff;opacity:.92}
+  .smd {font-family:'Cabin',sans-serif;fill:#5C666E}
+  .mono{font-family:'IBM Plex Mono',monospace;fill:#8A949C}
+  .lbl {font-family:'Cabin',sans-serif;font-weight:600;fill:#5C666E}
+  .cap {font-family:'Asap',sans-serif;font-weight:700;fill:#8A949C;letter-spacing:1.6px}
+</style>
+</head>
+<body>
+<div id="wrap">
+<svg width="1400" height="840" viewBox="0 0 1400 840" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="aC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#283034"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#E3000E"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8A949C"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1257A8"/></marker>
+    <marker id="aGr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#127A45"/></marker>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#283034" flood-opacity="0.13"/></filter>
+  </defs>
+
+  <rect width="1400" height="840" fill="#ffffff"/>
+  <!-- brand rule -->
+  <rect x="0" y="0" width="1400" height="7" fill="#E3000E"/>
+
+  <text x="60" y="70" class="t" font-size="30">Tamimi Lakehouse — Catalog &amp; Storage Layers</text>
+  <text x="60" y="100" class="st" font-size="15">How the federated Glue catalog, S3 Tables, Iceberg and S3 relate — annotated with the code that owns each layer</text>
+  <line x1="60" y1="122" x2="1340" y2="122" stroke="#DDE2E6" stroke-width="1.5"/>
+
+  <!-- ═══════ LEFT: Federated Glue Catalog ═══════ -->
+  <text x="60" y="176" class="cap" font-size="12">CATALOG</text>
+  <rect x="60" y="298" width="310" height="118" rx="12" fill="#283034" filter="url(#sh)"/>
+  <text x="215" y="336" class="bx" font-size="17" text-anchor="middle">Federated Glue Catalog</text>
+  <text x="215" y="364" class="sm" font-size="15" font-family="'IBM Plex Mono',monospace" text-anchor="middle">s3tablescatalog</text>
+  <text x="215" y="392" class="sm" font-size="12" text-anchor="middle" opacity="0.72">auto-mounts · no crawlers</text>
+  <text x="215" y="442" class="mono" font-size="11.5" text-anchor="middle">infra/modules/catalog_federation/</text>
+  <text x="215" y="459" class="mono" font-size="11.5" text-anchor="middle">main.tf · lf_grants.tf</text>
+
+  <!-- ═══════ MIDDLE: storage stack ═══════ -->
+  <rect x="430" y="160" width="360" height="500" rx="14" fill="none" stroke="#C6CDD3" stroke-width="1.6" stroke-dasharray="7 5"/>
+  <text x="610" y="188" class="cap" font-size="12" text-anchor="middle">STORAGE STACK</text>
+
+  <rect x="465" y="208" width="290" height="106" rx="12" fill="#E3000E" filter="url(#sh)"/>
+  <text x="610" y="242" class="bx" font-size="18" text-anchor="middle">Amazon S3 Tables</text>
+  <text x="610" y="266" class="sm" font-size="13" text-anchor="middle">bronze + silver table buckets</text>
+  <text x="610" y="295" font-size="10.5" text-anchor="middle" font-family="'IBM Plex Mono',monospace" fill="#ffffff" opacity="0.72">s3-data-lake/main.tf:11,30</text>
+
+  <rect x="465" y="352" width="290" height="106" rx="12" fill="#FDE8E9" stroke="#E3000E" stroke-width="2" filter="url(#sh)"/>
+  <text x="610" y="386" class="bxd" font-size="18" text-anchor="middle">Apache Iceberg v2</text>
+  <text x="610" y="410" class="smd" font-size="12.5" text-anchor="middle">snapshots · MERGE · schema evolution</text>
+  <text x="610" y="439" class="mono" font-size="10.5" text-anchor="middle">glue_engine/writers/s3_tables.py</text>
+
+  <rect x="465" y="496" width="290" height="106" rx="12" fill="#F8F9FA" stroke="#C6CDD3" stroke-width="2" filter="url(#sh)"/>
+  <text x="610" y="530" class="bxd" font-size="18" text-anchor="middle">Amazon S3</text>
+  <text x="610" y="554" class="smd" font-size="12.5" text-anchor="middle">physical objects — Parquet + metadata</text>
+  <text x="610" y="583" class="mono" font-size="10.5" text-anchor="middle">infra/modules/s3/main.tf</text>
+
+  <!-- ═══════ RIGHT: R/W ═══════ -->
+  <text x="900" y="176" class="cap" font-size="12">READ / WRITE</text>
+
+  <rect x="900" y="212" width="330" height="98" rx="12" fill="#E3EDF9" stroke="#1257A8" stroke-width="2" filter="url(#sh)"/>
+  <text x="925" y="245" class="bxd" font-size="16">WRITE — Glue 5.0 / Spark</text>
+  <text x="925" y="270" class="smd" font-size="12.5">bronze_pull · abap_transform</text>
+  <text x="925" y="290" class="smd" font-size="12.5">bronze_to_silver · dim_sync</text>
+  <text x="925" y="330" class="mono" font-size="11.5">src/glue/glue_engine/jobs/</text>
+
+  <rect x="900" y="352" width="330" height="98" rx="12" fill="#E4F3EA" stroke="#127A45" stroke-width="2" filter="url(#sh)"/>
+  <text x="925" y="385" class="bxd" font-size="16">READ — Redshift Spectrum</text>
+  <text x="925" y="410" class="smd" font-size="12.5">CREATE EXTERNAL SCHEMA silver_external</text>
+  <text x="925" y="430" class="smd" font-size="12.5">→ dbt → Gold → Power BI</text>
+  <text x="925" y="470" class="mono" font-size="11.5">jobs/_scripts/run_dbt.py</text>
+
+  <rect x="900" y="492" width="330" height="112" rx="12" fill="#FAFBFC" stroke="#B8C0C7" stroke-width="1.8" stroke-dasharray="6 4"/>
+  <text x="925" y="524" class="bxd" font-size="15" fill="#8A949C">NOT USED — Athena · Hive · Presto</text>
+  <text x="925" y="548" class="smd" font-size="12" fill="#9AA3AA">Athena is out of scope — Redshift is</text>
+  <text x="925" y="566" class="smd" font-size="12" fill="#9AA3AA">the query engine. No Hive/Presto anywhere.</text>
+  <text x="925" y="590" class="mono" font-size="11">only trace: s3/main.tf:30 athena-results</text>
+
+  <!-- ═══════ EDGES ═══════ -->
+  <!-- fedGC -> S3 Tables -->
+  <path d="M370 340 H412 V261 H457" stroke="#283034" stroke-width="2.4" fill="none" marker-end="url(#aC)"/>
+  <text x="412" y="232" class="lbl" font-size="12" text-anchor="middle">federates</text>
+
+  <!-- S3 Tables -> Iceberg (label to the left, clear of the box captions) -->
+  <line x1="610" y1="314" x2="610" y2="344" stroke="#E3000E" stroke-width="2.6" marker-end="url(#aR)"/>
+  <text x="598" y="334" class="lbl" font-size="11.5" text-anchor="end">managed as</text>
+
+  <!-- Iceberg -> S3 -->
+  <line x1="610" y1="458" x2="610" y2="488" stroke="#8A949C" stroke-width="2.6" marker-end="url(#aG)"/>
+  <text x="598" y="478" class="lbl" font-size="11.5" text-anchor="end">stored on</text>
+
+  <!-- WRITE -> S3 Tables -->
+  <line x1="892" y1="261" x2="763" y2="261" stroke="#1257A8" stroke-width="2.4" marker-end="url(#aB)"/>
+  <text x="828" y="250" class="lbl" font-size="12" text-anchor="middle" fill="#1257A8">writes</text>
+
+  <!-- READ -> Iceberg -->
+  <line x1="892" y1="399" x2="763" y2="399" stroke="#127A45" stroke-width="2.4" stroke-dasharray="6 4" marker-end="url(#aGr)"/>
+  <text x="828" y="388" class="lbl" font-size="12" text-anchor="middle" fill="#127A45">reads</text>
+
+  <!-- footer -->
+  <line x1="60" y1="700" x2="1340" y2="700" stroke="#DDE2E6" stroke-width="1.5"/>
+  <text x="60" y="728" class="smd" font-size="12.5"><tspan font-weight="700" fill="#283034">Governance:</tspan> Lake Formation LF-TBAC grants applied at the catalog level — catalog_federation/lf_grants.tf · IAM roles in infra/modules/iam/main.tf</text>
+  <text x="60" y="752" class="smd" font-size="12.5"><tspan font-weight="700" fill="#283034">Note:</tspan> S3 Tables is AWS-managed Iceberg — the three middle layers are one storage service viewed at three levels, not three separate hops.</text>
+  <text x="1340" y="790" class="mono" font-size="10.5" text-anchor="end">Tamimi Lakehouse · develop · eu-west-1</text>
+</svg>
+</div>
+</body>
+</html>

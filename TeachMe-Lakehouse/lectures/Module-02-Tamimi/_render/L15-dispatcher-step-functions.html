@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 15</text>
+<text x="90" y="168" class="title">What Decides Today's Work</text>
+<text x="90" y="212" class="sub">One cron fires. One Lambda decides. Everything after that is just execution — and one hard 256 KB ceiling.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE CHAIN ══ -->
+<text x="90" y="300" class="cap">1 · FROM CRON TO GLUE — WHO DOES WHAT</text>
+
+<!-- b1 EVENTBRIDGE -->
+<rect x="90" y="322" width="290" height="160" rx="16" fill="#1B2329" stroke="#4A5A66" stroke-width="3"/>
+<text x="235" y="366" class="bxt-s" text-anchor="middle" style="font-size:24px">EVENTBRIDGE</text>
+<text x="235" y="400" class="bxs-s" text-anchor="middle" style="font-size:18px">one rule · one cycle</text>
+<text x="235" y="428" class="bxs-s" text-anchor="middle" style="font-size:18px">00:00 KSA · no DST</text>
+<line x1="118" y1="444" x2="352" y2="444" stroke="#2C3841" stroke-width="2"/>
+<text x="235" y="468" class="code-s" text-anchor="middle" style="fill:#5E7080">cron(0 21 * * ? *)</text>
+
+<!-- b2 DISPATCHER — the thing being taught -->
+<rect x="416" y="322" width="360" height="160" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="596" y="366" class="bxt-s" text-anchor="middle" style="fill:#FF6A72;font-size:24px">DISPATCHER LAMBDA</text>
+<text x="596" y="400" class="bxs-s" text-anchor="middle" style="fill:#6FD8A8;font-size:19px">READS bronze-mapping + catalog</text>
+<text x="596" y="428" class="bxs-s" text-anchor="middle" style="font-size:19px">groups enabled rows by source_id</text>
+<line x1="444" y1="444" x2="748" y2="444" stroke="#5A2028" stroke-width="2"/>
+<text x="596" y="468" class="code-s" text-anchor="middle" style="fill:#FFA0A6">lambdas/dispatcher/handler.py</text>
+
+<!-- b3 CYCLE MANIFEST — the write -->
+<rect x="812" y="322" width="296" height="160" rx="16" fill="#12283F" stroke="#5AA9FF" stroke-width="3"/>
+<text x="960" y="366" class="bxt-s" text-anchor="middle" style="fill:#8FC7FF;font-size:23px">CYCLE MANIFEST</text>
+<text x="960" y="400" class="bxs-s" text-anchor="middle" style="font-size:18px">WRITE, before anything</text>
+<text x="960" y="428" class="bxs-s" text-anchor="middle" style="font-size:18px">expected[] = must finish</text>
+<line x1="840" y1="444" x2="1080" y2="444" stroke="#2A4560" stroke-width="2"/>
+<text x="960" y="468" class="code-s" text-anchor="middle" style="fill:#8FC7FF">cycle#2026-08-10</text>
+
+<!-- b4 STEP FUNCTIONS -->
+<rect x="1144" y="322" width="360" height="160" rx="16" fill="#1B2329" stroke="#4A5A66" stroke-width="3"/>
+<text x="1324" y="366" class="bxt-s" text-anchor="middle" style="font-size:24px">STEP FUNCTIONS</text>
+<text x="1324" y="400" class="bxs-s" text-anchor="middle" style="font-size:19px">one per source · Map over</text>
+<text x="1324" y="428" class="bxs-s" text-anchor="middle" style="font-size:19px">$.tables · barrier as the tail</text>
+<line x1="1172" y1="444" x2="1476" y2="444" stroke="#2C3841" stroke-width="2"/>
+<text x="1324" y="468" class="code-s" text-anchor="middle" style="fill:#5E7080">per_source_ingestion.tf:55</text>
+
+<!-- b5 GLUE -->
+<rect x="1540" y="322" width="290" height="160" rx="16" fill="#1B2329" stroke="#4A5A66" stroke-width="3"/>
+<text x="1685" y="366" class="bxt-s" text-anchor="middle" style="font-size:24px">GLUE JOBS</text>
+<text x="1685" y="400" class="bxs-s" text-anchor="middle" style="font-size:18px">source_download (P1)</text>
+<text x="1685" y="428" class="bxs-s" text-anchor="middle" style="font-size:18px">bronze_pull (P2)</text>
+<line x1="1568" y1="444" x2="1802" y2="444" stroke="#2C3841" stroke-width="2"/>
+<text x="1685" y="468" class="code-s" text-anchor="middle" style="fill:#5E7080">glue_sources.tf</text>
+
+<line x1="384" y1="402" x2="412" y2="402" stroke="#FF3B47" stroke-width="4" marker-end="url(#ar)"/>
+<line x1="780" y1="402" x2="808" y2="402" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+<line x1="1112" y1="402" x2="1140" y2="402" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+<line x1="1508" y1="402" x2="1536" y2="402" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+
+<!-- ══ ZONE 2 · THE FOUR MODES ══ -->
+<text x="90" y="530" class="cap">2 · ONE LAMBDA, FOUR KINDS OF RUN — THE PAYLOAD DECIDES</text>
+
+<!-- A scheduled -->
+<rect x="90" y="552" width="505" height="162" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="114" y="590" class="bxt-s" style="font-size:25px">SCHEDULED — the daily cycle</text>
+<text x="114" y="622" class="code" style="font-size:16px">payload {} — no keys at all</text>
+<text x="114" y="652" class="bxs-s">cycle_id is today's UTC date. Every enabled</text>
+<text x="114" y="678" class="bxs-s">bronze-mapping row, exactly one item each.</text>
+<text x="114" y="702" class="code-s" style="fill:#5E7080">handler.py:613 · _dispatch</text>
+
+<!-- B initial -->
+<rect x="625" y="552" width="505" height="162" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="649" y="590" class="bxt-s" style="font-size:25px">INITIAL — one-time bulk load</text>
+<text x="649" y="622" class="code" style="font-size:16px">{"initial_load":true,"source":"sap"}</text>
+<text x="649" y="652" class="bxs-s">5-year horizon split into month chunks. Its</text>
+<text x="649" y="678" class="bxs-s">OWN init-… cycle, full_refresh=True.</text>
+<text x="649" y="702" class="code-s" style="fill:#5E7080">handler.py:1417 · _chunk_windows:1306</text>
+
+<!-- C rerun -->
+<rect x="90" y="728" width="505" height="162" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="114" y="766" class="bxt-s" style="font-size:25px">RERUN — same-day recovery</text>
+<text x="114" y="798" class="code" style="font-size:16px">{"rerun":true,"cycle_id":"2026-08-10"}</text>
+<text x="114" y="828" class="bxs-s">Reopens the cycle, releases the gold and</text>
+<text x="114" y="854" class="bxs-s">conform locks, unique name -rHHMMSS.</text>
+<text x="114" y="878" class="code-s" style="fill:#5E7080">handler.py:1027 · rerun_download = P1 only</text>
+
+<!-- D backfill -->
+<rect x="625" y="728" width="505" height="162" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="649" y="766" class="bxt-s" style="font-size:25px">BACKFILL — a date window</text>
+<text x="649" y="798" class="code" style="font-size:16px">{"rerun":true,"source":"sap","date":…}</text>
+<text x="649" y="828" class="bxs-s">Its own bf-… cycle. Watermark untouched.</text>
+<text x="649" y="854" class="bxs-s">Gold rebuilds with --full-refresh.</text>
+<text x="649" y="878" class="code-s" style="fill:#5E7080">handler.py:1701 · gold_barrier.py:246</text>
+
+<!-- ══ ZONE 3 · THE CEILING ══ -->
+<text x="1180" y="530" class="cap">3 · THE LIMIT THAT BITES</text>
+
+<rect x="1180" y="552" width="650" height="338" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="1206" y="596" class="bxt" style="fill:#FF6A72;font-size:29px">256 KB · THE HARD EDGE</text>
+<line x1="1206" y1="612" x2="1804" y2="612" stroke="#5A2028" stroke-width="2"/>
+<text x="1206" y="644" class="bxs-s">StartExecution rejects an input over 262,144 bytes.</text>
+
+<rect x="1206" y="662" width="598" height="90" rx="8" fill="#0B1013" stroke="#3A1A20" stroke-width="2"/>
+<text x="1224" y="688" class="code" xml:space="preserve" style="font-size:16px">55 tables x 11 windows  =  605 items</text>
+<text x="1224" y="712" class="code" xml:space="preserve" style="font-size:16px">605 items x ~441 bytes  =  266,688 B</text>
+<text x="1224" y="738" class="code" xml:space="preserve" style="fill:#FF6A72;font-size:16px">ValidationException     →  started: []</text>
+
+<text x="1206" y="784" class="bxs-s" style="fill:#FFB84D">FIX 1 · slim the item — a P1 item carries no</text>
+<text x="1206" y="808" class="bxs-s" style="fill:#FFB84D">Silver keys: ~165 bytes saved on every one.</text>
+<text x="1206" y="836" class="bxs-s" style="fill:#8FA2AF;font-size:18px">FIX 2 · widen the chunk: chunk_months 12 → 330 items.</text>
+<text x="1206" y="860" class="bxs-s" style="fill:#8FA2AF;font-size:18px">Same 256 KB caps a Map result → ResultPath: null.</text>
+<text x="1206" y="876" class="code-s" style="fill:#5E7080">handler.py:426-453 · TICKET-initial-load-sfn-input-size.md</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">The cron is a doorbell — it carries no instructions. The dispatcher reads the config, writes down today's to-do list, and only then starts anyone working.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 15</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

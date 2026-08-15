@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 22</text>
+<text x="90" y="168" class="title">Getting to SAP Safely</text>
+<text x="90" y="212" class="sub">Three subnet tiers, one route across the Transit Gateway, TLS on the wire — and a hard ceiling made of IP addresses.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · SUBNET TIERS ══ -->
+<text x="90" y="300" class="cap">1 · THREE SUBNET TIERS, THREE WAYS OUT</text>
+
+<!-- public -->
+<rect x="90" y="322" width="560" height="220" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="364" class="bxt-s">PUBLIC · TWO /28s</text>
+<line x1="118" y1="382" x2="622" y2="382" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="412" class="bxs-s">The Internet Gateway and the NAT sit here.</text>
+<text x="118" y="438" class="bxs-s">No workload of ours runs in them.</text>
+<text x="118" y="464" class="bxs-s">Egress: straight to the internet.</text>
+<rect x="118" y="480" width="504" height="56" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="138" y="504" class="code" xml:space="preserve">10.248.4.192/28 · 10.248.4.208/28</text>
+<text x="138" y="526" class="code" xml:space="preserve" style="fill:#8296A3">dev 1 NAT · prod 1 NAT per AZ</text>
+
+<!-- private -->
+<rect x="690" y="322" width="560" height="220" rx="16" fill="#1A2430" stroke="#4A6A8A" stroke-width="3"/>
+<text x="718" y="364" class="bxt-s" style="fill:#7FBEFF">PRIVATE · TWO /28s</text>
+<line x1="718" y1="382" x2="1222" y2="382" stroke="#2E4A63" stroke-width="2"/>
+<text x="718" y="412" class="bxs-s">The dbt Glue runner and the Lambdas.</text>
+<text x="718" y="438" class="bxs-s">Egress via NAT — plus 7 interface</text>
+<text x="718" y="464" class="bxs-s">endpoints so AWS calls skip the NAT.</text>
+<rect x="718" y="480" width="504" height="56" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="738" y="504" class="code" xml:space="preserve" style="fill:#8FD8F0">secretsmanager kms glue sts logs</text>
+<text x="738" y="526" class="code" xml:space="preserve" style="fill:#8FD8F0">sqs monitoring — interface, :443</text>
+
+<!-- data -->
+<rect x="1290" y="322" width="540" height="220" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="1318" y="364" class="bxt-s" style="fill:#FF6A72">DATA · THREE /26s</text>
+<line x1="1318" y1="382" x2="1802" y2="382" stroke="#5A2028" stroke-width="2"/>
+<text x="1318" y="412" class="bxs-s">Redshift and every SAP Glue ENI.</text>
+<text x="1318" y="438" class="bxs-s">No NAT. No interface endpoints.</text>
+<text x="1318" y="464" class="bxs-s" style="fill:#FFB84D">Gateway endpoints and the TGW only.</text>
+<rect x="1318" y="480" width="484" height="56" rx="8" fill="#0B1013" stroke="#4A2028" stroke-width="2"/>
+<text x="1338" y="504" class="code" xml:space="preserve" style="fill:#FFA0A6">10.248.4.0/26 · .64/26 · .128/26</text>
+<text x="1338" y="526" class="code" xml:space="preserve" style="fill:#FFA0A6">59 usable IPs each</text>
+
+<!-- flow-log strip -->
+<rect x="90" y="556" width="1740" height="40" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="112" y="584" class="code" xml:space="preserve">VPC flow logs: traffic_type "ALL" → CMK-capable CloudWatch group, 90-day retention (HIGH-08)   ·   infra/modules/vpc/main.tf:236-300</text>
+
+<!-- ══ ZONE 2 · ROUTE + TLS ══ -->
+<text x="90" y="636" class="cap">2 · THE ROUTE TO SAP — AND THE TLS ON IT</text>
+
+<rect x="90" y="658" width="700" height="230" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="700" class="bxt-s">THE ROUTE TO ON-PREM SAP</text>
+<line x1="118" y1="718" x2="762" y2="718" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="746" class="bxs-s">One aws_route per route table, pointing at</text>
+<text x="118" y="772" class="bxs-s" style="fill:#FFB84D">the shared TGW. Prod puts them on the DATA tables.</text>
+<rect x="118" y="788" width="644" height="72" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="138" y="812" class="code" xml:space="preserve">dev   172.30.1.0/24 + 172.30.0.0/16</text>
+<text x="138" y="832" class="code" xml:space="preserve">qa    172.30.1.0/24</text>
+<text x="138" y="846" class="code" xml:space="preserve" style="fill:#FFB84D">prod  172.30.5.45/32   ← one host only</text>
+<text x="118" y="875" class="code-s" style="fill:#5E7080">infra/env/prod/main.tf:642-666 · terraform.tfvars:46-55</text>
+
+<rect x="830" y="658" width="460" height="230" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="858" y="700" class="bxt-s">TLS ON THE JDBC PATH</text>
+<line x1="858" y1="718" x2="1262" y2="718" stroke="#2C3841" stroke-width="2"/>
+<text x="858" y="746" class="bxs-s">SAP credentials and full table</text>
+<text x="858" y="772" class="bxs-s">extracts cross it. Both must be on:</text>
+<rect x="858" y="788" width="404" height="72" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="878" y="812" class="code" xml:space="preserve">...?encrypt=true</text>
+<text x="878" y="832" class="code" xml:space="preserve">   &amp;validateCertificate=true</text>
+<text x="878" y="846" class="code" xml:space="preserve" style="fill:#FFB84D">JDBC_ENFORCE_SSL = "true"</text>
+<text x="858" y="875" class="code-s" style="fill:#5E7080">dev/sap_hana_source_download.tf:100</text>
+
+<!-- ══ ZONE 3 · ENI CEILING ══ -->
+<text x="1330" y="636" class="cap">3 · THE CEILING</text>
+
+<rect x="1330" y="658" width="500" height="230" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="1358" y="700" class="bxt-s" style="fill:#FF6A72">WHY P1 CONCURRENCY IS 6</text>
+<line x1="1358" y1="718" x2="1802" y2="718" stroke="#5A2028" stroke-width="2"/>
+<text x="1358" y="746" class="bxs-s">Each Glue worker takes one IP in</text>
+<text x="1358" y="772" class="bxs-s">the subnet its connection pins to.</text>
+<rect x="1358" y="788" width="444" height="72" rx="8" fill="#0B1013" stroke="#4A2028" stroke-width="2"/>
+<text x="1378" y="812" class="code" xml:space="preserve" style="fill:#FF6A72">"Number of IP addresses on subnet is 0"</text>
+<text x="1378" y="832" class="code" xml:space="preserve" style="fill:#FFA0A6">/26 = 59 usable · 3 lanes x 2 runs</text>
+<text x="1378" y="846" class="code" xml:space="preserve" style="fill:#FFA0A6">x 12 workers = 24 ENIs at peak</text>
+<text x="1358" y="875" class="code-s" style="fill:#5E7080">env/dev/source_download.tf:58-68</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">The data subnets have no door to the internet. The one way out is the tunnel to SAP — and free IP addresses cap the worker count.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 22</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

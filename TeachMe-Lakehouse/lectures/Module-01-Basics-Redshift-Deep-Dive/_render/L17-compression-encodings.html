@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 01 · LESSON 17</text>
+<text x="90" y="168" class="title">Compression and Encodings</text>
+<text x="90" y="212" class="sub">Chosen per column, not per table. Fewer bytes on disk means fewer bytes read, so compression is a speed feature before it is a storage one.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">Because storage is columnar, every column compresses on its own terms</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">A column of repeated country codes and a column of unique receipt numbers want completely different schemes &#8212; and in a row store you could not give them one.</text>
+
+<text x="90" y="462" class="zhow">2 · HOW IT WORKS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="520" class="bxt-s" style="font-size:24px">THE ENCODINGS YOU WILL ACTUALLY USE</text>
+<line x1="118" y1="538" x2="1182" y2="538" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="554" width="5" height="40" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="576" class="bxt-s" style="font-size:21px;fill:#3FD98A">az64</text>
+<text x="1182" y="576" class="code-s" text-anchor="end" style="fill:#5E7080">numbers, dates, timestamps</text>
+<text x="136" y="602" class="bxs-s" style="font-size:18px">AWS&#8217;s own scheme for numeric and temporal types. Usually the best choice, and usually what AUTO picks for them.</text>
+<line x1="118" y1="608" x2="1182" y2="608" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="618" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="640" class="bxt-s" style="font-size:21px;fill:#5AA9FF">zstd</text>
+<text x="1182" y="640" class="code-s" text-anchor="end" style="fill:#5E7080">text, wide VARCHARs</text>
+<text x="136" y="666" class="bxs-s" style="font-size:18px">Strong general-purpose compression that works well on almost anything, and especially on text with repetition.</text>
+<line x1="118" y1="672" x2="1182" y2="672" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="682" width="5" height="40" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="704" class="bxt-s" style="font-size:21px;fill:#FFB84D">bytedict &#183; runlength</text>
+<text x="1182" y="704" class="code-s" text-anchor="end" style="fill:#5E7080">few distinct values</text>
+<text x="136" y="730" class="bxs-s" style="font-size:18px">For low-cardinality columns &#8212; status flags, country codes. Runlength is excellent when equal values sit next to each other after sorting.</text>
+<line x1="118" y1="736" x2="1182" y2="736" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="746" width="5" height="40" rx="2.5" fill="#FF6B73"/>
+<text x="136" y="768" class="bxt-s" style="font-size:21px;fill:#FF6B73">raw &#8212; ON THE SORT KEY</text>
+<text x="1182" y="768" class="code-s" text-anchor="end" style="fill:#5E7080">deliberate exception</text>
+<text x="136" y="794" class="bxs-s" style="font-size:18px">The first sort key column is often left uncompressed, so range checks against zone maps stay as cheap as possible.</text>
+
+<rect x="118" y="814" width="1064" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#8CE8B8">let ANALYZE COMPRESSION tell you — do not guess from the type name</text>
+
+<text x="1270" y="462" class="zsql">3 · THE SQL</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#0B1013" stroke="#2A4A3A" stroke-width="2.5"/>
+<text x="1298" y="508" class="sqlc">-- ask Redshift, against real data</text>
+<text x="1298" y="532" class="sql"><tspan class="sqlk">ANALYZE COMPRESSION</tspan> gold.fct_sales_line;</text>
+<text x="1298" y="568" class="sqlc">-- what is in effect right now?</text>
+<text x="1298" y="592" class="sql"><tspan class="sqlk">SELECT</tspan> "column", type, encoding</text>
+<text x="1298" y="616" class="sql"><tspan class="sqlk">FROM</tspan>   pg_table_def</text>
+<text x="1298" y="640" class="sql"><tspan class="sqlk">WHERE</tspan>  schemaname = 'gold'</text>
+<text x="1298" y="664" class="sql">  <tspan class="sqlk">AND</tspan>  tablename  = 'fct_sales_line';</text>
+
+<text x="1270" y="710" class="zgot">4 · GOTCHAS</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#231519" stroke="#7A3A40" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E5B8BC">ANALYZE COMPRESSION takes a table lock &#8212;</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E5B8BC">run it on a staging copy, not on production.</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E5B8BC">It only recommends. You still apply it.</text>
+<text x="1298" y="852" class="warn">measure on real data, not sample data</text>
+
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Packing each kind of item in the box that suits it. Shirts flat, mugs boxed &#8212; not one carton size for everything because it was simpler to order.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 01 · Lesson 17</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Redshift Deep Dive</text>
+</svg></div></body></html>

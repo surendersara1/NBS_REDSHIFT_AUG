@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 11</text>
+<text x="90" y="168" class="title">Reproduce Source Rules Faithfully</text>
+<text x="90" y="212" class="sub">Get the rule, copy it exactly — quirks included — and prove parity before anyone builds on it.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE DECISION ══ -->
+<text x="90" y="300" class="cap">1 · THE DECISION</text>
+<rect x="90" y="316" width="1740" height="108" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="362" class="bxt">Re-implement the source rule, or re-derive it?</text>
+<text x="118" y="398" class="bxs" style="fill:#A9BAC6">Only one answer is safe: get the rule from the source and copy it.</text>
+<rect x="1080" y="340" width="351" height="60" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="1255" y="377" class="doit" text-anchor="middle" style="font-size:19px">DO · REPRODUCE EXACTLY</text>
+<rect x="1451" y="340" width="351" height="60" rx="12" fill="#241416" stroke="#8A3A42" stroke-width="2.5" stroke-dasharray="7 5"/>
+<text x="1626" y="377" class="avoid" text-anchor="middle" style="font-size:19px">AVOID · IMPROVING IT</text>
+
+<!-- ══ ZONE 2 · DO THIS ══ -->
+<text x="90" y="464" class="cap">2 · DO THIS</text>
+<rect x="90" y="482" width="1010" height="408" rx="16" fill="#101E17" stroke="#3FD98A" stroke-width="3"/>
+<rect x="90" y="482" width="1010" height="7" rx="3.5" fill="#3FD98A"/>
+<text x="118" y="528" class="doit" style="font-size:23px">THE SETUP · FIVE STEPS</text>
+<line x1="118" y1="546" x2="1072" y2="546" stroke="#2A4A3A" stroke-width="2"/>
+
+<circle cx="134" cy="575" r="15" fill="#3FD98A"/>
+<text x="134" y="582" class="bxs-d" text-anchor="middle" style="font-size:18px">1</text>
+<text x="166" y="582" class="bxs">Get the rule as an artefact: source code, a spec, or a signed-off statement.</text>
+<text x="166" y="610" class="code">no artefact → no model · inference is not a rule</text>
+
+<circle cx="134" cy="637" r="15" fill="#3FD98A"/>
+<text x="134" y="644" class="bxs-d" text-anchor="middle" style="font-size:18px">2</text>
+<text x="166" y="644" class="bxs">Reproduce it exactly, including quirks the business already reconciles to.</text>
+<text x="166" y="672" class="code">a shipped quirk is the accepted answer, not a defect</text>
+
+<circle cx="134" cy="699" r="15" fill="#3FD98A"/>
+<text x="134" y="706" class="bxs-d" text-anchor="middle" style="font-size:18px">3</text>
+<text x="166" y="706" class="bxs">Prove parity with a reconciliation query before anyone builds on it.</text>
+<text x="166" y="734" class="code">source total vs lakehouse total, same window, signed off</text>
+
+<circle cx="134" cy="761" r="15" fill="#3FD98A"/>
+<text x="134" y="768" class="bxs-d" text-anchor="middle" style="font-size:18px">4</text>
+<text x="166" y="768" class="bxs">Refuse to copy a quirk that drops rows — that one needs a deviation.</text>
+<text x="166" y="796" class="code">lost rows are unrecoverable once gold stops reading bronze</text>
+
+<circle cx="134" cy="823" r="15" fill="#3FD98A"/>
+<text x="134" y="830" class="bxs-d" text-anchor="middle" style="font-size:18px">5</text>
+<text x="166" y="830" class="bxs">Record every intentional deviation in the docstring and in a test.</text>
+<text x="166" y="858" class="code">glue_engine/abap/helpers.py · deviations named in code</text>
+
+<!-- ══ ZONE 3 · WHY ══ -->
+<text x="1130" y="464" class="cap">3 · WHY</text>
+<rect x="1130" y="482" width="700" height="212" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1158" y="520" class="bxs">The lakehouse must agree with the system of record</text>
+<text x="1158" y="550" class="bxs">before it is allowed to be better than it. Parity</text>
+<text x="1158" y="580" class="bxs">first; improvements are a later, named change.</text>
+<line x1="1158" y1="600" x2="1802" y2="600" stroke="#2C3841" stroke-width="2"/>
+<text x="1158" y="628" class="code" style="fill:#FF6B73;font-size:16px;letter-spacing:2px">IF YOU DON'T</text>
+<text x="1158" y="653" class="bxs" style="fill:#C9A0A4">“We improved it while porting” is how a lakehouse</text>
+<text x="1158" y="680" class="bxs" style="fill:#C9A0A4">quietly disagrees with the system of record.</text>
+
+<!-- ══ ZONE 4 · ON APPAREL GROUP ══ -->
+<text x="1130" y="732" class="cap">4 · ON APPAREL GROUP</text>
+<rect x="1130" y="748" width="700" height="142" rx="16" fill="#1C1A12" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1158" y="784" class="agbox">ORACLE RETAIL RMS</text>
+<text x="1158" y="814" class="bxs" style="fill:#D9CBAE">Oracle Retail carries decades of embedded pricing</text>
+<text x="1158" y="844" class="bxs" style="fill:#D9CBAE">and costing rules. Get them from the people who</text>
+<text x="1158" y="874" class="bxs" style="fill:#D9CBAE">own them — do not infer them from the output.</text>
+
+<!-- ══ IN PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Porting a rule is translation, not editing. You may disagree with the original — but in writing, and only once the numbers match.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 11</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

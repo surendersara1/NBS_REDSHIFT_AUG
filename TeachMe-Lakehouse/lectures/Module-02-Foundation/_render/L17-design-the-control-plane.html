@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 17</text>
+<text x="90" y="168" class="title">Design the Control Plane</text>
+<text x="90" y="212" class="sub">Four record types, four questions. Every operator answer should be a lookup, not a log grep.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE DECISION ══ -->
+<text x="90" y="298" class="cap">1 · THE DECISION</text>
+<rect x="90" y="312" width="1740" height="84" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="348" class="bxt-s" style="font-size:25px">What does the platform write down about itself?</text>
+<text x="118" y="378" class="bxs-s" style="fill:#8FA2AF">Jobs are stateless and executions forget. If you did not record it, it did not happen.</text>
+
+<rect x="1000" y="328" width="380" height="52" rx="12" fill="#171C21" stroke="#4A5A66" stroke-width="2.5" stroke-dasharray="9 6"/>
+<text x="1190" y="360" class="bxs-s" text-anchor="middle" style="fill:#8296A3">&#215; grep the logs afterwards</text>
+<line x1="1386" y1="354" x2="1414" y2="354" stroke="#3FD98A" stroke-width="3.5" marker-end="url(#ag)"/>
+<rect x="1420" y="328" width="384" height="52" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1612" y="360" class="doit" text-anchor="middle" style="font-size:19px">RECORD IT AS IT HAPPENS</text>
+
+<!-- ══ ZONE 2 · DO THIS ══ -->
+<text x="90" y="430" class="cap">2 · DO THIS</text>
+<rect x="90" y="444" width="1086" height="316" rx="16" fill="#101A15" stroke="#2F6B4C" stroke-width="2.5"/>
+<text x="116" y="478" class="doit">FOUR RECORD TYPES &#183; ONE QUESTION EACH</text>
+<line x1="116" y1="488" x2="1150" y2="488" stroke="#274438" stroke-width="2"/>
+
+<rect x="116" y="500" width="1034" height="52" rx="10" fill="#12181D" stroke="#2C3841" stroke-width="2"/>
+<text x="136" y="533" class="bxt-s" style="font-size:21px">RUNS</text>
+<text x="380" y="533" class="bxs" style="fill:#FFB84D;font-size:20px">What happened?</text>
+<text x="680" y="533" class="bxs-s" style="fill:#8FA2AF;font-size:18px">one row per stage; index by cycle and by table</text>
+
+<rect x="116" y="557" width="1034" height="52" rx="10" fill="#12181D" stroke="#2C3841" stroke-width="2"/>
+<text x="136" y="590" class="bxt-s" style="font-size:21px">WATERMARKS</text>
+<text x="380" y="590" class="bxs" style="fill:#FFB84D;font-size:20px">How far did we get?</text>
+<text x="680" y="590" class="bxs-s" style="fill:#8FA2AF;font-size:18px">one position per table; failures never advance it</text>
+
+<rect x="116" y="614" width="1034" height="52" rx="10" fill="#12181D" stroke="#2C3841" stroke-width="2"/>
+<text x="136" y="647" class="bxt-s" style="font-size:21px">PIPELINE STATE</text>
+<text x="380" y="647" class="bxs" style="fill:#FFB84D;font-size:20px">Is it healthy now?</text>
+<text x="680" y="647" class="bxs-s" style="fill:#8FA2AF;font-size:18px">live health, freshness and alarms for the console</text>
+
+<rect x="116" y="671" width="1034" height="52" rx="10" fill="#12181D" stroke="#2C3841" stroke-width="2"/>
+<text x="136" y="704" class="bxt-s" style="font-size:21px">LINEAGE</text>
+<text x="380" y="704" class="bxs" style="fill:#FFB84D;font-size:20px">What came from what?</text>
+<text x="680" y="704" class="bxs-s" style="fill:#8FA2AF;font-size:18px">deterministic edge id &#8212; re-runs never grow it</text>
+
+<text x="116" y="746" class="bxs-s" style="fill:#6FE0A6;font-size:18px">Rule: never infer success from an orchestrator's execution status &#8212; read the run rows.</text>
+
+<!-- ══ ZONE 3 · WHY ══ -->
+<text x="1206" y="430" class="cap">3 · WHY</text>
+<rect x="1206" y="444" width="624" height="316" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1232" y="482" class="bxt-s" style="font-size:24px">IF IT IS NOT RECORDED, IT IS GONE</text>
+<line x1="1232" y1="494" x2="1804" y2="494" stroke="#2C3841" stroke-width="2"/>
+
+<circle cx="1238" cy="520" r="4" fill="#3FD98A"/>
+<text x="1256" y="526" class="bxs-s">Executions expire; the record is the memory.</text>
+<circle cx="1238" cy="552" r="4" fill="#3FD98A"/>
+<text x="1256" y="558" class="bxs-s">A dashboard is a read over these four types.</text>
+<circle cx="1238" cy="584" r="4" fill="#3FD98A"/>
+<text x="1256" y="590" class="bxs-s">Gates and sweepers judge on rows, not logs.</text>
+<circle cx="1238" cy="616" r="4" fill="#3FD98A"/>
+<text x="1256" y="622" class="bxs-s">Every runbook step becomes a keyed lookup.</text>
+
+<rect x="1226" y="650" width="584" height="94" rx="12" fill="#2A1216" stroke="#7A2A32" stroke-width="2.5"/>
+<text x="1246" y="678" class="avoid" style="font-size:17px">WHAT BREAKS IF YOU DON'T</text>
+<text x="1246" y="706" class="bxs-s" style="font-size:18px">Every incident becomes archaeology, and no one</text>
+<text x="1246" y="730" class="bxs-s" style="font-size:18px">can build an operator view over data you never kept.</text>
+
+<!-- ══ ZONE 4 · ON APPAREL GROUP ══ -->
+<text x="90" y="794" class="cap">4 · ON APPAREL GROUP</text>
+<rect x="90" y="806" width="1740" height="84" rx="14" fill="#1F1A10" stroke="#7A5F26" stroke-width="2.5"/>
+<text x="118" y="854" class="agbox">ON APPAREL GROUP</text>
+<line x1="360" y1="820" x2="360" y2="876" stroke="#5A4720" stroke-width="2"/>
+<text x="390" y="838" class="bxs" style="font-size:20px">An Oracle RMS table and a MoEngage API pull produce the same four record shapes &#8212; one console for all eight.</text>
+<text x="390" y="870" class="bxs" style="font-size:20px">Stamp source, cycle and run mode on every row, and the Retail IQ operations view is already queryable.</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A ship's log. Nobody reads it on a good day — but on a bad one it is the only thing that says where you were, and when.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 17</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

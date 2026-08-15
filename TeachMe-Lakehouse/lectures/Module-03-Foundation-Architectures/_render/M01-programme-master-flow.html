@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 3 · MASTER FLOW 01 · APPAREL GROUP</text>
+<text x="90" y="168" class="title">The Programme, End To End</text>
+<text x="90" y="212" class="sub">Six phases from kickoff to hypercare. Everything in the other diagrams sits inside one of these boxes.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zhow">1 · THE DELIVERY SEQUENCE</text>
+
+<!-- P1 -->
+<rect x="90" y="316" width="268" height="454" rx="14" fill="#14181B" stroke="#3A4854" stroke-width="2.5"/>
+<text x="112" y="352" class="grp" style="font-size:17px;fill:#A9BAC6">1 &#183; DISCOVER</text>
+<line x1="112" y1="366" x2="336" y2="366" stroke="#2C3841" stroke-width="2"/>
+<image href="../../_icons/aws/general/toolkit.png" x="196" y="388" width="56" height="56"/>
+<text x="112" y="486" class="icd" style="font-size:16px">Source inventory and owners</text>
+<text x="112" y="518" class="icd" style="font-size:16px">Does each source hard-delete?</text>
+<text x="112" y="550" class="icd" style="font-size:16px">Volumes and change rates</text>
+<text x="112" y="582" class="icd" style="font-size:16px">PII classification</text>
+<text x="112" y="614" class="icd" style="font-size:16px">Reporting requirements</text>
+<line x1="112" y1="646" x2="336" y2="646" stroke="#2C3841" stroke-width="2"/>
+<text x="112" y="678" class="th">EXIT WHEN</text>
+<text x="112" y="710" class="icd" style="font-size:16px">every source has a named</text>
+<text x="112" y="734" class="icd" style="font-size:16px">owner and a contract</text>
+
+<!-- P2 -->
+<rect x="384" y="316" width="268" height="454" rx="14" fill="#101A24" stroke="#2E4A66" stroke-width="2.5"/>
+<text x="406" y="352" class="grp" style="font-size:17px;fill:#5AA9FF">2 &#183; FOUNDATION</text>
+<line x1="406" y1="366" x2="630" y2="366" stroke="#2E4A66" stroke-width="2"/>
+<image href="../../_icons/aws/management/cloudformation.png" x="490" y="388" width="56" height="56"/>
+<text x="406" y="486" class="icd" style="font-size:16px">Accounts and guardrails</text>
+<text x="406" y="518" class="icd" style="font-size:16px">Network path to on-prem</text>
+<text x="406" y="550" class="icd" style="font-size:16px">Terraform modules, 3 envs</text>
+<text x="406" y="582" class="icd" style="font-size:16px">CI/CD with OIDC</text>
+<text x="406" y="614" class="icd" style="font-size:16px">The engine, before pipelines</text>
+<line x1="406" y1="646" x2="630" y2="646" stroke="#2E4A66" stroke-width="2"/>
+<text x="406" y="678" class="th">EXIT WHEN</text>
+<text x="406" y="710" class="icd" style="font-size:16px">one table flows end to</text>
+<text x="406" y="734" class="icd" style="font-size:16px">end, in dev, from a spec</text>
+
+<!-- P3 -->
+<rect x="678" y="316" width="268" height="454" rx="14" fill="#231114" stroke="#E3000E" stroke-width="3"/>
+<text x="700" y="352" class="grp" style="font-size:17px;fill:#FF3B47">3 &#183; SOURCE WAVES</text>
+<line x1="700" y1="366" x2="924" y2="366" stroke="#6A2A30" stroke-width="2"/>
+<image href="../../_icons/aws/analytics/glue.png" x="784" y="388" width="56" height="56"/>
+<text x="700" y="486" class="icd" style="font-size:16px;fill:#E5B8BC">Wave 1 &#8212; Oracle RMS</text>
+<text x="700" y="518" class="icd" style="font-size:16px;fill:#E5B8BC">Wave 2 &#8212; SIM, XStore</text>
+<text x="700" y="550" class="icd" style="font-size:16px;fill:#E5B8BC">Wave 3 &#8212; Epsilon, MoEngage</text>
+<text x="700" y="582" class="icd" style="font-size:16px;fill:#E5B8BC">Wave 4 &#8212; Magento, footfall</text>
+<text x="700" y="614" class="icd" style="font-size:16px;fill:#E5B8BC">Each wave = specs, not code</text>
+<line x1="700" y1="646" x2="924" y2="646" stroke="#6A2A30" stroke-width="2"/>
+<text x="700" y="678" class="th" style="fill:#C08A90">EXIT WHEN</text>
+<text x="700" y="710" class="icd" style="font-size:16px;fill:#E5B8BC">bronze and silver land</text>
+<text x="700" y="734" class="icd" style="font-size:16px;fill:#E5B8BC">nightly, and re-run safely</text>
+
+<!-- P4 -->
+<rect x="972" y="316" width="268" height="454" rx="14" fill="#0F1E17" stroke="#2A5A40" stroke-width="2.5"/>
+<text x="994" y="352" class="grp" style="font-size:17px;fill:#3FD98A">4 &#183; MODEL</text>
+<line x1="994" y1="366" x2="1218" y2="366" stroke="#2A5A40" stroke-width="2"/>
+<image href="../../_icons/aws/analytics/redshift.png" x="1078" y="388" width="56" height="56"/>
+<text x="994" y="486" class="icd" style="font-size:16px">Conformed dimensions first</text>
+<text x="994" y="518" class="icd" style="font-size:16px">Type 2 where history matters</text>
+<text x="994" y="550" class="icd" style="font-size:16px">Facts at the finest grain</text>
+<text x="994" y="582" class="icd" style="font-size:16px">dbt tests on every model</text>
+<text x="994" y="614" class="icd" style="font-size:16px">Reconciled to source</text>
+<line x1="994" y1="646" x2="1218" y2="646" stroke="#2A5A40" stroke-width="2"/>
+<text x="994" y="678" class="th">EXIT WHEN</text>
+<text x="994" y="710" class="icd" style="font-size:16px">the business agrees the</text>
+<text x="994" y="734" class="icd" style="font-size:16px">numbers, in writing</text>
+
+<!-- P5 -->
+<rect x="1266" y="316" width="268" height="454" rx="14" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1288" y="352" class="grp" style="font-size:17px;fill:#FFB84D">5 &#183; CONSUME</text>
+<line x1="1288" y1="366" x2="1512" y2="366" stroke="#8A6A3A" stroke-width="2"/>
+<image href="../../_icons/aws/analytics/quicksight.png" x="1372" y="388" width="56" height="56"/>
+<text x="1288" y="486" class="icd" style="font-size:16px;fill:#E8D5B0">Reporting views, not tables</text>
+<text x="1288" y="518" class="icd" style="font-size:16px;fill:#E8D5B0">Power BI datasets</text>
+<text x="1288" y="550" class="icd" style="font-size:16px;fill:#E8D5B0">Column masking for PII</text>
+<text x="1288" y="582" class="icd" style="font-size:16px;fill:#E8D5B0">Ops console, per environment</text>
+<text x="1288" y="614" class="icd" style="font-size:16px;fill:#E8D5B0">Athena for investigation</text>
+<line x1="1288" y1="646" x2="1512" y2="646" stroke="#8A6A3A" stroke-width="2"/>
+<text x="1288" y="678" class="th" style="fill:#B99A6A">EXIT WHEN</text>
+<text x="1288" y="710" class="icd" style="font-size:16px;fill:#E8D5B0">users answer questions</text>
+<text x="1288" y="734" class="icd" style="font-size:16px;fill:#E8D5B0">without asking us</text>
+
+<!-- P6 -->
+<rect x="1560" y="316" width="268" height="454" rx="14" fill="#191233" stroke="#8A5CF0" stroke-width="2.5"/>
+<text x="1582" y="352" class="grp" style="font-size:17px;fill:#B79BFF">6 &#183; GO-LIVE</text>
+<line x1="1582" y1="366" x2="1806" y2="366" stroke="#8A5CF0" stroke-width="2"/>
+<image href="../../_icons/aws/management/cloudwatch.png" x="1666" y="388" width="56" height="56"/>
+<text x="1582" y="486" class="icd" style="font-size:16px">Parallel run against legacy</text>
+<text x="1582" y="518" class="icd" style="font-size:16px">Reconciliation sign-off</text>
+<text x="1582" y="550" class="icd" style="font-size:16px">Alarms and runbooks live</text>
+<text x="1582" y="582" class="icd" style="font-size:16px">Hypercare, then handover</text>
+<text x="1582" y="614" class="icd" style="font-size:16px">Training delivered</text>
+<line x1="1582" y1="646" x2="1806" y2="646" stroke="#8A5CF0" stroke-width="2"/>
+<text x="1582" y="678" class="th" style="fill:#9A7ACF">EXIT WHEN</text>
+<text x="1582" y="710" class="icd" style="font-size:16px">the client team runs a</text>
+<text x="1582" y="734" class="icd" style="font-size:16px">nightly failure alone</text>
+
+<!-- CRITICAL PATH BAND -->
+<rect x="90" y="790" width="1740" height="100" rx="14" fill="#231519" stroke="#7A3A40" stroke-width="2.5"/>
+<text x="118" y="820" class="icb" style="fill:#FF6B73">THE THINGS THAT DELAY PROGRAMMES LIKE THIS &#8212; START THEM IN PHASE 1</text>
+<line x1="118" y1="834" x2="1802" y2="834" stroke="#4A2228" stroke-width="2"/>
+<text x="118" y="868" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Network access to on-prem Oracle (weeks of lead time) &#8226; PII classification and legal sign-off &#8226; source system owners agreeing to a contract &#8226; a decision on the Oracle ingestion route</text>
+
+<!-- PLAIN ENGLISH -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Six phases, and the only ones that slip are the ones waiting on somebody else. Start those on day one, even if you cannot finish them yet.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 3 · Master Flow 01</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 21</text>
+<text x="90" y="168" class="title">Least Privilege, For Real</text>
+<text x="90" y="212" class="sub">Taught from our own audit. Two HIGH findings: the code as it was, and the code as it is now.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · HIGH-06 ══ -->
+<text x="90" y="300" class="cap">1 · THE ROLE THAT OWNED EVERYTHING</text>
+
+<rect x="90" y="322" width="870" height="290" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="366" class="bxt-s">HIGH-06 · THE GLUE JOB ROLE</text>
+<line x1="118" y1="384" x2="932" y2="384" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="414" class="bxs-s">Every Glue job assumes this one role. The audit found it could</text>
+<text x="118" y="440" class="bxs-s">read or delete any object in the account — tfstate included.</text>
+
+<rect x="118" y="456" width="814" height="60" rx="8" fill="#2A1216" stroke="#6A2028" stroke-width="2"/>
+<text x="138" y="480" class="code" xml:space="preserve" style="fill:#FF6A72">BEFORE   AmazonS3FullAccess  ·  s3tables:*  glue:*  on  "*"</text>
+<text x="138" y="504" class="code" xml:space="preserve" style="fill:#C98A90">         a bad spec could exfiltrate or wipe any bucket</text>
+
+<rect x="118" y="528" width="814" height="60" rx="8" fill="#12331F" stroke="#2A6A48" stroke-width="2"/>
+<text x="138" y="552" class="code" xml:space="preserve" style="fill:#6FD8A8">AFTER    s3:Get/Put/DeleteObject on 3 NAMED buckets</text>
+<text x="138" y="576" class="code" xml:space="preserve" style="fill:#6FD8A8">         s3tables / glue actions on project ARNs only</text>
+
+<text x="118" y="599" class="code-s" style="fill:#5E7080">infra/modules/iam/main.tf:58-116 · permissions_boundary on all 5 roles</text>
+
+<!-- ══ ZONE 2 · HIGH-07 ══ -->
+<text x="960" y="300" class="cap">2 · THE KEY THAT TRUSTED EVERYONE</text>
+
+<rect x="960" y="322" width="870" height="290" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="988" y="366" class="bxt-s">HIGH-07 · SIX KMS CMKs PER ENV</text>
+<line x1="988" y1="384" x2="1802" y2="384" stroke="#2C3841" stroke-width="2"/>
+<text x="988" y="414" class="bxs-s">bronze · silver · redshift · secrets · audit · lambda. Each one</text>
+<text x="988" y="440" class="bxs-s">trusted 15 AWS services on Resource:"*" with no condition.</text>
+
+<rect x="988" y="456" width="814" height="60" rx="8" fill="#2A1216" stroke="#6A2028" stroke-width="2"/>
+<text x="1008" y="480" class="code" xml:space="preserve" style="fill:#FF6A72">BEFORE   Principal: 15 services   Resource: "*"</text>
+<text x="1008" y="504" class="code" xml:space="preserve" style="fill:#C98A90">         confused deputy — ANY account could ride a service in</text>
+
+<rect x="988" y="528" width="814" height="60" rx="8" fill="#12331F" stroke="#2A6A48" stroke-width="2"/>
+<text x="1008" y="552" class="code" xml:space="preserve" style="fill:#6FD8A8">AFTER    Condition = { StringEquals = {</text>
+<text x="1008" y="576" class="code" xml:space="preserve" style="fill:#6FD8A8">           "aws:SourceAccount" = &lt;this account&gt; } }</text>
+
+<text x="988" y="599" class="code-s" style="fill:#5E7080">infra/modules/kms/main.tf:74-82 · per-layer narrowing hook still unused</text>
+
+<!-- ══ ZONE 3 ══ -->
+<text x="90" y="652" class="cap">3 · THE THREE THINGS "SCOPED" ACTUALLY MEANS HERE</text>
+
+<rect x="90" y="674" width="560" height="214" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="716" class="bxt-s">WHAT SCOPING CANNOT FIX</text>
+<line x1="118" y1="732" x2="622" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="762" class="bxs-s">Some AWS actions accept no resource ARN.</text>
+<text x="118" y="788" class="bxs-s">Those stay on "*" — by design, not neglect.</text>
+<rect x="118" y="802" width="504" height="58" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="138" y="826" class="code" xml:space="preserve">lakeformation:GetDataAccess  →  "*"</text>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#FFB84D">ec2:Describe*  ·  glue:GetCatalog</text>
+<text x="118" y="878" class="code-s" style="fill:#5E7080">infra/modules/iam/main.tf:101-105</text>
+
+<rect x="690" y="674" width="560" height="214" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="718" y="716" class="bxt-s">LAKE FORMATION IS THE DOOR</text>
+<line x1="718" y1="732" x2="1222" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="718" y="762" class="bxs-s">Strict mode: the default permission is NONE.</text>
+<text x="718" y="788" class="bxs-s">glue-role gets CREATE_TABLE; redshift SELECT.</text>
+<rect x="718" y="802" width="504" height="58" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="738" y="826" class="code" xml:space="preserve">LF tags: layer · sensitivity · domain</text>
+<text x="738" y="848" class="code" xml:space="preserve" style="fill:#FFB84D">IAM on its own opens nothing here</text>
+<text x="718" y="878" class="code-s" style="fill:#5E7080">catalog_federation/lf_grants.tf:28-91</text>
+
+<rect x="1290" y="674" width="540" height="214" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1318" y="716" class="bxt-s">SECRETS BY REFERENCE</text>
+<line x1="1318" y1="732" x2="1802" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="1318" y="762" class="bxs-s">Terraform owns the secret's name and its</text>
+<text x="1318" y="788" class="bxs-s">CMK. Never the value — so never the state.</text>
+<rect x="1318" y="802" width="484" height="58" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="1338" y="826" class="code" xml:space="preserve">SECRET_ID = &lt;arn&gt;  # Glue reads it</text>
+<text x="1338" y="848" class="code" xml:space="preserve" style="fill:#FFB84D">ignore_changes = [secret_string]</text>
+<text x="1318" y="878" class="code-s" style="fill:#5E7080">infra/modules/secrets/main.tf:20-31</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Least privilege is not a setting, it is a diff. Two real ones: a key that stopped trusting everyone, a role that lost every bucket.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 21</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

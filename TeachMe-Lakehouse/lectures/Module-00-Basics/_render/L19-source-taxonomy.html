@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 0 · LESSON 19</text>
+<text x="90" y="168" class="title">Eight Kinds Of Source</text>
+<text x="90" y="212" class="sub">Classify the source before you choose the pipeline. The class decides the mechanism — and every project has more classes than it expects.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zhow">1 · THE TAXONOMY</text>
+<rect x="90" y="316" width="1740" height="574" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+
+<text x="118" y="356" class="th">KIND OF SOURCE</text>
+<text x="500" y="356" class="th">WHAT MAKES IT HARD</text>
+<text x="1120" y="356" class="th">HOW YOU MOVE IT</text>
+<text x="1520" y="356" class="th">APPAREL GROUP</text>
+<line x1="118" y1="372" x2="1802" y2="372" stroke="#3A4854" stroke-width="2"/>
+
+<text x="118" y="414" class="tdk">OLTP RELATIONAL</text>
+<text x="500" y="414" class="td" style="font-size:18px">Huge tables, live load, no downtime window</text>
+<text x="1120" y="414" class="td" style="font-size:18px">JDBC · CDC · zero-ETL</text>
+<text x="1520" y="414" class="code" style="font-size:16px">RMS · SIM · XStore</text>
+<line x1="118" y1="440" x2="1802" y2="440" stroke="#1E2830" stroke-width="1.5"/>
+
+<text x="118" y="470" class="tdk">SAAS API</text>
+<text x="500" y="470" class="td" style="font-size:18px">Rate limits, cursor paging, no bulk export</text>
+<text x="1120" y="470" class="td" style="font-size:18px">API pull · AppFlow · zero-ETL</text>
+<text x="1520" y="470" class="code" style="font-size:16px">Epsilon · MoEngage</text>
+<line x1="118" y1="496" x2="1802" y2="496" stroke="#1E2830" stroke-width="1.5"/>
+
+<text x="118" y="526" class="tdk">E-COMMERCE</text>
+<text x="500" y="526" class="td" style="font-size:18px">Sometimes a database, sometimes an API, sometimes both</text>
+<text x="1120" y="526" class="td" style="font-size:18px">JDBC or API</text>
+<text x="1520" y="526" class="code" style="font-size:16px">Magento</text>
+<line x1="118" y1="552" x2="1802" y2="552" stroke="#1E2830" stroke-width="1.5"/>
+
+<text x="118" y="582" class="tdk">FILE DROP</text>
+<text x="500" y="582" class="td" style="font-size:18px">Arrives late, arrives twice, or does not arrive</text>
+<text x="1120" y="582" class="td" style="font-size:18px">S3 landing · Transfer Family</text>
+<text x="1520" y="582" class="code" style="font-size:16px">Vemco · Irisys</text>
+<line x1="118" y1="608" x2="1802" y2="608" stroke="#1E2830" stroke-width="1.5"/>
+
+<text x="118" y="638" class="tdk">STREAMS &amp; EVENTS</text>
+<text x="500" y="638" class="td" style="font-size:18px">Unbounded; ordering and duplicates both matter</text>
+<text x="1120" y="638" class="td" style="font-size:18px">Kinesis · MSK · Firehose</text>
+<text x="1520" y="638" class="code" style="font-size:16px;fill:#4E6472">none today</text>
+<line x1="118" y1="664" x2="1802" y2="664" stroke="#1E2830" stroke-width="1.5"/>
+
+<text x="118" y="694" class="tdk">LOGS &amp; CLICKSTREAM</text>
+<text x="500" y="694" class="td" style="font-size:18px">Enormous volume, very low value per single row</text>
+<text x="1120" y="694" class="td" style="font-size:18px">Firehose to S3, partitioned</text>
+<text x="1520" y="694" class="code" style="font-size:16px;fill:#4E6472">web analytics</text>
+<line x1="118" y1="720" x2="1802" y2="720" stroke="#1E2830" stroke-width="1.5"/>
+
+<text x="118" y="750" class="tdk">ON-PREM</text>
+<text x="500" y="750" class="td" style="font-size:18px">Behind a firewall; needs a network path before anything</text>
+<text x="1120" y="750" class="td" style="font-size:18px">VPN / Direct Connect + Glue</text>
+<text x="1520" y="750" class="code" style="font-size:16px;fill:#4E6472">legacy stores</text>
+<line x1="118" y1="776" x2="1802" y2="776" stroke="#1E2830" stroke-width="1.5"/>
+
+<text x="118" y="806" class="tdk">THIRD-PARTY FEED</text>
+<text x="500" y="806" class="td" style="font-size:18px">You do not control the schema, and it will change</text>
+<text x="1120" y="806" class="td" style="font-size:18px">contract + validate on landing</text>
+<text x="1520" y="806" class="code" style="font-size:16px;fill:#4E6472">market data</text>
+
+<rect x="118" y="828" width="1684" height="46" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="858" class="code" xml:space="preserve" style="fill:#8CE8B8">eight sources, five classes — the variety is in the connectors, not in a hundred bespoke jobs</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">You do not need a different van for every delivery. You need to know which of five kinds of parcel you are being handed.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 0 · Lesson 19</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundations for Data Engineers</text>
+</svg></div></body></html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 03</text>
+<text x="90" y="168" class="title">The Four Layers — and What Changes at Each</text>
+<text x="90" y="212" class="sub">Raw → Bronze → Silver → Gold. Every hop has exactly one job. Never do two jobs in one hop.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- 4 layer columns -->
+<!-- RAW -->
+<rect x="90" y="300" width="400" height="470" rx="18" fill="#1B2329" stroke="#4A5A66" stroke-width="3"/>
+<rect x="90" y="300" width="400" height="8" rx="4" fill="#8296A3"/>
+<text x="290" y="358" class="bxt" text-anchor="middle">RAW</text>
+<text x="290" y="392" class="bxs" text-anchor="middle" style="fill:#8FA2AF">the untouched dump</text>
+<line x1="130" y1="416" x2="450" y2="416" stroke="#2C3841" stroke-width="2"/>
+<text x="130" y="452" class="bxs-s">▪ Byte-for-byte from source</text>
+<text x="130" y="484" class="bxs-s">▪ Parquet files on S3, per cycle</text>
+<text x="130" y="516" class="bxs-s">▪ Never edited. Never deleted.</text>
+<text x="130" y="548" class="bxs-s">▪ 7-year retention</text>
+<rect x="130" y="576" width="320" height="60" rx="10" fill="#12181D" stroke="#2C3841" stroke-width="2"/>
+<text x="290" y="600" class="edge-s" text-anchor="middle" style="fill:#7A8C99">WHAT CHANGES</text>
+<text x="290" y="624" class="bxs-s" text-anchor="middle" style="fill:#FFB84D">Nothing. That's the point.</text>
+<text x="290" y="676" class="code-s" text-anchor="middle">jobs/source_download.py</text>
+<text x="290" y="700" class="code-s" text-anchor="middle" style="fill:#5E7080">writers/raw_landing.py</text>
+<text x="290" y="742" class="bxs-s" text-anchor="middle" style="fill:#7A8C99">Why: replay anything, anytime</text>
+
+<!-- BRONZE -->
+<rect x="530" y="300" width="400" height="470" rx="18" fill="#2A1F14" stroke="#8A6A3A" stroke-width="3"/>
+<rect x="530" y="300" width="400" height="8" rx="4" fill="#C88B3A"/>
+<text x="730" y="358" class="bxt" text-anchor="middle" style="fill:#E8A54D">BRONZE</text>
+<text x="730" y="392" class="bxs" text-anchor="middle" style="fill:#C39A62">typed &amp; deduplicated</text>
+<line x1="570" y1="416" x2="890" y2="416" stroke="#5A4626" stroke-width="2"/>
+<text x="570" y="452" class="bxs-s">▪ Real data types applied</text>
+<text x="570" y="484" class="bxs-s">▪ Iceberg MERGE on the PK</text>
+<text x="570" y="516" class="bxs-s">▪ Audit cols: _run_id, _ingested_at</text>
+<text x="570" y="548" class="bxs-s">▪ Still 1:1 with the source</text>
+<rect x="570" y="576" width="320" height="60" rx="10" fill="#12181D" stroke="#5A4626" stroke-width="2"/>
+<text x="730" y="600" class="edge-s" text-anchor="middle" style="fill:#7A8C99">WHAT CHANGES</text>
+<text x="730" y="624" class="bxs-s" text-anchor="middle" style="fill:#FFB84D">Shape, not meaning</text>
+<text x="730" y="676" class="code-s" text-anchor="middle">jobs/bronze_pull.py</text>
+<text x="730" y="700" class="code-s" text-anchor="middle" style="fill:#5E7080">specs/bronze/*.yaml</text>
+<text x="730" y="742" class="bxs-s" text-anchor="middle" style="fill:#7A8C99">Rule: NO business logic here</text>
+
+<!-- SILVER -->
+<rect x="970" y="300" width="400" height="470" rx="18" fill="#1A2430" stroke="#4A6A8A" stroke-width="3"/>
+<rect x="970" y="300" width="400" height="8" rx="4" fill="#5AA9FF"/>
+<text x="1170" y="358" class="bxt" text-anchor="middle" style="fill:#7FBEFF">SILVER</text>
+<text x="1170" y="392" class="bxs" text-anchor="middle" style="fill:#94B4D4">cleansed &amp; conformed</text>
+<line x1="1010" y1="416" x2="1330" y2="416" stroke="#2C4560" stroke-width="2"/>
+<text x="1010" y="452" class="bxs-s">▪ Business rules applied</text>
+<text x="1010" y="484" class="bxs-s">▪ Names/units standardised</text>
+<text x="1010" y="516" class="bxs-s">▪ Source logic rebuilt (ABAP → Spark)</text>
+<text x="1010" y="548" class="bxs-s">▪ Joins across tables allowed</text>
+<rect x="1010" y="576" width="320" height="60" rx="10" fill="#12181D" stroke="#2C4560" stroke-width="2"/>
+<text x="1170" y="600" class="edge-s" text-anchor="middle" style="fill:#7A8C99">WHAT CHANGES</text>
+<text x="1170" y="624" class="bxs-s" text-anchor="middle" style="fill:#FFB84D">Meaning is added</text>
+<text x="1170" y="676" class="code-s" text-anchor="middle">jobs/bronze_to_silver.py</text>
+<text x="1170" y="700" class="code-s" text-anchor="middle" style="fill:#5E7080">glue_engine/abap/</text>
+<text x="1170" y="742" class="bxs-s" text-anchor="middle" style="fill:#7A8C99">Trap: joins can silently double rows</text>
+
+<!-- GOLD -->
+<rect x="1410" y="300" width="420" height="470" rx="18" fill="#2B2410" stroke="#9A8434" stroke-width="3"/>
+<rect x="1410" y="300" width="420" height="8" rx="4" fill="#FFC947"/>
+<text x="1620" y="358" class="bxt" text-anchor="middle" style="fill:#FFD35C">GOLD</text>
+<text x="1620" y="392" class="bxs" text-anchor="middle" style="fill:#D3BA72">shaped for the question</text>
+<line x1="1450" y1="416" x2="1790" y2="416" stroke="#5F5322" stroke-width="2"/>
+<text x="1450" y="452" class="bxs-s">▪ Star schema: facts + dimensions</text>
+<text x="1450" y="484" class="bxs-s">▪ Aggregated to the report grain</text>
+<text x="1450" y="516" class="bxs-s">▪ Lives INSIDE Redshift (native)</text>
+<text x="1450" y="548" class="bxs-s">▪ Built by dbt, tested by dbt</text>
+<rect x="1450" y="576" width="340" height="60" rx="10" fill="#12181D" stroke="#5F5322" stroke-width="2"/>
+<text x="1620" y="600" class="edge-s" text-anchor="middle" style="fill:#7A8C99">WHAT CHANGES</text>
+<text x="1620" y="624" class="bxs-s" text-anchor="middle" style="fill:#FFB84D">Answers, not records</text>
+<text x="1620" y="676" class="code-s" text-anchor="middle">src/dbt/models/marts/gold/</text>
+<text x="1620" y="700" class="code-s" text-anchor="middle" style="fill:#5E7080">unified_sales.sql</text>
+<text x="1620" y="742" class="bxs-s" text-anchor="middle" style="fill:#7A8C99">Power BI reads only this</text>
+
+<!-- arrows between -->
+<line x1="492" y1="530" x2="524" y2="530" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+<line x1="932" y1="530" x2="964" y2="530" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+<line x1="1372" y1="530" x2="1404" y2="530" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+
+<!-- example strip -->
+<rect x="90" y="800" width="1740" height="96" rx="14" fill="#141A20" stroke="#2C3841" stroke-width="2.5"/>
+<text x="122" y="836" class="edge" style="fill:#7A8C99">ONE ROW, ALL FOUR LAYERS</text>
+<text x="122" y="874" class="code" style="font-size:20px">sap.zsdcc dump  →  bronze.sap.zsdcc (typed, merged)  →  silver.sap.zsdcc (dept text joined)  →  gold.unified_sales (site × date × dept × scenario)</text>
+
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Raw = the photo of the receipt · Bronze = typed into the system · Silver = cleaned and standardised · Gold = the line on the report</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 03</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 01 · LESSON 45 · THE MASTERY MAP</text>
+<text x="90" y="168" class="title">Cost, Sizing and What To Remember</text>
+<text x="90" y="212" class="sub">Forty-four lessons compress to about ten decisions. If you only carry ten things out of this module, carry these.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zwhat">1 · WHAT DRIVES THE BILL</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">Serverless bills RPU-seconds. Provisioned bills nodes by the hour.</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">A spiky or intermittent workload is cheaper on serverless. A cluster running hard sixteen hours a day is cheaper provisioned, and cheaper still reserved.</text>
+
+<text x="90" y="462" class="zhow">2 · THE TEN THINGS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+
+<text x="118" y="508" class="bxs-s" style="font-size:18px"><tspan class="node">1</tspan>  It is columnar and MPP. Never SELECT *, never row-at-a-time.</text>
+<text x="118" y="546" class="bxs-s" style="font-size:18px"><tspan class="node">2</tspan>  There are no indexes. DISTKEY and SORTKEY are the design.</text>
+<text x="118" y="584" class="bxs-s" style="font-size:18px"><tspan class="node">3</tspan>  Size every VARCHAR honestly. Oversizing causes disk spill.</text>
+<text x="118" y="622" class="bxs-s" style="font-size:18px"><tspan class="node">4</tspan>  Constraints are hints. Uniqueness is a test you write and run.</text>
+<text x="118" y="660" class="bxs-s" style="font-size:18px"><tspan class="node">5</tspan>  Load with COPY from S3. Never a loop of INSERTs.</text>
+<text x="118" y="698" class="bxs-s" style="font-size:18px"><tspan class="node">6</tspan>  Every load is idempotent for its batch date, or it is not finished.</text>
+<text x="118" y="736" class="bxs-s" style="font-size:18px"><tspan class="node">7</tspan>  Hunt DS_BCAST_INNER. Small dimensions go DISTSTYLE ALL.</text>
+<text x="118" y="774" class="bxs-s" style="font-size:18px"><tspan class="node">8</tspan>  ANALYZE after every load. It is the cheapest fix that exists.</text>
+<text x="118" y="812" class="bxs-s" style="font-size:18px"><tspan class="node">9</tspan>  Store UTC. Convert once, at the reporting boundary.</text>
+<text x="118" y="850" class="bxs-s" style="font-size:18px"><tspan class="node">10</tspan> Diagnose in order. Rewriting the SQL is the last step, not the first.</text>
+
+<text x="1270" y="462" class="zsql">3 · WHERE THE MONEY GOES</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#0B1013" stroke="#2A4A3A" stroke-width="2.5"/>
+<text x="1298" y="508" class="sql"><tspan class="sqlk">1</tspan>  compute &#8212; RPUs or node hours</text>
+<text x="1298" y="536" class="sql"><tspan class="sqlk">2</tspan>  managed storage per TB-month</text>
+<text x="1298" y="564" class="sql"><tspan class="sqlk">3</tspan>  concurrency scaling beyond credit</text>
+<text x="1298" y="592" class="sql"><tspan class="sqlk">4</tspan>  Spectrum per TB scanned</text>
+<text x="1298" y="620" class="sql"><tspan class="sqlk">5</tspan>  cross-region snapshot transfer</text>
+<text x="1298" y="656" class="sqlc">-- 1 and 2 are almost the whole bill</text>
+
+<text x="1270" y="710" class="zgot">4 · THE FIVE HABITS THAT SAVE MONEY</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="758" class="bxs-s" style="font-size:17px">Set a serverless max-RPU ceiling and an alarm.</text>
+<text x="1298" y="784" class="bxs-s" style="font-size:17px">Give the workgroup a query timeout.</text>
+<text x="1298" y="810" class="bxs-s" style="font-size:17px">Materialize what every dashboard recomputes.</text>
+<text x="1298" y="836" class="bxs-s" style="font-size:17px">Reserve capacity once the pattern is known.</text>
+<text x="1298" y="866" class="bxs-s" style="font-size:17px;fill:#8CC44C">Delete the tables nobody has queried in a year.</text>
+
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">WHERE TO GO NEXT</text>
+<text x="122" y="982" class="plain">Module 00 for the lakehouse picture · Module 02 for the Tamimi build · Module 03 for the architectures. Then build something and break it in dev.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 01 · Lesson 45 · end of module</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Redshift Deep Dive</text>
+</svg></div></body></html>

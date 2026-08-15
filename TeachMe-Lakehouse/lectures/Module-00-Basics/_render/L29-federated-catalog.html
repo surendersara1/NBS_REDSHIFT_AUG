@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 0 · LESSON 29</text>
+<text x="90" y="168" class="title">The Catalog Is Now Federated</text>
+<text x="90" y="212" class="sub">It is no longer one flat list of databases. It is a three-level hierarchy that can mount other systems <tspan style="fill:#FFFFFF">in place</tspan>, without copying them.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · WHAT IT IS ══ -->
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#231114" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">Three levels &#8212; and the top one can be somebody else&#8217;s system</text>
+<text x="118" y="392" class="code" style="font-size:19px;fill:#FF8A92">catalog  .  database  .  table          &#8592; nested catalogs mirror the shape of the source</text>
+
+<!-- ══ ZONE 2 · HOW IT WORKS ══ -->
+<text x="90" y="462" class="zhow">2 · HOW IT WORKS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="520" class="bxt-s" style="font-size:24px">TWO KINDS OF CATALOG, ONE GOVERNANCE PLANE</text>
+<line x1="118" y1="538" x2="1182" y2="538" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="554" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="576" class="bxt-s" style="font-size:21px;fill:#5AA9FF">MANAGED CATALOG</text>
+<text x="1182" y="576" class="code-s" text-anchor="end" style="fill:#5E7080">S3 or RMS</text>
+<text x="136" y="602" class="bxs-s" style="font-size:18px">A catalog you create. The data is managed for you, in S3 or in Redshift Managed Storage.</text>
+<line x1="118" y1="608" x2="1182" y2="608" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="618" width="5" height="40" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="640" class="bxt-s" style="font-size:21px;fill:#3FD98A">FEDERATED CATALOG</text>
+<text x="1182" y="640" class="code-s" text-anchor="end" style="fill:#5E7080">mounts, does not copy</text>
+<text x="136" y="666" class="bxs-s" style="font-size:18px">Points at a system that already exists. The tables appear; the bytes never move.</text>
+<line x1="118" y1="672" x2="1182" y2="672" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="682" width="5" height="40" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="704" class="bxt-s" style="font-size:21px;fill:#FFB84D">ONE GOVERNANCE PLANE</text>
+<text x="1182" y="704" class="code-s" text-anchor="end" style="fill:#5E7080">AWS Lake Formation</text>
+<text x="136" y="730" class="bxs-s" style="font-size:18px">Grant at catalog, database, table or column — and every engine reading the catalog enforces it.</text>
+<line x1="118" y1="736" x2="1182" y2="736" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="746" width="5" height="40" rx="2.5" fill="#C9D6DE"/>
+<text x="136" y="768" class="bxt-s" style="font-size:21px">ANY ICEBERG ENGINE</text>
+<text x="1182" y="768" class="code-s" text-anchor="end" style="fill:#5E7080">Athena · Redshift · Spark · EMR</text>
+<text x="136" y="794" class="bxs-s" style="font-size:18px">Query in place from whichever engine suits the job. One copy of the data, many ways in.</text>
+
+<rect x="118" y="814" width="1064" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#8CE8B8">this is the SageMaker Lakehouse architecture: S3 lakes + Redshift, one catalog</text>
+
+<!-- ══ ZONE 3 · WHAT YOU CAN MOUNT ══ -->
+<text x="1270" y="462" class="zwhen">3 · WHAT YOU CAN MOUNT</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="512" class="bxs-s" style="font-size:18px">Amazon Redshift · DynamoDB · DocumentDB</text>
+<text x="1298" y="542" class="bxs-s" style="font-size:18px"><tspan style="fill:#FFFFFF">Oracle</tspan> · SQL Server · MySQL · PostgreSQL</text>
+<text x="1298" y="572" class="bxs-s" style="font-size:18px">Aurora MySQL · Aurora PostgreSQL</text>
+<text x="1298" y="602" class="bxs-s" style="font-size:18px">BigQuery · Snowflake · Azure SQL</text>
+<line x1="1298" y1="622" x2="1802" y2="622" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="656" class="code" style="font-size:17px">S3 Tables &#8594; s3tablescatalog</text>
+
+<!-- ══ ZONE 4 · GOTCHAS ══ -->
+<text x="1270" y="710" class="zprac">4 · GOTCHAS</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Lakehouse identifiers must be lowercase.</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Prefer declarative registration to crawlers.</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Partition projection beats crawling.</text>
+<text x="1298" y="852" class="bxt-s" style="font-size:19px;fill:#FFB84D">decide naming before you build</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A library card catalogue that also lists the books in the library across the road — and the librarian there still checks your card.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 0 · Lesson 29</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundations for Data Engineers</text>
+</svg></div></body></html>

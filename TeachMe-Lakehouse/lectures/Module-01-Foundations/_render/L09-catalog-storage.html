@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../_fonts/fonts.css">
+<style>
+  html,body{margin:0;padding:0;background:#0E1418}
+  #slide{width:1920px;height:1080px}
+  /* ── LECTURE TYPE SCALE (projected, read from the back row) ── */
+  .eyebrow{font-family:'Asap',sans-serif;font-weight:800;font-size:22px;letter-spacing:4px;fill:#FF3B47}
+  .title  {font-family:'Asap',sans-serif;font-weight:800;font-size:62px;fill:#FFFFFF}
+  .sub    {font-family:'Cabin',sans-serif;font-weight:500;font-size:27px;fill:#A9BAC6}
+  .cap    {font-family:'Asap',sans-serif;font-weight:800;font-size:19px;letter-spacing:3.5px;fill:#7A8C99}
+  .bxt    {font-family:'Asap',sans-serif;font-weight:800;font-size:31px;fill:#FFFFFF}
+  .bxt-d  {font-family:'Asap',sans-serif;font-weight:800;font-size:31px;fill:#0E1418}
+  .bxs    {font-family:'Cabin',sans-serif;font-weight:600;font-size:21px;fill:#D3DEE5}
+  .bxs-d  {font-family:'Cabin',sans-serif;font-weight:600;font-size:21px;fill:#25313A}
+  .code   {font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:17px;fill:#6FD8C6}
+  .code-d {font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:17px;fill:#2A4A44}
+  .edge   {font-family:'Cabin',sans-serif;font-weight:700;font-size:20px;fill:#A9BAC6}
+  .foot   {font-family:'Cabin',sans-serif;font-weight:600;font-size:19px;fill:#7A8C99}
+  .footc  {font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:18px;fill:#5E7080}
+  .plain  {font-family:'Cabin',sans-serif;font-weight:600;font-size:24px;fill:#D3DEE5}
+  .plainb {font-family:'Asap',sans-serif;font-weight:800;font-size:24px;fill:#FFB84D}
+</style>
+</head>
+<body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="mW" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+    <marker id="mR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+    <marker id="mG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8296A3"/></marker>
+    <marker id="mB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5AA9FF"/></marker>
+    <marker id="mGr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#0E1418"/>
+  <rect x="0" y="0" width="1920" height="11" fill="#E3000E"/>
+
+  <!-- ════════ HEADER ════════ -->
+  <text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 09</text>
+  <text x="90" y="168" class="title">Where the Data Actually Lives</text>
+  <text x="90" y="212" class="sub">Catalog vs table format vs storage — three different things people all call “the database”</text>
+  <line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+  <!-- ════════ LEFT: CATALOG ════════ -->
+  <text x="90" y="304" class="cap">1 · THE CATALOG</text>
+  <rect x="90" y="330" width="430" height="180" rx="16" fill="#1B2A33" stroke="#3A5766" stroke-width="2.5"/>
+  <text x="305" y="392" class="bxt" text-anchor="middle">Federated Glue Catalog</text>
+  <text x="305" y="432" class="code" text-anchor="middle" style="font-size:23px">s3tablescatalog</text>
+  <text x="305" y="474" class="bxs" text-anchor="middle" style="font-size:20px">The index. Knows what tables exist —</text>
+  <text x="305" y="498" class="bxs" text-anchor="middle" style="font-size:20px">holds no data itself.</text>
+  <text x="305" y="548" class="code" text-anchor="middle" style="fill:#5E7080">infra/modules/catalog_federation/</text>
+
+  <!-- ════════ MIDDLE: STORAGE STACK ════════ -->
+  <rect x="640" y="286" width="600" height="600" rx="20" fill="none" stroke="#2C3841" stroke-width="2.5" stroke-dasharray="10 8"/>
+  <text x="940" y="322" class="cap" text-anchor="middle">2 · WHERE THE ROWS LIVE</text>
+
+  <rect x="690" y="352" width="500" height="150" rx="16" fill="#E3000E"/>
+  <text x="940" y="408" class="bxt" text-anchor="middle">Amazon S3 Tables</text>
+  <text x="940" y="446" class="bxs" text-anchor="middle" style="fill:#FFE0E2">the AWS service — bronze + silver buckets</text>
+  <text x="940" y="480" class="code" text-anchor="middle" style="fill:#FFC9CD">s3-data-lake/main.tf:11,30</text>
+
+  <rect x="690" y="542" width="500" height="150" rx="16" fill="#FFE3E5" stroke="#FF3B47" stroke-width="3"/>
+  <text x="940" y="594" class="bxt-d" text-anchor="middle">Apache Iceberg v2</text>
+  <text x="940" y="628" class="bxs-d" text-anchor="middle">the table format — MERGE, snapshots,</text>
+  <text x="940" y="652" class="bxs-d" text-anchor="middle">time travel, schema evolution</text>
+  <text x="940" y="681" class="code-d" text-anchor="middle">writers/s3_tables.py</text>
+
+  <rect x="690" y="732" width="500" height="130" rx="16" fill="#1B2329" stroke="#3A4854" stroke-width="2.5"/>
+  <text x="940" y="788" class="bxt" text-anchor="middle">Amazon S3</text>
+  <text x="940" y="826" class="bxs" text-anchor="middle">the actual files — Parquet + metadata</text>
+
+  <!-- ════════ RIGHT: R/W ════════ -->
+  <text x="1360" y="304" class="cap">3 · WHO TOUCHES IT</text>
+
+  <rect x="1360" y="330" width="470" height="185" rx="16" fill="#12283F" stroke="#5AA9FF" stroke-width="3"/>
+  <text x="1392" y="386" class="bxt" style="font-size:29px">WRITE — Glue / Spark</text>
+  <text x="1392" y="428" class="bxs">bronze_pull · abap_transform</text>
+  <text x="1392" y="458" class="bxs">bronze_to_silver · dim_sync</text>
+  <text x="1392" y="494" class="code" style="fill:#7FB6EF">src/glue/glue_engine/jobs/</text>
+
+  <rect x="1360" y="552" width="470" height="185" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+  <text x="1392" y="608" class="bxt" style="font-size:29px">READ — Redshift</text>
+  <text x="1392" y="650" class="bxs">Spectrum reads Silver in place,</text>
+  <text x="1392" y="680" class="bxs">dbt builds Gold → Power BI</text>
+  <text x="1392" y="716" class="code" style="fill:#6FD8A8">jobs/_scripts/run_dbt.py</text>
+
+  <rect x="1360" y="774" width="470" height="112" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5" stroke-dasharray="9 6"/>
+  <text x="1392" y="822" class="bxt" style="fill:#8296A3;font-size:25px">NOT USED HERE</text>
+  <text x="1392" y="856" class="bxs" style="fill:#7A8C99;font-size:20px">Athena · Hive · Presto — Redshift is the engine</text>
+
+  <!-- ════════ EDGES ════════ -->
+  <path d="M520 420 H600 V427 H682" stroke="#C9D6DE" stroke-width="3.5" fill="none" marker-end="url(#mW)"/>
+  <text x="600" y="404" class="edge" text-anchor="middle">indexes</text>
+
+  <line x1="940" y1="502" x2="940" y2="534" stroke="#FF3B47" stroke-width="4" marker-end="url(#mR)"/>
+  <text x="922" y="527" class="edge" text-anchor="end" style="font-size:19px">stored as</text>
+
+  <line x1="940" y1="692" x2="940" y2="724" stroke="#8296A3" stroke-width="4" marker-end="url(#mG)"/>
+  <text x="922" y="717" class="edge" text-anchor="end" style="font-size:19px">which is just</text>
+
+  <line x1="1352" y1="422" x2="1198" y2="422" stroke="#5AA9FF" stroke-width="3.5" marker-end="url(#mB)"/>
+  <text x="1275" y="404" class="edge" text-anchor="middle" style="fill:#5AA9FF">writes</text>
+
+  <line x1="1352" y1="617" x2="1198" y2="617" stroke="#3FD98A" stroke-width="3.5" stroke-dasharray="9 6" marker-end="url(#mGr)"/>
+  <text x="1275" y="599" class="edge" text-anchor="middle" style="fill:#3FD98A">reads</text>
+
+  <!-- ════════ PLAIN-ENGLISH STRIP (for app coders) ════════ -->
+  <rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+  <text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+  <text x="122" y="982" class="plain">The <tspan class="plainb" font-size="24">catalog</tspan> is the library index · <tspan class="plainb" font-size="24">Iceberg</tspan> is the file format (like .docx) · <tspan class="plainb" font-size="24">S3</tspan> is the hard drive. S3 Tables = AWS running Iceberg for you.</text>
+
+  <!-- ════════ FOOTER ════════ -->
+  <text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 09</text>
+  <text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg>
+</div>
+</body>
+</html>

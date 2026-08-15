@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 21</text>
+<text x="90" y="168" class="title">Set Up Security and Governance</text>
+<text x="90" y="212" class="sub">One role per workload, one key per layer, and a condition on every service principal.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE DECISION ══ -->
+<text x="90" y="302" class="cap">1 · THE DECISION</text>
+<rect x="90" y="316" width="1740" height="94" rx="14" fill="#141A20" stroke="#2C3841" stroke-width="2.5"/>
+<rect x="90" y="316" width="7" height="94" rx="3.5" fill="#FF3B47"/>
+<text x="122" y="356" class="bxt-s">Who can read the data — and how narrow can you make that on day one?</text>
+<text x="122" y="390" class="bxs-s" style="fill:#8FA2AF">Broad grants are easy to add and almost impossible to take back once a dozen jobs depend on them.</text>
+
+<!-- ══ ZONE 2 · DO THIS ══ -->
+<text x="90" y="452" class="cap">2 · DO THIS</text>
+<rect x="90" y="466" width="1108" height="424" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="118" y="502" class="doit">SIX RULES, SET ON DAY ONE</text>
+<line x1="118" y1="516" x2="1170" y2="516" stroke="#2A4A3A" stroke-width="2"/>
+
+<rect x="118" y="540" width="516" height="96" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2"/>
+<text x="140" y="576" class="bxs">Least privilege, per workload</text>
+<text x="140" y="606" class="bxs-s" style="fill:#8FA2AF">One role per job — no full-access managed policy.</text>
+
+<rect x="654" y="540" width="516" height="96" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2"/>
+<text x="676" y="576" class="bxs">Condition every service principal</text>
+<text x="676" y="606" class="bxs-s" style="fill:#8FA2AF">aws:SourceAccount = this account, on every key.</text>
+
+<rect x="118" y="648" width="516" height="96" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2"/>
+<text x="140" y="684" class="bxs">One KMS key per data layer</text>
+<text x="140" y="714" class="bxs-s" style="fill:#8FA2AF">raw · bronze · silver · gold · secrets · audit</text>
+
+<rect x="654" y="648" width="516" height="96" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2"/>
+<text x="676" y="684" class="bxs">Tag-based access for data</text>
+<text x="676" y="714" class="bxs-s" style="fill:#8FA2AF">Grant on sensitivity=pii, not on table names.</text>
+
+<rect x="118" y="756" width="516" height="96" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2"/>
+<text x="140" y="792" class="bxs">Secrets by reference only</text>
+<text x="140" y="822" class="bxs-s" style="fill:#8FA2AF">Code holds the ARN; the value never enters state.</text>
+
+<rect x="654" y="756" width="516" height="96" rx="10" fill="#0B1A12" stroke="#2E7A55" stroke-width="2"/>
+<text x="676" y="792" class="bxs">Permissions boundary</text>
+<text x="676" y="822" class="bxs-s" style="fill:#8FA2AF">On any role that is allowed to create roles.</text>
+
+<text x="118" y="878" class="code" style="fill:#6FD8A8">modules/iam · modules/kms · modules/lake-formation · modules/secrets</text>
+
+<!-- ══ ZONE 3 · WHY ══ -->
+<text x="1226" y="452" class="cap">3 · WHY</text>
+<rect x="1226" y="466" width="604" height="192" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1252" y="504" class="bxt-s">EVERY STAR DELIBERATE</text>
+<line x1="1252" y1="518" x2="1804" y2="518" stroke="#2C3841" stroke-width="2"/>
+<text x="1252" y="546" class="bxs-s">Least privilege is not zero wildcards — it is</text>
+<text x="1252" y="574" class="bxs-s">every wildcard deliberate, and commented.</text>
+<rect x="1252" y="588" width="552" height="62" rx="10" fill="#2A1416" stroke="#7A2F35" stroke-width="2"/>
+<text x="1274" y="614" class="avoid" style="font-size:17px">WHAT BREAKS IF YOU DON'T</text>
+<text x="1274" y="640" class="bxs-s" style="fill:#FFB9BD">A job role becomes an account-wide key.</text>
+
+<!-- ══ ZONE 4 · ON APPAREL GROUP ══ -->
+<text x="1226" y="690" class="cap">4 · ON APPAREL GROUP</text>
+<rect x="1226" y="704" width="604" height="186" rx="16" fill="#221B10" stroke="#C0902E" stroke-width="3"/>
+<text x="1252" y="740" class="agbox">AG · EPSILON IS PII</text>
+<line x1="1252" y1="754" x2="1804" y2="754" stroke="#5A4626" stroke-width="2"/>
+<text x="1252" y="784" class="bxs-s">Epsilon loyalty and MoEngage profiles are</text>
+<text x="1252" y="812" class="bxs-s">personal data. Classify in the spec, mask in</text>
+<text x="1252" y="840" class="bxs-s">Silver — before any report can see it.</text>
+<text x="1252" y="874" class="code-s" style="fill:#5E7080">pii_class: pii · grant on sensitivity=pii</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Give every job the smallest key ring that still opens its own doors — and put a name on the one door you had to leave open.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 21</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

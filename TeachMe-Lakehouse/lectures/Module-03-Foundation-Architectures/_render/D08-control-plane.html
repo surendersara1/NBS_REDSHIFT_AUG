@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5AA9FF"/></marker>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 3 · ARCHITECTURE 08</text>
+<text x="90" y="168" class="title">The Control Plane</text>
+<text x="90" y="212" class="sub">Five DynamoDB tables that turn &#8220;did last night work?&#8221; into a query instead of a log search &#8212; and make barriers possible at all.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ WRITERS ══ -->
+<rect x="90" y="316" width="380" height="574" rx="16" fill="#101A24" stroke="#2E4A66" stroke-width="2.5"/>
+<text x="118" y="356" class="grp" style="fill:#5AA9FF">WHO WRITES IT</text>
+<line x1="118" y1="372" x2="442" y2="372" stroke="#2E4A66" stroke-width="2"/>
+<image href="../../_icons/aws/analytics/glue.png" x="118" y="406" width="48" height="48"/>
+<text x="178" y="434" class="icn" style="font-size:18px">Glue jobs</text>
+<text x="178" y="456" class="icd" style="font-size:16px">every run, every table</text>
+<image href="../../_icons/aws/integration/step-functions.png" x="118" y="520" width="48" height="48"/>
+<text x="178" y="548" class="icn" style="font-size:18px">Step Functions</text>
+<text x="178" y="570" class="icd" style="font-size:16px">phase transitions</text>
+<image href="../../_icons/aws/compute/lambda.png" x="118" y="634" width="48" height="48"/>
+<text x="178" y="662" class="icn" style="font-size:18px">The dispatcher</text>
+<text x="178" y="684" class="icd" style="font-size:16px">what runs tonight</text>
+<image href="../../_icons/aws/analytics/emr.png" x="118" y="748" width="48" height="48"/>
+<text x="178" y="776" class="icn" style="font-size:18px">Writers</text>
+<text x="178" y="798" class="icd" style="font-size:16px">lineage on every write</text>
+
+<line x1="478" y1="560" x2="502" y2="560" stroke="#5AA9FF" stroke-width="3.5" marker-end="url(#ab)"/>
+
+<!-- ══ THE TABLES ══ -->
+<rect x="510" y="316" width="880" height="574" rx="16" fill="#231114" stroke="#E3000E" stroke-width="3"/>
+<image href="../../_icons/aws/database/dynamodb.png" x="538" y="334" width="34" height="34"/>
+<text x="584" y="358" class="icb" style="fill:#FF6B73">AMAZON DYNAMODB &#8212; FIVE TABLES, ONE SOURCE OF TRUTH</text>
+<line x1="538" y1="374" x2="1362" y2="374" stroke="#6A2A30" stroke-width="2"/>
+
+<rect x="538" y="396" width="5" height="44" rx="2.5" fill="#FF3B47"/>
+<text x="562" y="422" class="code" style="font-size:19px;fill:#FF8A92">runs</text>
+<text x="562" y="446" class="icd" style="font-size:17px;fill:#E5B8BC">one row per job execution &#8212; status, start, end, rows, error</text>
+
+<rect x="538" y="490" width="5" height="44" rx="2.5" fill="#FF3B47"/>
+<text x="562" y="516" class="code" style="font-size:19px;fill:#FF8A92">watermarks</text>
+<text x="562" y="540" class="icd" style="font-size:17px;fill:#E5B8BC">the high-water mark per table &#8212; and whether it is dirty</text>
+
+<rect x="538" y="584" width="5" height="44" rx="2.5" fill="#FF3B47"/>
+<text x="562" y="610" class="code" style="font-size:19px;fill:#FF8A92">pipeline-state</text>
+<text x="562" y="634" class="icd" style="font-size:17px;fill:#E5B8BC">live per-source state, so the dispatcher knows what is safe</text>
+
+<rect x="538" y="678" width="5" height="44" rx="2.5" fill="#FF3B47"/>
+<text x="562" y="704" class="code" style="font-size:19px;fill:#FF8A92">lineage_edges</text>
+<text x="562" y="728" class="icd" style="font-size:17px;fill:#E5B8BC">which output came from which input &#8212; for impact analysis</text>
+
+<rect x="538" y="772" width="5" height="44" rx="2.5" fill="#FF3B47"/>
+<text x="562" y="798" class="code" style="font-size:19px;fill:#FF8A92">coordination</text>
+<text x="562" y="822" class="icd" style="font-size:17px;fill:#E5B8BC">single-flight locks &#8212; conditional writes are what make barriers work</text>
+
+<rect x="538" y="844" width="824" height="34" rx="8" fill="#0B1013" stroke="#6A2A30" stroke-width="2"/>
+<text x="558" y="867" class="code" style="font-size:16px;fill:#FF8A92">attribute_not_exists(pk)  &#8212;  the whole barrier, in one condition expression</text>
+
+<line x1="1398" y1="560" x2="1422" y2="560" stroke="#3FD98A" stroke-width="3.5" marker-end="url(#ag)"/>
+
+<!-- ══ READERS ══ -->
+<rect x="1430" y="316" width="400" height="574" rx="16" fill="#0F1E17" stroke="#2A5A40" stroke-width="2.5"/>
+<text x="1458" y="356" class="grp" style="fill:#3FD98A">WHO READS IT</text>
+<line x1="1458" y1="372" x2="1802" y2="372" stroke="#2A5A40" stroke-width="2"/>
+<image href="../../_icons/aws/general/client.png" x="1458" y="406" width="48" height="48"/>
+<text x="1518" y="434" class="icn" style="font-size:18px">The ops console</text>
+<text x="1518" y="456" class="icd" style="font-size:16px">what ran, when, how long</text>
+<image href="../../_icons/aws/integration/step-functions.png" x="1458" y="520" width="48" height="48"/>
+<text x="1518" y="548" class="icn" style="font-size:18px">The barrier gate</text>
+<text x="1518" y="570" class="icd" style="font-size:16px">may phase 2 start yet?</text>
+<image href="../../_icons/aws/analytics/glue.png" x="1458" y="634" width="48" height="48"/>
+<text x="1518" y="662" class="icn" style="font-size:18px">The next run</text>
+<text x="1518" y="684" class="icd" style="font-size:16px">reads its own watermark</text>
+<image href="../../_icons/aws/management/cloudwatch-alarm.png" x="1458" y="748" width="48" height="48"/>
+<text x="1518" y="776" class="icn" style="font-size:18px">Alarms</text>
+<text x="1518" y="798" class="icd" style="font-size:16px">stale, failed or missing</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">The clipboard by the door. Anyone can read what happened last night without going through the bins &#8212; and two people cannot take the same job.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 3 · Architecture 08</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundation Architectures</text>
+</svg></div></body></html>

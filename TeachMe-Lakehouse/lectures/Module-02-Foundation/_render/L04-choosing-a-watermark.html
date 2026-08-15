@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 04</text>
+<text x="90" y="168" class="title">Choose a Watermark You Can Trust</text>
+<text x="90" y="212" class="sub">One column decides which rows are new. Pick it on evidence, validate it before use, and never store one you would refuse.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE DECISION ══ -->
+<text x="90" y="300" class="cap">1 · THE DECISION</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">Which column means "this row is new"?</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">Every future run trusts that column without question. Qualify it now, or pay for it every night.</text>
+
+<rect x="1040" y="336" width="350" height="64" rx="12" fill="#231519" stroke="#7A3A40" stroke-width="2.5" stroke-dasharray="9 6"/>
+<line x1="1066" y1="359" x2="1084" y2="377" stroke="#FF6B73" stroke-width="3.5" stroke-linecap="round"/>
+<line x1="1084" y1="359" x2="1066" y2="377" stroke="#FF6B73" stroke-width="3.5" stroke-linecap="round"/>
+<text x="1100" y="376" class="avoid">Any date-ish column</text>
+
+<rect x="1410" y="336" width="420" height="64" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<polyline points="1440,368 1449,377 1466,357" fill="none" stroke="#3FD98A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1480" y="376" class="doit">Monotonic &amp; indexed</text>
+
+<!-- ══ ZONE 2 · DO THIS ══ -->
+<text x="90" y="462" class="doit">2 · DO THIS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="518" class="bxt-s" style="font-size:24px">QUALIFY THE COLUMN — ALL FOUR TESTS, OR IT IS NOT A WATERMARK</text>
+<line x1="118" y1="534" x2="1182" y2="534" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="552" width="248" height="104" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="242" y="586" class="bxt-s" text-anchor="middle" style="font-size:19px;fill:#3FD98A">MONOTONIC</text>
+<text x="242" y="616" class="bxs-s" text-anchor="middle" style="font-size:17px">only ever goes up;</text>
+<text x="242" y="640" class="bxs-s" text-anchor="middle" style="font-size:17px">an update moves it</text>
+
+<rect x="390" y="552" width="248" height="104" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="514" y="586" class="bxt-s" text-anchor="middle" style="font-size:19px;fill:#3FD98A">INDEXED</text>
+<text x="514" y="616" class="bxs-s" text-anchor="middle" style="font-size:17px">the delta predicate</text>
+<text x="514" y="640" class="bxs-s" text-anchor="middle" style="font-size:17px">must not table-scan</text>
+
+<rect x="662" y="552" width="248" height="104" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="786" y="586" class="bxt-s" text-anchor="middle" style="font-size:19px;fill:#3FD98A">NON-NULL</text>
+<text x="786" y="616" class="bxs-s" text-anchor="middle" style="font-size:17px">a NULL row stays</text>
+<text x="786" y="640" class="bxs-s" text-anchor="middle" style="font-size:17px">invisible forever</text>
+
+<rect x="934" y="552" width="248" height="104" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="1058" y="586" class="bxt-s" text-anchor="middle" style="font-size:19px;fill:#3FD98A">PARSEABLE</text>
+<text x="1058" y="616" class="bxs-s" text-anchor="middle" style="font-size:17px">you know its exact</text>
+<text x="1058" y="640" class="bxs-s" text-anchor="middle" style="font-size:17px">type and format</text>
+
+<rect x="118" y="674" width="520" height="130" rx="12" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="140" y="706" class="bxt-s" style="font-size:20px;fill:#3FD98A">VALIDATE BEFORE YOU SPLICE</text>
+<text x="140" y="738" class="bxs-s" style="font-size:18px">Check the value against the declared</text>
+<text x="140" y="764" class="bxs-s" style="font-size:18px">format before it goes near SQL. On</text>
+<text x="140" y="790" class="bxs-s" style="font-size:18px">failure keep the old mark and re-read.</text>
+
+<rect x="662" y="674" width="520" height="130" rx="12" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="684" y="706" class="bxt-s" style="font-size:20px;fill:#3FD98A">NO COLUMN QUALIFIES?</text>
+<text x="684" y="738" class="bxs-s" style="font-size:18px">Declare the table full-refresh in its</text>
+<text x="684" y="764" class="bxs-s" style="font-size:18px">spec. Faking CDC on a column you</text>
+<text x="684" y="790" class="bxs-s" style="font-size:18px">cannot trust loses rows in silence.</text>
+
+<rect x="118" y="818" width="1064" height="52" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="850" class="code" xml:space="preserve" style="fill:#8CE8B8">forward-only:  a candidate below the stored watermark is discarded, never persisted</text>
+
+<!-- ══ ZONE 3 · WHY ══ -->
+<text x="1270" y="462" class="cap">3 · WHY</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="514" class="bxs-s" style="font-size:18px">A watermark is a bookmark every future run</text>
+<text x="1298" y="540" class="bxs-s" style="font-size:18px">trusts without question. A bad one fails in</text>
+<text x="1298" y="566" class="bxs-s" style="font-size:18px">one of two ways: it skips rows in silence,</text>
+<text x="1298" y="592" class="bxs-s" style="font-size:18px">or it wedges the table at the same guard.</text>
+<line x1="1298" y1="608" x2="1802" y2="608" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="636" class="bxt-s" style="font-size:18px;fill:#FF6B73">IF YOU DON'T</text>
+<text x="1298" y="662" class="bxs-s" style="font-size:18px;fill:#C69AA0">The gap surfaces months later, unexplained.</text>
+
+<!-- ══ ZONE 4 · ON APPAREL GROUP ══ -->
+<text x="1270" y="710" class="agbox">4 · ON APPAREL GROUP</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E8D5B0">RMS · SIM · XStore — prove one watermark</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E8D5B0">per table before any spec is written</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Epsilon · MoEngage — use their cursor</text>
+<text x="1298" y="850" class="bxt-s" style="font-size:19px;fill:#FFB84D">Lookups &amp; footfall — full-refresh</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A bookmark. Put it on the wrong page and you skip chapters — or can't open the book at all. Check the page before you place it.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 04</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

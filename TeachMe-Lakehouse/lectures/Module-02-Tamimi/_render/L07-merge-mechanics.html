@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 07</text>
+<text x="90" y="168" class="title">Why This MERGE Failed</text>
+<text x="90" y="212" class="sub">A target row may be claimed by at most ONE source row. Every cardinality error is a duplicate upstream.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE ARMS ══ -->
+<text x="90" y="300" class="cap">1 · THE ARMS — WHAT THE WRITER ACTUALLY BUILDS</text>
+
+<rect x="90" y="322" width="900" height="278" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="362" class="bxt-s" style="fill:#FF6A72">Three arms, assembled as a string</text>
+<line x1="118" y1="378" x2="962" y2="378" stroke="#5A2028" stroke-width="2"/>
+
+<rect x="118" y="392" width="844" height="146" rx="8" fill="#0B1013" stroke="#3A1A1E" stroke-width="2"/>
+<text x="138" y="418" class="code" xml:space="preserve">MERGE INTO &lt;target&gt; t USING &lt;source&gt; s  ON t.`k` = s.`k`</text>
+<text x="138" y="442" class="code" xml:space="preserve" style="fill:#FF8A92">WHEN MATCHED AND s.`_change_op` = 'D'   THEN DELETE</text>
+<text x="138" y="466" class="code" xml:space="preserve">WHEN MATCHED                            THEN UPDATE SET *</text>
+<text x="138" y="490" class="code" xml:space="preserve">WHEN NOT MATCHED AND s.`_change_op` &lt;&gt; 'D'</text>
+<text x="138" y="514" class="code" xml:space="preserve">                                        THEN INSERT *</text>
+
+<text x="118" y="566" class="bxs-s">The delete arm exists only when the frame carries _change_op (SAP ODP deltas).</text>
+<text x="118" y="588" class="code-s" style="fill:#5E7080">writers/s3_tables.py:251-274 · jobs/bronze_to_silver.py:228-233</text>
+
+<!-- ══ ZONE 2 · THE CONSTRAINT ══ -->
+<text x="1030" y="300" class="cap">2 · THE ONE-MATCH CONSTRAINT</text>
+
+<rect x="1030" y="322" width="800" height="278" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1058" y="362" class="bxt-s">Two source rows, one target row</text>
+
+<rect x="1058" y="384" width="300" height="88" rx="10" fill="#12181D" stroke="#2C3841" stroke-width="2"/>
+<rect x="1070" y="394" width="276" height="32" rx="6" fill="#0B1013"/>
+<text x="1084" y="416" class="code-s">RAW row A  MATNR=100234</text>
+<rect x="1070" y="432" width="276" height="32" rx="6" fill="#0B1013"/>
+<text x="1084" y="454" class="code-s">RAW row B  MATNR=100234</text>
+
+<rect x="1548" y="402" width="254" height="52" rx="10" fill="#12181D" stroke="#2C3841" stroke-width="2"/>
+<text x="1675" y="434" class="code-s" text-anchor="middle">Bronze  MATNR=100234</text>
+
+<line x1="1364" y1="410" x2="1542" y2="422" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+<line x1="1364" y1="448" x2="1542" y2="434" stroke="#FF3B47" stroke-width="3.5" marker-end="url(#ar)"/>
+
+<rect x="1058" y="486" width="744" height="46" rx="10" fill="#2A1216" stroke="#E3000E" stroke-width="2.5"/>
+<text x="1078" y="516" class="code" style="fill:#FF8A92">MERGE_CARDINALITY_VIOLATION — the whole job dies</text>
+
+<text x="1058" y="558" class="bxs-s">Live on QA 2026-07-23: a retried source_download re-wrote the same</text>
+<text x="1058" y="582" class="bxs-s">cycle prefix, so the snapshot landed twice — sap.mbew, sap.mbewh.</text>
+
+<!-- ══ ZONE 3 · THE FIX ══ -->
+<text x="90" y="640" class="cap">3 · THE FIX — DEDUPE THE SOURCE, IN ALL THREE PLACES</text>
+
+<!-- f1 -->
+<rect x="90" y="662" width="560" height="226" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="704" class="bxt-s">IN THE JOB</text>
+<line x1="118" y1="720" x2="622" y2="720" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="750" class="bxs-s">A retried download can double-write</text>
+<text x="118" y="778" class="bxs-s">the cycle prefix. Collapse the frame</text>
+<text x="118" y="806" class="bxs-s">to one row per merge_key first.</text>
+<rect x="118" y="820" width="504" height="42" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="136" y="847" class="code">df.dropDuplicates(spec.merge_key)</text>
+<text x="118" y="878" class="code-s" style="fill:#5E7080">jobs/bronze_pull.py:313 · commit 359b3b2</text>
+
+<!-- f2 -->
+<rect x="680" y="662" width="560" height="226" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="708" y="704" class="bxt-s">IN THE WRITER</text>
+<line x1="708" y1="720" x2="1212" y2="720" stroke="#2C3841" stroke-width="2"/>
+<text x="708" y="750" class="bxs-s">merge_into re-dedupes the classic</text>
+<text x="708" y="778" class="bxs-s">upsert source itself: ROW_NUMBER over</text>
+<text x="708" y="806" class="bxs-s">the key, latest ingest wins.</text>
+<rect x="708" y="820" width="504" height="42" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="726" y="847" class="code">.where(col("_rn") == 1)</text>
+<text x="708" y="878" class="code-s" style="fill:#5E7080">writers/s3_tables.py:241 · :539-561</text>
+
+<!-- f3 -->
+<rect x="1270" y="662" width="560" height="226" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="704" class="bxt-s">IN dbt</text>
+<line x1="1298" y1="720" x2="1802" y2="720" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="750" class="bxs-s">Redshift refuses QUALIFY over a</text>
+<text x="1298" y="778" class="bxs-s">Spectrum external table, so staging</text>
+<text x="1298" y="806" class="bxs-s">ranks in a subquery: WHERE _rn = 1.</text>
+<rect x="1298" y="820" width="504" height="42" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="1314" y="847" class="code">ROW_NUMBER() OVER (PARTITION BY werks, datum)</text>
+<text x="1298" y="878" class="code-s" style="fill:#5E7080">models/staging/stg_sap_zscc.sql:24-63</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">MERGE promises that no two source rows want the same target row. Break that promise and it stops — the duplicate is upstream.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 07</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

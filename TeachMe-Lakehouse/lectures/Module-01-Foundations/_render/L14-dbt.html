@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 14</text>
+<text x="90" y="168" class="title">dbt: SQL as Engineered Code</text>
+<text x="90" y="212" class="sub">A model is one SELECT. ref() builds the DAG. The warehouse then builds itself, in dependency order.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 ══ -->
+<text x="90" y="300" class="cap">1 · A MODEL IS ONE SELECT</text>
+<rect x="90" y="322" width="560" height="268" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="366" class="bxt-s" style="fill:#FF6A72">One SELECT. No DDL.</text>
+<line x1="118" y1="384" x2="622" y2="384" stroke="#5A2028" stroke-width="2"/>
+<text x="118" y="416" class="bxs-s">You write the SELECT. dbt writes the CREATE</text>
+<text x="118" y="444" class="bxs-s">TABLE, the DROP, the atomic swap and the</text>
+<text x="118" y="472" class="bxs-s">grants — for every model, the same way.</text>
+<rect x="118" y="490" width="504" height="58" rx="8" fill="#0B1013" stroke="#3A1A20" stroke-width="2"/>
+<text x="138" y="514" class="code" style="fill:#FFA0A6">{{ config(materialized='view') }}</text>
+<text x="138" y="536" class="code" style="fill:#FFA0A6">FROM {{ source('silver','sap_zsdcc') }}</text>
+<text x="118" y="576" class="code-s" style="fill:#5E7080">models/staging/stg_sap_zsdcc.sql:17-32</text>
+
+<!-- ══ ZONE 2 ══ -->
+<text x="690" y="300" class="cap">2 · ref() BUILDS THE DAG</text>
+<rect x="690" y="322" width="560" height="268" rx="16" fill="#1B2A33" stroke="#3A5766" stroke-width="3"/>
+<text x="718" y="366" class="bxt-s">ref() is the dependency</text>
+<line x1="718" y1="384" x2="1222" y2="384" stroke="#2C3841" stroke-width="2"/>
+<text x="718" y="416" class="bxs-s">ref('stg_sap_zsdcc') compiles to the real</text>
+<text x="718" y="444" class="bxs-s">relation AND records an edge in the graph.</text>
+<text x="718" y="472" class="bxs-s">dbt sorts the graph and builds in order —</text>
+<rect x="718" y="490" width="504" height="58" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="738" y="514" class="code">stg_sap_zsdcc → unified_sales → vw_abv</text>
+<text x="738" y="536" class="code" xml:space="preserve" style="fill:#5E7080">dbt build   # deps + run + test, in order</text>
+<text x="718" y="576" class="code-s" style="fill:#5E7080">9 staging · 4 dims · 5 gold · 11 reporting</text>
+
+<!-- ══ ZONE 3 ══ -->
+<text x="1290" y="300" class="cap">3 · TESTS MAKE IT SOFTWARE</text>
+<rect x="1290" y="322" width="540" height="268" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="1318" y="366" class="bxt-s">Tests ship with the model</text>
+<line x1="1318" y1="384" x2="1802" y2="384" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1318" y="416" class="bxs-s">not_null · unique · accepted_values live in</text>
+<text x="1318" y="444" class="bxs-s">YAML beside the model. dbt build runs each</text>
+<text x="1318" y="472" class="bxs-s">test right after its model and stops.</text>
+<rect x="1318" y="490" width="484" height="58" rx="8" fill="#0B1013" stroke="#1E3A2A" stroke-width="2"/>
+<text x="1338" y="514" class="code" xml:space="preserve" style="fill:#6FD8A8">tests:  +store_failures: true</text>
+<text x="1338" y="536" class="code" xml:space="preserve" style="fill:#6FD8A8">        +severity: error</text>
+<text x="1318" y="576" class="code-s" style="fill:#5E7080">src/dbt/dbt_project.yml:118-120</text>
+
+<!-- ══ MATERIALIZATION BAND ══ -->
+<text x="90" y="630" class="cap">MATERIALIZATION IS ONE LINE OF CONFIG — src/dbt/dbt_project.yml:57-98</text>
+
+<rect x="90" y="652" width="417" height="236" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="694" class="bxt-s">staging</text>
+<line x1="118" y1="712" x2="479" y2="712" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="744" class="code">+materialized: view</text>
+<text x="118" y="770" class="code" style="fill:#FFB84D">+bind: false</text>
+<text x="118" y="796" class="code" style="fill:#5E7080">+schema: staging</text>
+<text x="118" y="830" class="bxs-s">1:1 with Silver. Renames + casts.</text>
+<text x="118" y="858" class="bxs-s" style="fill:#7A8C99">9 models · late-binding (see L13)</text>
+
+<rect x="531" y="652" width="417" height="236" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="559" y="694" class="bxt-s">intermediate</text>
+<line x1="559" y1="712" x2="920" y2="712" stroke="#2C3841" stroke-width="2"/>
+<text x="559" y="744" class="code">+materialized: ephemeral</text>
+<text x="559" y="770" class="code" style="fill:#5E7080">+schema: intermediate</text>
+<text x="559" y="830" class="bxs-s">Compiles into a CTE —</text>
+<text x="559" y="858" class="bxs-s" style="fill:#7A8C99">no object is created at all.</text>
+
+<rect x="972" y="652" width="417" height="236" rx="16" fill="#2B2410" stroke="#9A8434" stroke-width="2.5"/>
+<text x="1000" y="694" class="bxt-s" style="fill:#FFD35C">marts / gold</text>
+<line x1="1000" y1="712" x2="1361" y2="712" stroke="#5F5322" stroke-width="2"/>
+<text x="1000" y="744" class="code" style="fill:#D8B85E">+materialized: incremental</text>
+<text x="1000" y="770" class="code" style="fill:#D8B85E">+incremental_strategy: merge</text>
+<text x="1000" y="796" class="code" style="fill:#FFB84D">+on_schema_change: fail</text>
+<text x="1000" y="830" class="bxs-s">Native Redshift tables.</text>
+<text x="1000" y="858" class="bxs-s" style="fill:#7A8C99">4 dims · 5 fact tables.</text>
+
+<rect x="1413" y="652" width="417" height="236" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="1441" y="694" class="bxt-s">marts / reporting</text>
+<line x1="1441" y1="712" x2="1802" y2="712" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1441" y="744" class="code" style="fill:#6FD8A8">+materialized: view</text>
+<text x="1441" y="770" class="code" style="fill:#6FD8A8">+schema: reporting</text>
+<text x="1441" y="796" class="code" style="fill:#5E7080">+tags: [reporting]</text>
+<text x="1441" y="830" class="bxs-s">What Power BI queries.</text>
+<text x="1441" y="858" class="bxs-s" style="fill:#7A8C99">10 views + 1 materialised.</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">dbt is <tspan class="plainb" font-size="24">make</tspan> for SQL — you declare what each table selects, it works out the build order, runs it, then tests the result.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 14</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

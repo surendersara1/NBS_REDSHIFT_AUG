@@ -1,0 +1,98 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="24.7.17" type="device">
+  <diagram id="catalog-storage-layers" name="Catalog &amp; Storage Layers">
+    <mxGraphModel dx="1100" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ══ Title ══ -->
+        <mxCell id="title" value="Tamimi Lakehouse — Catalog &amp;amp; Storage Layers" style="text;html=1;fontSize=20;fontStyle=1;fontColor=#283034;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="24" width="600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="How the federated Glue catalog, S3 Tables, Iceberg and S3 relate — with the code that owns each layer" style="text;html=1;fontSize=12;fontColor=#5C666E;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="52" width="720" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ══ LEFT: Federated Glue Catalog ══ -->
+        <mxCell id="fedgc" value="Federated Glue Catalog&#10;&lt;b&gt;s3tablescatalog&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#283034;strokeColor=none;fontColor=#FFFFFF;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="240" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="fedgc_path" value="infra/modules/catalog_federation/&#10;main.tf · lf_grants.tf" style="text;html=1;fontSize=10;fontColor=#5C666E;align=center;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="45" y="336" width="230" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="fedgc_note" value="Auto-mounts the S3 Tables buckets.&#10;No Glue Crawlers." style="text;html=1;fontSize=10;fontColor=#8A949C;align=center;" vertex="1" parent="1">
+          <mxGeometry x="45" y="372" width="230" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ══ MIDDLE: the storage stack (grouped) ══ -->
+        <mxCell id="stackbox" value="STORAGE STACK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#C6CDD3;dashed=1;verticalAlign=top;fontSize=10;fontColor=#8A949C;fontStyle=1;align=center;spacingTop=6;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="380" y="120" width="300" height="380" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3tab" value="&lt;b&gt;Amazon S3 Tables&lt;/b&gt;&#10;bronze + silver table buckets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3000E;strokeColor=none;fontColor=#FFFFFF;fontSize=13;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="410" y="160" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s3tab_path" value="infra/modules/s3-data-lake/main.tf:11,30&#10;aws_s3tables_table_bucket" style="text;html=1;fontSize=10;fontColor=#5C666E;align=center;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="395" y="232" width="270" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="iceberg" value="&lt;b&gt;Apache Iceberg v2&lt;/b&gt;&#10;table format — snapshots, MERGE, schema evolution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDE8E9;strokeColor=#E3000E;fontColor=#283034;fontSize=13;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="410" y="285" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iceberg_path" value="src/glue/glue_engine/writers/s3_tables.py&#10;merge_into · append · full_refresh" style="text;html=1;fontSize=10;fontColor=#5C666E;align=center;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="390" y="357" width="280" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3" value="&lt;b&gt;Amazon S3&lt;/b&gt;&#10;physical objects (Parquet + metadata)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#C6CDD3;fontColor=#283034;fontSize=13;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="410" y="410" width="240" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ══ RIGHT: R/W ══ -->
+        <mxCell id="rwlabel" value="R / W" style="text;html=1;fontSize=16;fontStyle=1;fontColor=#283034;align=center;" vertex="1" parent="1">
+          <mxGeometry x="800" y="126" width="240" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="write" value="&lt;b&gt;WRITE&lt;/b&gt; — Glue 5.0 / Spark&#10;bronze_pull · abap_transform&#10;bronze_to_silver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3EDF9;strokeColor=#1257A8;fontColor=#283034;fontSize=12;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="800" y="160" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="write_path" value="src/glue/glue_engine/jobs/" style="text;html=1;fontSize=10;fontColor=#5C666E;align=center;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="800" y="242" width="240" height="18" as="geometry" />
+        </mxCell>
+
+        <mxCell id="read" value="&lt;b&gt;READ&lt;/b&gt; — Redshift Spectrum&#10;CREATE EXTERNAL SCHEMA&#10;silver_external → dbt → Gold" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E4F3EA;strokeColor=#127A45;fontColor=#283034;fontSize=12;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="800" y="285" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="read_path" value="glue_engine/jobs/_scripts/run_dbt.py" style="text;html=1;fontSize=10;fontColor=#5C666E;align=center;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="790" y="367" width="260" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- ══ Out of scope ══ -->
+        <mxCell id="oos" value="&lt;b&gt;NOT USED&lt;/b&gt; — Athena · Hive · Presto/Trino&#10;Athena is out of scope (Redshift is the query engine).&#10;Only trace: leftover athena-results bucket&#10;infra/modules/s3/main.tf:30" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#8A949C;dashed=1;fontColor=#8A949C;fontSize=11;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="800" y="410" width="240" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ══ EDGES ══ -->
+        <mxCell id="e_fed_s3tab" value="federates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#283034;strokeWidth=2;fontSize=10;fontColor=#5C666E;endArrow=block;" edge="1" parent="1" source="fedgc" target="s3tab">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s3tab_ice" value="managed as" style="edgeStyle=none;html=1;strokeColor=#E3000E;strokeWidth=2;fontSize=10;fontColor=#5C666E;endArrow=block;" edge="1" parent="1" source="s3tab" target="iceberg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ice_s3" value="stored on" style="edgeStyle=none;html=1;strokeColor=#8A949C;strokeWidth=2;fontSize=10;fontColor=#5C666E;endArrow=block;" edge="1" parent="1" source="iceberg" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1257A8;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="write" target="s3tab">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#127A45;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="read" target="iceberg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ══ Legend ══ -->
+        <mxCell id="legend" value="Governance: Lake Formation LF-TBAC grants at the catalog level (catalog_federation/lf_grants.tf) · IAM in infra/modules/iam/main.tf" style="text;html=1;fontSize=10;fontColor=#8A949C;align=left;" vertex="1" parent="1">
+          <mxGeometry x="60" y="540" width="1000" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

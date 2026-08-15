@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 01 · LESSON 20</text>
+<text x="90" y="168" class="title">Designing A Fact And Its Dimensions</text>
+<text x="90" y="212" class="sub">Everything in Part C, applied once, end to end. Six decisions in order &#8212; and the first one is a sentence, not a keyword.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">State the grain out loud before you type CREATE TABLE</text>
+<text x="118" y="392" class="code" style="font-size:19px">&#8220;one row = one line on one receipt&#8221;   &#8592; everything below follows from this sentence</text>
+
+<text x="90" y="462" class="zhow">2 · THE SIX DECISIONS, IN ORDER</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="520" class="bxt-s" style="font-size:24px">DO THEM IN THIS ORDER OR YOU WILL REDO THEM</text>
+<line x1="118" y1="538" x2="1182" y2="538" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="554" width="5" height="40" rx="2.5" fill="#E3000E"/>
+<text x="136" y="576" class="bxt-s" style="font-size:21px;fill:#FF3B47">1 &#183; GRAIN &#183; 2 &#183; COLUMNS</text>
+<text x="1182" y="576" class="code-s" text-anchor="end" style="fill:#5E7080">measures + foreign keys</text>
+<text x="136" y="602" class="bxs-s" style="font-size:18px">One row equals one what? Then: the numbers you sum, and the surrogate keys pointing at the dimensions you slice by.</text>
+<line x1="118" y1="608" x2="1182" y2="608" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="618" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="640" class="bxt-s" style="font-size:21px;fill:#5AA9FF">3 &#183; DISTKEY &#8212; THE BUSIEST JOIN</text>
+<text x="1182" y="640" class="code-s" text-anchor="end" style="fill:#5E7080">high cardinality</text>
+<text x="136" y="666" class="bxs-s" style="font-size:18px">Not the primary key by reflex. The column this table is most often joined on, with enough distinct values to spread evenly.</text>
+<line x1="118" y1="672" x2="1182" y2="672" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="682" width="5" height="40" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="704" class="bxt-s" style="font-size:21px;fill:#3FD98A">4 &#183; SORTKEY &#8212; THE ALWAYS-FILTER</text>
+<text x="1182" y="704" class="code-s" text-anchor="end" style="fill:#5E7080">the date, first</text>
+<text x="136" y="730" class="bxs-s" style="font-size:18px">The column in every WHERE clause. Sorting on an ever-increasing date also means new rows land where they belong.</text>
+<line x1="118" y1="736" x2="1182" y2="736" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="746" width="5" height="40" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="768" class="bxt-s" style="font-size:21px;fill:#FFB84D">5 &#183; DIMENSIONS &#183; 6 &#183; TESTS</text>
+<text x="1182" y="768" class="code-s" text-anchor="end" style="fill:#5E7080">ALL, then prove it</text>
+<text x="136" y="794" class="bxs-s" style="font-size:18px">Small dimensions get DISTSTYLE ALL so every join is local. Then a uniqueness test, because nothing else will check it.</text>
+
+<rect x="118" y="814" width="1064" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#8CE8B8">DIST for joins · SORT for filters · ALL for small dimensions</text>
+
+<text x="1270" y="462" class="zsql">3 · THE SQL</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#0B1013" stroke="#2A4A3A" stroke-width="2.5"/>
+<text x="1298" y="504" class="sql"><tspan class="sqlk">CREATE TABLE</tspan> gold.fct_sales_line (</text>
+<text x="1298" y="526" class="sql">  sale_date  <tspan class="sqlk">DATE</tspan>   <tspan class="sqlk">NOT NULL</tspan> <tspan class="sqlk">ENCODE</tspan> raw,</text>
+<text x="1298" y="548" class="sql">  store_sk   <tspan class="sqlk">BIGINT</tspan> <tspan class="sqlk">NOT NULL</tspan> <tspan class="sqlk">ENCODE</tspan> az64,</text>
+<text x="1298" y="570" class="sql">  product_sk <tspan class="sqlk">BIGINT</tspan> <tspan class="sqlk">NOT NULL</tspan> <tspan class="sqlk">ENCODE</tspan> az64,</text>
+<text x="1298" y="592" class="sql">  net_amount <tspan class="sqlk">DECIMAL</tspan>(14,2)  <tspan class="sqlk">ENCODE</tspan> az64,</text>
+<text x="1298" y="614" class="sql">  merge_key  <tspan class="sqlk">VARCHAR</tspan>(64) <tspan class="sqlk">NOT NULL</tspan></text>
+<text x="1298" y="636" class="sql">)</text>
+<text x="1298" y="658" class="sql"><tspan class="sqlk">DISTKEY</tspan>(store_sk) <tspan class="sqlk">SORTKEY</tspan>(sale_date);</text>
+
+<text x="1270" y="710" class="zgot">4 · GOTCHAS</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#231519" stroke="#7A3A40" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Mixing two grains in one fact guarantees</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E5B8BC">double counting nobody can explain.</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E5B8BC">Verify skew after the first real load.</text>
+<text x="1298" y="852" class="warn">grain first. always.</text>
+
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Decide what one row means before you decide anything else. Every later argument about a number is really an argument about that sentence.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 01 · Lesson 20</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Redshift Deep Dive</text>
+</svg></div></body></html>

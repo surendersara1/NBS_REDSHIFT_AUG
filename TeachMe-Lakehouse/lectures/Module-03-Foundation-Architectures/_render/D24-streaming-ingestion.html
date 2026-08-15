@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8296A3"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 3 · ARCHITECTURE 24 · DEEP DIVE</text>
+<text x="90" y="168" class="title">Streaming — Two Landing Paths</text>
+<text x="90" y="212" class="sub">Same transport, two very different destinations. One goes through S3; the other does not touch it at all.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<rect x="250" y="272" width="1420" height="620" rx="16" fill="#11161A" stroke="#4A5560" stroke-width="3"/>
+<rect x="264" y="284" width="168" height="34" rx="8" fill="#232B33" stroke="#4A5560" stroke-width="2"/>
+<text x="278" y="306" class="icb" style="fill:#C9D6DE">AWS CLOUD</text>
+
+<rect x="660" y="352" width="700" height="200" rx="14" fill="#0F1E17" stroke="#2A5A40" stroke-width="2.5"/>
+<image href="../../_icons/aws/analytics/kinesis-data-firehose.png" x="674" y="364" width="28" height="28"/>
+<text x="710" y="385" class="icb" style="fill:#3FD98A">PATH A &#8212; FIREHOSE INTO THE LAKE</text>
+
+<rect x="660" y="612" width="700" height="200" rx="14" fill="#101A24" stroke="#2E4A66" stroke-width="2.5"/>
+<image href="../../_icons/aws/analytics/redshift.png" x="674" y="624" width="28" height="28"/>
+<text x="710" y="645" class="icb" style="fill:#5AA9FF">PATH B &#8212; STRAIGHT INTO THE WAREHOUSE</text>
+
+<!-- TRANSPORT -->
+<rect x="114" y="404" width="76" height="76" rx="12" fill="#1E262D" stroke="#33404A" stroke-width="2"/>
+<image href="../../_icons/aws/general/client.png" x="120" y="410" width="64" height="64"/>
+<text x="152" y="496" class="nlb" text-anchor="middle">Producers</text>
+<text x="152" y="516" class="dlb" text-anchor="middle">tills, apps, sensors</text>
+
+<image href="../../_icons/aws/analytics/kinesis-data-streams.png" x="310" y="410" width="64" height="64"/>
+<text x="342" y="496" class="nlb" text-anchor="middle">Kinesis</text>
+<text x="342" y="516" class="dlb" text-anchor="middle">ordered shards</text>
+
+<image href="../../_icons/aws/analytics/managed-streaming-for-kafka.png" x="310" y="670" width="64" height="64"/>
+<text x="342" y="756" class="nlb" text-anchor="middle">Amazon MSK</text>
+<text x="342" y="776" class="dlb" text-anchor="middle">or Confluent Cloud</text>
+
+<text x="490" y="576" class="icb" style="fill:#7A8C99">TRANSPORT</text>
+<text x="490" y="600" class="dlb" style="font-size:14px">pick one</text>
+
+<!-- PATH A -->
+<image href="../../_icons/aws/analytics/kinesis-data-firehose.png" x="720" y="410" width="64" height="64"/>
+<text x="752" y="496" class="nlb" text-anchor="middle">Data Firehose</text>
+<text x="752" y="516" class="dlb" text-anchor="middle">managed, no code</text>
+
+<image href="../../_icons/aws/storage/simple-storage-service-s3.png" x="940" y="410" width="64" height="64"/>
+<text x="972" y="496" class="nlb" text-anchor="middle">S3 Tables</text>
+<text x="972" y="516" class="dlb" text-anchor="middle">Iceberg, I/U/D routed</text>
+
+<image href="../../_icons/aws/analytics/athena.png" x="1160" y="410" width="64" height="64"/>
+<text x="1192" y="496" class="nlb" text-anchor="middle">Athena</text>
+<text x="1192" y="516" class="dlb" text-anchor="middle">and every engine</text>
+
+<image href="../../_icons/aws/management/cloudwatch-alarm.png" x="1420" y="410" width="64" height="64"/>
+<text x="1452" y="496" class="nlb" text-anchor="middle">The trade-off</text>
+<text x="1452" y="516" class="dlb" text-anchor="middle">throughput vs partitions</text>
+
+<!-- PATH B -->
+<image href="../../_icons/aws/analytics/redshift.png" x="720" y="670" width="64" height="64"/>
+<text x="752" y="756" class="nlb" text-anchor="middle">Streaming MV</text>
+<text x="752" y="776" class="dlb" text-anchor="middle">no S3 staging</text>
+
+<image href="../../_icons/aws/analytics/redshift.png" x="940" y="670" width="64" height="64"/>
+<text x="972" y="756" class="nlb" text-anchor="middle">Redshift</text>
+<text x="972" y="776" class="dlb" text-anchor="middle">AUTO REFRESH</text>
+
+<image href="../../_icons/aws/analytics/quicksight.png" x="1160" y="670" width="64" height="64"/>
+<text x="1192" y="756" class="nlb" text-anchor="middle">Live dashboard</text>
+<text x="1192" y="776" class="dlb" text-anchor="middle">seconds behind</text>
+
+<image href="../../_icons/aws/general/user.png" x="1420" y="670" width="64" height="64"/>
+<text x="1452" y="756" class="nlb" text-anchor="middle">Ask first</text>
+<text x="1452" y="776" class="dlb" text-anchor="middle">who watches at 3am?</text>
+
+<!-- ARROWS -->
+<line x1="192" y1="442" x2="302" y2="442" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<path d="M 192 470 V 702 H 302" fill="none" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<line x1="382" y1="442" x2="712" y2="442" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<line x1="382" y1="702" x2="712" y2="702" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<line x1="792" y1="442" x2="932" y2="442" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<line x1="1012" y1="442" x2="1152" y2="442" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<line x1="792" y1="702" x2="932" y2="702" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<line x1="1012" y1="702" x2="1152" y2="702" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+
+<!-- BADGES -->
+<circle cx="247" cy="442" r="17" fill="#0B1013" stroke="#8296A3" stroke-width="2"/><text x="247" y="449" class="bdg" text-anchor="middle">1</text>
+<circle cx="547" cy="442" r="17" fill="#0B1013" stroke="#8296A3" stroke-width="2"/><text x="547" y="449" class="bdg" text-anchor="middle">2</text>
+<circle cx="862" cy="442" r="17" fill="#0B1013" stroke="#8296A3" stroke-width="2"/><text x="862" y="449" class="bdg" text-anchor="middle">3</text>
+<circle cx="1082" cy="442" r="17" fill="#0B1013" stroke="#8296A3" stroke-width="2"/><text x="1082" y="449" class="bdg" text-anchor="middle">4</text>
+<circle cx="1322" cy="442" r="17" fill="#E3000E" stroke="#FF8A92" stroke-width="2"/><text x="1322" y="449" class="bdg" text-anchor="middle">5</text>
+<circle cx="547" cy="702" r="17" fill="#0B1013" stroke="#8296A3" stroke-width="2"/><text x="547" y="709" class="bdg" text-anchor="middle">6</text>
+<circle cx="862" cy="702" r="17" fill="#E3000E" stroke="#FF8A92" stroke-width="2"/><text x="862" y="709" class="bdg" text-anchor="middle">7</text>
+<circle cx="1082" cy="702" r="17" fill="#0B1013" stroke="#8296A3" stroke-width="2"/><text x="1082" y="709" class="bdg" text-anchor="middle">8</text>
+<circle cx="1322" cy="702" r="17" fill="#E3000E" stroke="#FF8A92" stroke-width="2"/><text x="1322" y="709" class="bdg" text-anchor="middle">9</text>
+
+<!-- PLAIN ENGLISH -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Path A keeps the evidence and feeds everything. Path B is faster and feeds one thing. Most projects want A and think they want B.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 3 · Architecture 24</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundation Architectures</text>
+</svg></div></body></html>

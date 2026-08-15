@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 19</text>
+<text x="90" y="168" class="title">How the Infrastructure Is Built</text>
+<text x="90" y="212" class="sub">28 reusable modules. Three environments that only differ by values. And the guard rails that stop a typo deleting Redshift.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE MODULE ══ -->
+<text x="90" y="300" class="cap">1 · A MODULE — BUILT ONCE, ENV-BLIND</text>
+
+<rect x="90" y="322" width="780" height="290" rx="16" fill="#2A1216" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="366" class="bxt-s" style="fill:#FF6A72">A MODULE IS A BUILDING BLOCK</text>
+<line x1="118" y1="384" x2="842" y2="384" stroke="#5A2028" stroke-width="2"/>
+<text x="118" y="412" class="code-s" style="fill:#FFA0A6">infra/modules/&lt;name&gt;/ — main.tf · variables.tf · outputs.tf · versions.tf</text>
+<text x="118" y="444" class="bxs-s">It takes inputs. It knows no environment name,</text>
+<text x="118" y="470" class="bxs-s">no account id, no CIDR, no bucket name.</text>
+<text x="118" y="496" class="bxs-s" style="fill:#FFB84D">Hard-code an env inside it and it stops being a module.</text>
+
+<rect x="118" y="512" width="724" height="86" rx="8" fill="#0B1013" stroke="#4A2028" stroke-width="2"/>
+<text x="138" y="536" class="code" xml:space="preserve" style="fill:#6FD8C6">vpc · vpc-peering · tgw-route · iam · kms · secrets</text>
+<text x="138" y="560" class="code" xml:space="preserve" style="fill:#6FD8C6">s3 · s3-data-lake · ssm · cloudtrail · lake-formation</text>
+<text x="138" y="584" class="code" xml:space="preserve" style="fill:#6FD8C6">glue-job · step-function · redshift-serverless · … 28</text>
+
+<!-- arrow -->
+<line x1="876" y1="467" x2="924" y2="467" stroke="#FF3B47" stroke-width="4" marker-end="url(#ar)"/>
+
+<!-- ══ ZONE 2 · THE ENV ══ -->
+<text x="930" y="300" class="cap">2 · AN ENVIRONMENT — COMPOSITION ONLY</text>
+
+<rect x="930" y="322" width="900" height="290" rx="16" fill="#1A2430" stroke="#4A6A8A" stroke-width="3"/>
+<text x="958" y="366" class="bxt-s" style="fill:#7FBEFF">AN ENV IS A LIST OF MODULE CALLS</text>
+<line x1="958" y1="384" x2="1802" y2="384" stroke="#2E4A63" stroke-width="2"/>
+<text x="958" y="416" class="bxs-s">Dev, QA and Prod call the SAME modules — 24 module blocks</text>
+<text x="958" y="442" class="bxs-s">in one file. Everything that differs lives in tfvars.</text>
+
+<rect x="958" y="458" width="500" height="140" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="978" y="484" class="code" xml:space="preserve" style="fill:#8FD8F0">module "vpc" {</text>
+<text x="978" y="506" class="code" xml:space="preserve" style="fill:#8FD8F0">  source = "../../modules/vpc"</text>
+<text x="978" y="528" class="code" xml:space="preserve" style="fill:#8FD8F0">  vpc_cidr_range =</text>
+<text x="978" y="550" class="code" xml:space="preserve" style="fill:#8FD8F0">      var.network.vpc_cidr_range</text>
+<text x="978" y="572" class="code" xml:space="preserve" style="fill:#8FD8F0">}</text>
+
+<text x="1490" y="480" class="cap" style="fill:#7FBEFF">SAME CALLS · 3 ROOTS</text>
+<text x="1490" y="512" class="code" xml:space="preserve">dev   21 .tf  10.248.4.0/24</text>
+<text x="1490" y="538" class="code" xml:space="preserve">qa    21 .tf  10.248.6.0/24</text>
+<text x="1490" y="564" class="code" xml:space="preserve">prod  20 .tf  10.248.8.0/24</text>
+<text x="1490" y="592" class="bxs-s" style="fill:#FFB84D">Values differ. Code does not.</text>
+
+<!-- ══ ZONE 3 · GUARD RAILS ══ -->
+<text x="90" y="652" class="cap">3 · THE THREE GUARD RAILS THAT KEEP IT HONEST</text>
+
+<!-- 3a pinning -->
+<rect x="90" y="674" width="560" height="214" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="716" class="bxt-s">PIN THE PROVIDER</text>
+<line x1="118" y1="732" x2="622" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="762" class="bxs-s">An unpinned provider means today's</text>
+<text x="118" y="788" class="bxs-s">plan is not tomorrow's plan.</text>
+<rect x="118" y="802" width="504" height="58" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="138" y="826" class="code" xml:space="preserve">aws = "~&gt; 6.28"   required &gt;= 1.9</text>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#FFB84D">28 of 28 modules carry versions.tf</text>
+<text x="118" y="878" class="code-s" style="fill:#5E7080">infra/env/dev/versions.tf:1-22</text>
+
+<!-- 3b prevent_destroy -->
+<rect x="690" y="674" width="560" height="214" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="718" y="716" class="bxt-s">MAKE STATE UNDELETABLE</text>
+<line x1="718" y1="732" x2="1222" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="718" y="762" class="bxs-s">Anything holding data or history</text>
+<text x="718" y="788" class="bxs-s">refuses to be destroyed. Literal, always on.</text>
+<rect x="718" y="802" width="504" height="58" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="738" y="826" class="code" xml:space="preserve">lifecycle { prevent_destroy = true }</text>
+<text x="738" y="848" class="code" xml:space="preserve" style="fill:#FFB84D">KMS · S3 · CloudTrail · Redshift ns</text>
+<text x="718" y="878" class="code-s" style="fill:#5E7080">infra/modules/kms/main.tf:45-50 (HIGH-17)</text>
+
+<!-- 3c state -->
+<rect x="1290" y="674" width="540" height="214" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1318" y="716" class="bxt-s">ISOLATE THE STATE</text>
+<line x1="1318" y1="732" x2="1802" y2="732" stroke="#2C3841" stroke-width="2"/>
+<text x="1318" y="762" class="bxs-s">Each env owns its own backend.tf</text>
+<text x="1318" y="788" class="bxs-s">and its own state key — read the value:</text>
+<rect x="1318" y="802" width="484" height="58" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="1338" y="826" class="code" xml:space="preserve">key = ".../dev/terraform.tfstate"</text>
+<text x="1338" y="848" class="code" xml:space="preserve" style="fill:#FF6A72">one bucket + lock for all 3 — CRIT-01</text>
+<text x="1318" y="878" class="code-s" style="fill:#5E7080">infra/env/dev/backend.tf:18-26</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A module is a class; an env root is the file that instantiates it three times with different constructor arguments. prevent_destroy is `final`.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 19</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

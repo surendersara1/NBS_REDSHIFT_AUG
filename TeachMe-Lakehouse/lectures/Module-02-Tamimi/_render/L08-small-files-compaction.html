@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FF3B47"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 08</text>
+<text x="90" y="168" class="title">The Maintenance Problem</text>
+<text x="90" y="212" class="sub">Every write leaves files and a snapshot behind. AWS sweeps some of it — one job we wrote is not scheduled.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · WHY SMALL FILES ══ -->
+<text x="90" y="300" class="cap">1 · WHY SMALL FILES HAPPEN</text>
+
+<rect x="90" y="322" width="850" height="278" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="364" class="bxt-s">One run = a few files + one snapshot</text>
+<line x1="118" y1="382" x2="912" y2="382" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="416" class="bxs-s">Bronze appends a delta every cycle. Silver MERGEs. Both commit a</text>
+<text x="118" y="444" class="bxs-s">new snapshot each time, and each snapshot names a new manifest</text>
+<text x="118" y="472" class="bxs-s">list. Across 48 tables on a daily cadence that is thousands of</text>
+<text x="118" y="500" class="bxs-s">small Parquet files and a metadata chain that only gets longer.</text>
+<text x="118" y="536" class="bxs-s" style="fill:#FFB84D">Planning a query means reading that chain first — so this shows</text>
+<text x="118" y="564" class="bxs-s" style="fill:#FFB84D">up as scans getting slower, never as an error.</text>
+
+<!-- ══ ZONE 2 · WHAT AWS DOES ══ -->
+<text x="980" y="300" class="cap">2 · WHAT S3 TABLES DOES FOR YOU</text>
+
+<rect x="980" y="322" width="850" height="278" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1008" y="362" class="bxt-s">Managed compaction — and only that</text>
+<line x1="1008" y1="378" x2="1802" y2="378" stroke="#2C3841" stroke-width="2"/>
+<text x="1008" y="410" class="bxs-s">ADR-0024 chose S3 Tables so AWS compacts data files for us. We</text>
+<text x="1008" y="438" class="bxs-s">deliberately do NOT schedule rewrite_data_files — it would fight</text>
+<text x="1008" y="466" class="bxs-s">the managed maintenance. Terraform enables file removal per bucket:</text>
+<rect x="1008" y="480" width="794" height="62" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="1028" y="504" class="code-s" xml:space="preserve">iceberg_unreferenced_file_removal   unreferenced_days = 7   # bronze</text>
+<text x="1028" y="526" class="code-s" xml:space="preserve">                                    unreferenced_days = 30  # silver</text>
+<text x="1008" y="562" class="bxs-s" style="fill:#FFB84D">Per-table maintenance is never declared: Glue creates tables, not Terraform.</text>
+<text x="1008" y="588" class="code-s" style="fill:#5E7080">infra/modules/s3-data-lake/main.tf:8, 11-47</text>
+
+<!-- ══ ZONE 3 · THE GAP ══ -->
+<text x="90" y="640" class="cap">3 · THE HONEST GAP — expire_snapshots HAS NO CALLER</text>
+
+<rect x="90" y="662" width="1740" height="226" rx="16" fill="#15191C" stroke="#4A5560" stroke-width="2.5" stroke-dasharray="14 9"/>
+<line x1="960" y1="690" x2="960" y2="862" stroke="#2C3841" stroke-width="2"/>
+
+<text x="118" y="704" class="bxt-s" style="fill:#FF6A72">The method exists</text>
+<text x="118" y="740" class="bxs-s">S3 Tables compacts data files. It does not shorten OUR history:</text>
+<text x="118" y="768" class="bxs-s">every append / merge / overwrite adds a snapshot, and the manifest</text>
+<text x="118" y="796" class="bxs-s">list plus metadata JSON grow with it.</text>
+<rect x="118" y="810" width="812" height="42" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="136" y="837" class="code">CALL &lt;cat&gt;.system.expire_snapshots(table =&gt; …)</text>
+<text x="118" y="876" class="code-s" style="fill:#5E7080">writers/s3_tables.py:407-449 (older_than_days=7, retain_last=100)</text>
+
+<text x="990" y="704" class="bxt-s" style="fill:#FFB84D">Nothing calls it</text>
+<text x="990" y="740" class="bxs-s">The docstring says so, in as many words: "there is no automatic</text>
+<text x="990" y="768" class="bxs-s">caller yet". Until a weekly cron job instantiates a writer per</text>
+<text x="990" y="796" class="bxs-s">table and calls this, snapshots are never expired — and query</text>
+<text x="990" y="824" class="bxs-s">planning gets slower the longer a table lives.</text>
+<text x="990" y="876" class="code-s" style="fill:#5E7080">writers/s3_tables.py:431-434 · audit M-23, still open</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">AWS sweeps up the small files for us. It does not shorten the history — we wrote that job and never plugged it in.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 08</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

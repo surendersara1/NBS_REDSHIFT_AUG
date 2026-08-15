@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 0 · LESSON 20</text>
+<text x="90" y="168" class="title">Six Ways To Move Data</text>
+<text x="90" y="212" class="sub">The table you will argue from in every design review. Latency improves down the list; the control you keep gets worse.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<text x="90" y="300" class="zhow">1 · THE DECISION TABLE</text>
+<rect x="90" y="316" width="1740" height="574" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+
+<text x="118" y="356" class="th">MECHANISM</text>
+<text x="400" y="356" class="th">AWS SERVICE</text>
+<text x="740" y="356" class="th">LATENCY</text>
+<text x="920" y="356" class="th">CHOOSE IT WHEN</text>
+<line x1="118" y1="372" x2="1802" y2="372" stroke="#3A4854" stroke-width="2"/>
+
+<rect x="118" y="392" width="5" height="46" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="414" class="tdk" style="fill:#5AA9FF">BATCH ETL</text>
+<text x="400" y="414" class="td" style="font-size:18px">AWS Glue · EMR (Spark)</text>
+<text x="740" y="414" class="code" style="font-size:16px">hours</text>
+<text x="920" y="414" class="td" style="font-size:18px">You need to transform on the way and control the shape</text>
+<text x="920" y="440" class="tdn" style="font-size:17px">the default for a medallion lakehouse</text>
+<line x1="118" y1="462" x2="1802" y2="462" stroke="#1E2830" stroke-width="1.5"/>
+
+<rect x="118" y="468" width="5" height="46" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="490" class="tdk" style="fill:#3FD98A">CDC REPLICATION</text>
+<text x="400" y="490" class="td" style="font-size:18px">AWS DMS</text>
+<text x="740" y="490" class="code" style="font-size:16px">minutes</text>
+<text x="920" y="490" class="td" style="font-size:18px">Continuous replication between two different engines</text>
+<text x="920" y="516" class="tdn" style="font-size:17px">reads the source&#8217;s log — no load on its tables</text>
+<line x1="118" y1="538" x2="1802" y2="538" stroke="#1E2830" stroke-width="1.5"/>
+
+<rect x="118" y="544" width="5" height="46" rx="2.5" fill="#E3000E"/>
+<text x="136" y="566" class="tdk" style="fill:#FF3B47">ZERO-ETL</text>
+<text x="400" y="566" class="td" style="font-size:18px">managed integration</text>
+<text x="740" y="566" class="code" style="font-size:16px;fill:#FF8A92">min &#8211; 1 hr</text>
+<text x="920" y="566" class="td" style="font-size:18px">You want the table in the target with no pipeline at all</text>
+<text x="920" y="592" class="tdn" style="font-size:17px">Oracle, SAP, Salesforce, DynamoDB and more &#8212; Lesson 21</text>
+<line x1="118" y1="614" x2="1802" y2="614" stroke="#1E2830" stroke-width="1.5"/>
+
+<rect x="118" y="620" width="5" height="46" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="642" class="tdk" style="fill:#FFB84D">FEDERATED QUERY</text>
+<text x="400" y="642" class="td" style="font-size:18px">Redshift · Athena</text>
+<text x="740" y="642" class="code" style="font-size:16px">live</text>
+<text x="920" y="642" class="td" style="font-size:18px">A small lookup against a live database, with no copy</text>
+<text x="920" y="668" class="tdn" style="font-size:17px">filters push down; large scans do not</text>
+<line x1="118" y1="690" x2="1802" y2="690" stroke="#1E2830" stroke-width="1.5"/>
+
+<rect x="118" y="696" width="5" height="46" rx="2.5" fill="#C9D6DE"/>
+<text x="136" y="718" class="tdk">STREAMING</text>
+<text x="400" y="718" class="td" style="font-size:18px">Kinesis · MSK · Firehose</text>
+<text x="740" y="718" class="code" style="font-size:16px">seconds</text>
+<text x="920" y="718" class="td" style="font-size:18px">Genuinely event-driven data, where seconds change a decision</text>
+<text x="920" y="744" class="tdn" style="font-size:17px">most retail reporting does not need this</text>
+<line x1="118" y1="766" x2="1802" y2="766" stroke="#1E2830" stroke-width="1.5"/>
+
+<rect x="118" y="772" width="5" height="46" rx="2.5" fill="#8296A3"/>
+<text x="136" y="794" class="tdk" style="fill:#A9BAC6">FILE TRANSFER</text>
+<text x="400" y="794" class="td" style="font-size:18px">Transfer Family · DataSync · AppFlow</text>
+<text x="740" y="794" class="code" style="font-size:16px">scheduled</text>
+<text x="920" y="794" class="td" style="font-size:18px">SFTP drops, NAS sync and SaaS connectors you would rather not code</text>
+<text x="920" y="820" class="tdn" style="font-size:17px">the boring one that quietly works</text>
+
+<rect x="118" y="838" width="1684" height="40" rx="8" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="864" class="code" xml:space="preserve" style="fill:#8CE8B8">pick the latency you actually need, then the most managed option that still gives you it</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Post, courier, direct debit, phone call, live feed, or the weekly van. Same parcel — six prices, six speeds, six amounts of fuss.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 0 · Lesson 20</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundations for Data Engineers</text>
+</svg></div></body></html>

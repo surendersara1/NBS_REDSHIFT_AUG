@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 13</text>
+<text x="90" y="168" class="title">Build Incremental Models Correctly</text>
+<text x="90" y="212" class="sub">A merge is only as good as its key, its reprocess window, and the refresh scheduled behind it.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE DECISION ══ -->
+<text x="90" y="300" class="cap">1 · THE DECISION</text>
+<rect x="90" y="316" width="1740" height="108" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="362" class="bxt">View, table or incremental — and merged on which key?</text>
+<text x="118" y="398" class="bxs" style="fill:#A9BAC6">Facts go incremental with a merge. The key is the grain — and the grain must be unique.</text>
+<rect x="1080" y="340" width="351" height="60" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="1255" y="377" class="doit" text-anchor="middle" style="font-size:19px">DO · MERGE ON A REAL KEY</text>
+<rect x="1451" y="340" width="351" height="60" rx="12" fill="#241416" stroke="#8A3A42" stroke-width="2.5" stroke-dasharray="7 5"/>
+<text x="1626" y="377" class="avoid" text-anchor="middle" style="font-size:19px">AVOID · NULL IN A KEY</text>
+
+<!-- ══ ZONE 2 · DO THIS ══ -->
+<text x="90" y="464" class="cap">2 · DO THIS</text>
+<rect x="90" y="482" width="1010" height="408" rx="16" fill="#101E17" stroke="#3FD98A" stroke-width="3"/>
+<rect x="90" y="482" width="1010" height="7" rx="3.5" fill="#3FD98A"/>
+<text x="118" y="528" class="doit" style="font-size:23px">THE SETUP · FIVE STEPS</text>
+<line x1="118" y1="546" x2="1072" y2="546" stroke="#2A4A3A" stroke-width="2"/>
+
+<circle cx="134" cy="575" r="15" fill="#3FD98A"/>
+<text x="134" y="582" class="bxs-d" text-anchor="middle" style="font-size:18px">1</text>
+<text x="166" y="582" class="bxs">Write the grain in the model header, then make the merge key equal it.</text>
+<text x="166" y="610" class="code">unique_key = the grain, column for column</text>
+
+<circle cx="134" cy="637" r="15" fill="#3FD98A"/>
+<text x="134" y="644" class="bxs-d" text-anchor="middle" style="font-size:18px">2</text>
+<text x="166" y="644" class="bxs">Prove the key is unique in the source before you trust it in a merge.</text>
+<text x="166" y="672" class="code">too narrow → cardinality error · too wide → rows re-insert</text>
+
+<circle cx="134" cy="699" r="15" fill="#3FD98A"/>
+<text x="134" y="706" class="bxs-d" text-anchor="middle" style="font-size:18px">3</text>
+<text x="166" y="706" class="bxs">Use a sentinel, never NULL, in any column that forms part of the key.</text>
+<text x="166" y="734" class="code">'__ALL__' instead of NULL on synthetic rollup rows</text>
+
+<circle cx="134" cy="761" r="15" fill="#3FD98A"/>
+<text x="134" y="768" class="bxs-d" text-anchor="middle" style="font-size:18px">4</text>
+<text x="166" y="768" class="bxs">Set the reprocess window wider than the source's late-arrival habit.</text>
+<text x="166" y="796" class="code">reprocess_days as a variable, never a literal in the model</text>
+
+<circle cx="134" cy="823" r="15" fill="#3FD98A"/>
+<text x="134" y="830" class="bxs-d" text-anchor="middle" style="font-size:18px">5</text>
+<text x="166" y="830" class="bxs">Schedule a periodic full refresh. The window cannot repair older history.</text>
+<text x="166" y="858" class="code">dbt run --select model --full-refresh · monthly cadence</text>
+
+<!-- ══ ZONE 3 · WHY ══ -->
+<text x="1130" y="464" class="cap">3 · WHY</text>
+<rect x="1130" y="482" width="700" height="212" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1158" y="520" class="bxs">NULL never equals NULL in a merge predicate, so a</text>
+<text x="1158" y="550" class="bxs">NULL-keyed row matches nothing and re-inserts</text>
+<text x="1158" y="580" class="bxs">itself on every single run, forever.</text>
+<line x1="1158" y1="600" x2="1802" y2="600" stroke="#2C3841" stroke-width="2"/>
+<text x="1158" y="628" class="code" style="fill:#FF6B73;font-size:16px;letter-spacing:2px">IF YOU DON'T</text>
+<text x="1158" y="653" class="bxs" style="fill:#C9A0A4">The table grows quietly, every total drifts upward,</text>
+<text x="1158" y="680" class="bxs" style="fill:#C9A0A4">and no run ever reports an error.</text>
+
+<!-- ══ ZONE 4 · ON APPAREL GROUP ══ -->
+<text x="1130" y="732" class="cap">4 · ON APPAREL GROUP</text>
+<rect x="1130" y="748" width="700" height="142" rx="16" fill="#1C1A12" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1158" y="784" class="agbox">CONFIRM ORACLE PKs FIRST</text>
+<text x="1158" y="814" class="bxs" style="fill:#D9CBAE">Confirm the true primary key on every RMS, SIM</text>
+<text x="1158" y="844" class="bxs" style="fill:#D9CBAE">and XStore table before you write its spec.</text>
+<text x="1158" y="874" class="bxs" style="fill:#D9CBAE">Composite keys rarely match the documentation.</text>
+
+<!-- ══ IN PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A merge must recognise a row it has seen before. A blank in the key is an unreadable name badge — it gets a new seat every time.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 13</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

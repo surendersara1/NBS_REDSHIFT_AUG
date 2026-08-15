@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 0 · LESSON 21</text>
+<text x="90" y="168" class="title">Zero-ETL: No Pipeline At All</text>
+<text x="90" y="212" class="sub">A fully managed integration replicates the data <tspan style="fill:#FFFFFF">and the schemas</tspan> into the target, continuously. It covers far more sources than most people know.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · WHAT IT IS ══ -->
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#231114" stroke="#E3000E" stroke-width="3"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">There is no job, no cluster, no code and nothing to schedule</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#E5B8BC">You configure an integration between a source and a target. AWS keeps them in step. That is the entire operational surface.</text>
+
+<!-- ══ ZONE 2 · SOURCES ══ -->
+<text x="90" y="462" class="zhow">2 · SOURCES &#8212; THREE FAMILIES</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+
+<rect x="118" y="500" width="5" height="76" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="524" class="bxt-s" style="font-size:21px;fill:#5AA9FF">AWS DATABASES</text>
+<text x="136" y="552" class="bxs-s" style="font-size:18px">Aurora MySQL · Aurora PostgreSQL · RDS MySQL</text>
+<text x="136" y="576" class="bxs-s" style="font-size:18px">Amazon DynamoDB · Oracle Database@AWS</text>
+<line x1="118" y1="594" x2="1182" y2="594" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="606" width="5" height="76" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="630" class="bxt-s" style="font-size:21px;fill:#3FD98A">SELF-MANAGED DATABASES</text>
+<text x="1182" y="630" class="code-s" text-anchor="end" style="fill:#5E7080">via AWS DMS</text>
+<text x="136" y="658" class="bxs-s" style="font-size:18px"><tspan style="fill:#FFFFFF">Oracle</tspan> · SQL Server · MySQL · PostgreSQL</text>
+<text x="136" y="682" class="bxs-s" style="font-size:18px;fill:#8296A3">your own instances, wherever they run</text>
+<line x1="118" y1="700" x2="1182" y2="700" stroke="#1E2830" stroke-width="2"/>
+
+<rect x="118" y="712" width="5" height="76" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="736" class="bxt-s" style="font-size:21px;fill:#FFB84D">SAAS APPLICATIONS</text>
+<text x="136" y="764" class="bxs-s" style="font-size:18px">Salesforce · <tspan style="fill:#FFFFFF">SAP OData</tspan> · ServiceNow · Zendesk</text>
+<text x="136" y="788" class="bxs-s" style="font-size:18px">Zoho CRM · Facebook Ads · Instagram Ads</text>
+
+<rect x="118" y="806" width="1064" height="64" rx="10" fill="#12331F" stroke="#3FD98A" stroke-width="2.5"/>
+<text x="138" y="832" class="bxt-s" style="font-size:19px;fill:#3FD98A">WHY THIS MATTERS TO US</text>
+<text x="138" y="857" class="bxs-s" style="font-size:18px;fill:#A9E8C4">Three of Apparel Group&#8217;s eight sources are Oracle. This is a real alternative to hand-built JDBC.</text>
+
+<!-- ══ ZONE 3 · TARGETS ══ -->
+<text x="1270" y="462" class="zwhen">3 · TARGETS</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="514" class="bxs-s" style="font-size:18px">Amazon Redshift data warehouse</text>
+<text x="1298" y="546" class="bxs-s" style="font-size:18px">Amazon S3 general-purpose bucket</text>
+<text x="1298" y="578" class="bxs-s" style="font-size:18px">Amazon S3 Tables</text>
+<text x="1298" y="610" class="bxs-s" style="font-size:18px">Redshift Managed Storage</text>
+<line x1="1298" y1="628" x2="1802" y2="628" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="660" class="bxs-s" style="font-size:17px;fill:#8296A3">the last three go via SageMaker Lakehouse</text>
+
+<!-- ══ ZONE 4 · LIMITS ══ -->
+<text x="1270" y="710" class="zprac">4 · LIMITS THAT DECIDE THE DESIGN</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Self-managed sources &#8594; Redshift only</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E8D5B0">SaaS sources: 1 hour minimum latency</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E8D5B0">It replicates. It does not transform.</text>
+<text x="1298" y="852" class="bxt-s" style="font-size:19px;fill:#FFB84D">check the limits before you commit</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A pipe someone else maintains. You lose the right to change the water on the way through — and you stop being paged at 3am.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 0 · Lesson 21</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundations for Data Engineers</text>
+</svg></div></body></html>

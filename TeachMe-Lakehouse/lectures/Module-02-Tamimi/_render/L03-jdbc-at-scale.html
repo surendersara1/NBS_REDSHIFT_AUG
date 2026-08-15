@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+  <marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#FFB84D"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 03</text>
+<text x="90" y="168" class="title">Partitioning the Giants</text>
+<text x="90" y="212" class="sub">One connection cannot read 36 million rows. Sixteen could not connect at all. The lesson is the number in between.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THREE KNOBS ══ -->
+<text x="90" y="300" class="cap">1 · THREE KNOBS — ONLY ONE FIRES ON THE SAP PATH</text>
+
+<!-- KNOB A — live -->
+<rect x="90" y="322" width="560" height="234" rx="16" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<text x="118" y="364" class="bxt-s" style="font-size:24px">jdbc_hash_partitions</text>
+<rect x="546" y="340" width="82" height="30" rx="8" fill="#12331F" stroke="#3FD98A" stroke-width="2"/>
+<text x="587" y="361" class="code-s" text-anchor="middle" style="fill:#8CE8B8">LIVE</text>
+<line x1="118" y1="382" x2="622" y2="382" stroke="#2A4A3A" stroke-width="2"/>
+<text x="118" y="416" class="bxs-s">N contiguous date sub-ranges over the</text>
+<text x="118" y="444" class="bxs-s">watermark column — one JDBC connection</text>
+<text x="118" y="472" class="bxs-s">each, each a pushed-down BETWEEN.</text>
+<rect x="118" y="490" width="504" height="34" rx="8" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="513" class="code" style="fill:#8CE8B8">spark.read.jdbc(predicates=[...])</text>
+<text x="118" y="544" class="code-s" style="fill:#5E9E7C">sap_hana.py:718 _window_predicates · :1038</text>
+
+<!-- KNOB B — unused -->
+<rect x="690" y="322" width="540" height="234" rx="16" fill="#171C21" stroke="#4A5A66" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="718" y="364" class="bxt-s" style="font-size:24px;fill:#8FA2AF">partition_column</text>
+<line x1="718" y1="382" x2="1202" y2="382" stroke="#2C3841" stroke-width="2"/>
+<text x="718" y="416" class="bxs-s" style="fill:#8FA2AF">Spark's own range split: lowerBound /</text>
+<text x="718" y="444" class="bxs-s" style="fill:#8FA2AF">upperBound / numPartitions. The code</text>
+<text x="718" y="472" class="bxs-s" style="fill:#8FA2AF">path exists — no SAP spec sets it.</text>
+<text x="718" y="508" class="bxs-s" style="fill:#FFB84D">SAP keys are NVARCHAR, not numeric</text>
+<text x="718" y="536" class="bxs-s" style="fill:#FFB84D">ranges. See sap_konp.yaml:33-35.</text>
+
+<!-- KNOB C — inert -->
+<rect x="1270" y="322" width="560" height="234" rx="16" fill="#171C21" stroke="#4A5A66" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="1298" y="364" class="bxt-s" style="font-size:24px;fill:#8FA2AF">jdbc_hash_field</text>
+<line x1="1298" y1="382" x2="1802" y2="382" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="416" class="bxs-s" style="fill:#8FA2AF">Validated at :266, stored at :270 —</text>
+<text x="1298" y="444" class="bxs-s" style="fill:#8FA2AF">then never read again by sap_hana.</text>
+<text x="1298" y="472" class="bxs-s" style="fill:#8FA2AF">It is live on rds_jdbc.py:353-359.</text>
+<text x="1298" y="508" class="bxs-s" style="fill:#FFB84D">On SAP it documents WHICH PK member</text>
+<text x="1298" y="536" class="bxs-s" style="fill:#FFB84D">you would hash. Know that before you tune.</text>
+
+<!-- ══ ZONE 2 · THE GUARD ══ -->
+<text x="90" y="606" class="cap">2 · THE GUARD</text>
+
+<rect x="90" y="628" width="700" height="262" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="670" class="bxt-s" style="font-size:24px">REFUSE THE UNPARTITIONED GIANT</text>
+<line x1="118" y1="688" x2="762" y2="688" stroke="#2C3841" stroke-width="2"/>
+<rect x="118" y="704" width="644" height="82" rx="8" fill="#0B1013" stroke="#22303A" stroke-width="2"/>
+<text x="138" y="728" class="code" xml:space="preserve">expected_row_count:       35,999,963</text>
+<text x="138" y="752" class="code" xml:space="preserve">single_partition_max_rows: 40,000,000</text>
+<text x="138" y="776" class="code" xml:space="preserve" style="fill:#FF6A72">above it + no partition_column -> ValueError</text>
+<text x="118" y="818" class="bxs-s">Default ceiling is 5,000,000. MBEW raises it to 40M,</text>
+<text x="118" y="846" class="bxs-s">KONP to 400M — each an explicit, commented choice.</text>
+<text x="118" y="878" class="code-s" style="fill:#5E7080">sap_hana.py:192, :389-411 · sap_mbew.yaml:51-52</text>
+
+<!-- ══ ZONE 3 · THE INCIDENT ══ -->
+<text x="830" y="606" class="cap">3 · THE INCIDENT — MBEW</text>
+
+<rect x="830" y="628" width="1000" height="262" rx="16" fill="#2A1E12" stroke="#C4841F" stroke-width="3"/>
+<text x="858" y="670" class="bxt-s" style="font-size:24px;fill:#FFB84D">16 CONNECTIONS COULD NOT CONNECT</text>
+<line x1="858" y1="688" x2="1802" y2="688" stroke="#5A4520" stroke-width="2"/>
+
+<text x="858" y="722" class="bxs">16 simultaneous connects saturated HANA's connect headroom.</text>
+<rect x="858" y="736" width="652" height="34" rx="8" fill="#0B1013" stroke="#5A4520" stroke-width="2"/>
+<text x="878" y="759" class="code" style="fill:#FFB84D">Cannot connect to host (socket timeout)</text>
+
+<text x="858" y="800" class="bxs">FIX 1 — connect budget 15s → 60s</text>
+<text x="1500" y="800" class="code-s" text-anchor="end" style="fill:#A88A50">sap_hana.py:959-964</text>
+<text x="858" y="832" class="bxs">FIX 2 — hash_partitions 16 → 4 (≈ 9M each)</text>
+<text x="1500" y="832" class="code-s" text-anchor="end" style="fill:#A88A50">sap_mbew.yaml:33-36</text>
+<text x="858" y="864" class="bxs">LATER — VBRP went 4 → 8 (684M table)</text>
+<text x="1500" y="864" class="code-s" text-anchor="end" style="fill:#A88A50">sap_vbrp.yaml:22</text>
+
+<line x1="1530" y1="700" x2="1530" y2="878" stroke="#5A4520" stroke-width="2"/>
+<text x="1666" y="738" class="bxs-s" text-anchor="middle" style="fill:#FFD08A">THE ARITHMETIC</text>
+<text x="1666" y="778" class="code" text-anchor="middle" style="fill:#FFB84D">lanes × partitions</text>
+<text x="1666" y="812" class="code" text-anchor="middle" style="fill:#FFB84D">4 × 8 = 32</text>
+<text x="1666" y="852" class="bxs-s" text-anchor="middle" style="fill:#C6A46A">ceiling ≈ 160 connects</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Checkout lanes. Too few and the queue never clears; too many and the doors jam. Tune the count against the doorway, not the queue.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 03</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

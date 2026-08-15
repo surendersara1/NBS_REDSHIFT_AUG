@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 0 · LESSON 23</text>
+<text x="90" y="168" class="title">Streaming, Honestly</text>
+<text x="90" y="212" class="sub">Six services, one materialized view — and a straight answer about whether your project needs any of it.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · WHAT IT IS ══ -->
+<text x="90" y="300" class="zwhat">1 · WHAT IT IS</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">Two separate questions: how the events travel, and where they land</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">People mix these up constantly. Kinesis and Kafka are transport. Firehose and streaming ingestion are landing. You choose both.</text>
+
+<!-- ══ ZONE 2 · HOW IT WORKS ══ -->
+<text x="90" y="462" class="zhow">2 · HOW IT WORKS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="516" class="bxt-s" style="font-size:22px;fill:#5AA9FF">TRANSPORT &#8212; HOW EVENTS TRAVEL</text>
+<line x1="118" y1="532" x2="1182" y2="532" stroke="#2C3841" stroke-width="2"/>
+
+<rect x="118" y="544" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="566" class="bxt-s" style="font-size:20px;fill:#5AA9FF">KINESIS DATA STREAMS</text>
+<text x="1182" y="566" class="code-s" text-anchor="end" style="fill:#5E7080">shards · ordered</text>
+<text x="136" y="590" class="bxs-s" style="font-size:18px">Durable ordered shards. Several consumers can read the same stream independently.</text>
+
+<rect x="118" y="606" width="5" height="40" rx="2.5" fill="#5AA9FF"/>
+<text x="136" y="628" class="bxt-s" style="font-size:20px;fill:#5AA9FF">AMAZON MSK / KAFKA</text>
+<text x="1182" y="628" class="code-s" text-anchor="end" style="fill:#5E7080">incl. Confluent Cloud</text>
+<text x="136" y="652" class="bxs-s" style="font-size:18px">Managed Kafka. The right call when the organisation already speaks Kafka.</text>
+
+<line x1="118" y1="668" x2="1182" y2="668" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="698" class="bxt-s" style="font-size:22px;fill:#3FD98A">LANDING &#8212; WHERE THEY COME TO REST</text>
+
+<rect x="118" y="712" width="5" height="40" rx="2.5" fill="#3FD98A"/>
+<text x="136" y="734" class="bxt-s" style="font-size:20px;fill:#3FD98A">AMAZON DATA FIREHOSE</text>
+<text x="1182" y="734" class="code-s" text-anchor="end" style="fill:#5E7080">no code at all</text>
+<text x="136" y="758" class="bxs-s" style="font-size:18px">Delivers to S3, Iceberg tables including S3 Tables, Redshift and OpenSearch.</text>
+
+<rect x="118" y="774" width="5" height="40" rx="2.5" fill="#FFB84D"/>
+<text x="136" y="796" class="bxt-s" style="font-size:20px;fill:#FFB84D">REDSHIFT STREAMING INGESTION</text>
+<text x="1182" y="796" class="code-s" text-anchor="end" style="fill:#5E7080">AUTO REFRESH</text>
+<text x="136" y="820" class="bxs-s" style="font-size:18px">A materialized view mapped straight onto the stream &#8212; with no S3 staging at all.</text>
+
+<rect x="118" y="836" width="1064" height="40" rx="8" fill="#0B1013" stroke="#5A3A2A" stroke-width="2"/>
+<text x="138" y="862" class="code" xml:space="preserve" style="fill:#FFB84D">Firehose into Iceberg trades throughput against how many partitions are open at once</text>
+
+<!-- ══ ZONE 3 · WHEN TO USE IT ══ -->
+<text x="1270" y="462" class="zwhen">3 · WHEN TO USE IT</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="512" class="bxs-s" style="font-size:18px">Seconds genuinely change a decision</text>
+<text x="1298" y="542" class="bxs-s" style="font-size:18px">The source emits events, not table rows</text>
+<text x="1298" y="572" class="bxs-s" style="font-size:18px">Volume is too high to batch sensibly</text>
+<line x1="1298" y1="592" x2="1802" y2="592" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="622" class="bxt-s" style="font-size:18px;fill:#FF6B73">NOT FOR</text>
+<text x="1298" y="654" class="bxs-s" style="font-size:18px;fill:#C69AA0">Daily retail reporting — batch is cheaper</text>
+
+<!-- ══ ZONE 4 · IN PRACTICE ══ -->
+<text x="1270" y="710" class="zprac">4 · IN PRACTICE</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Neither of our platforms streams today.</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Learn it to recognise the 10% that needs it.</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Do not stream because it sounds modern.</text>
+<text x="1298" y="852" class="bxt-s" style="font-size:19px;fill:#FFB84D">batch until it genuinely hurts</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A live feed is only worth its cost if somebody is watching the screen. Nobody watches yesterday&#8217;s sales report at three in the morning.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 0 · Lesson 23</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundations for Data Engineers</text>
+</svg></div></body></html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 0 · LESSON 06</text>
+<text x="90" y="168" class="title">So Which One Do You Need?</text>
+<text x="90" y="212" class="sub">Four options side by side. For almost every retail business the honest answer is the same one.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · WHAT IT IS ══ -->
+<text x="90" y="300" class="zwhat">1 · THE QUESTION</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">You are not choosing a favourite — you are choosing what to pay for</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">Every option buys one thing and gives up another. Name what you are buying before you name the technology.</text>
+
+<!-- ══ ZONE 2 · SIDE BY SIDE ══ -->
+<text x="90" y="462" class="zhow">2 · SIDE BY SIDE</text>
+
+<!-- card 1 WAREHOUSE -->
+<rect x="90" y="478" width="420" height="346" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="518" class="bxt-s" style="font-size:23px">WAREHOUSE</text>
+<line x1="118" y1="536" x2="482" y2="536" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="570" class="bxs-s" style="font-size:17px">Schema on write, modelled first</text>
+<text x="118" y="600" class="bxs-s" style="font-size:17px">Fast joins, numbers that reconcile</text>
+<text x="118" y="630" class="bxs-s" style="font-size:17px">Rigid — changes cost a migration</text>
+<text x="118" y="660" class="bxs-s" style="font-size:17px">Priced per hour of compute</text>
+<line x1="118" y1="686" x2="482" y2="686" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="716" class="th">ON AWS</text>
+<text x="118" y="746" class="code" style="font-size:17px">Amazon Redshift</text>
+<text x="118" y="790" class="bxt-s" style="font-size:19px;fill:#A9BAC6">BUY: TRUST</text>
+
+<!-- card 2 LAKE -->
+<rect x="530" y="478" width="420" height="346" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="558" y="518" class="bxt-s" style="font-size:23px">LAKE</text>
+<line x1="558" y1="536" x2="922" y2="536" stroke="#2C3841" stroke-width="2"/>
+<text x="558" y="570" class="bxs-s" style="font-size:17px">Schema on read, decide later</text>
+<text x="558" y="600" class="bxs-s" style="font-size:17px">Keeps everything, costs very little</text>
+<text x="558" y="630" class="bxs-s" style="font-size:17px">No updates, no guarantees</text>
+<text x="558" y="660" class="bxs-s" style="font-size:17px">Priced per terabyte scanned</text>
+<line x1="558" y1="686" x2="922" y2="686" stroke="#2C3841" stroke-width="2"/>
+<text x="558" y="716" class="th">ON AWS</text>
+<text x="558" y="746" class="code" style="font-size:17px">S3 + Glue + Athena</text>
+<text x="558" y="790" class="bxt-s" style="font-size:19px;fill:#A9BAC6">BUY: OPTIONALITY</text>
+
+<!-- card 3 LAKEHOUSE — the recommendation -->
+<rect x="970" y="478" width="420" height="346" rx="16" fill="#231114" stroke="#E3000E" stroke-width="3.5"/>
+<text x="998" y="518" class="bxt-s" style="font-size:23px">LAKEHOUSE</text>
+<line x1="998" y1="536" x2="1362" y2="536" stroke="#6A2A30" stroke-width="2"/>
+<text x="998" y="570" class="bxs-s" style="font-size:17px;fill:#E5B8BC">Lake storage, warehouse behaviour</text>
+<text x="998" y="600" class="bxs-s" style="font-size:17px;fill:#E5B8BC">ACID, MERGE, time travel</text>
+<text x="998" y="630" class="bxs-s" style="font-size:17px;fill:#E5B8BC">Many engines read one copy</text>
+<text x="998" y="660" class="bxs-s" style="font-size:17px;fill:#E5B8BC">More moving parts to operate</text>
+<line x1="998" y1="686" x2="1362" y2="686" stroke="#6A2A30" stroke-width="2"/>
+<text x="998" y="716" class="th" style="fill:#C08A90">ON AWS</text>
+<text x="998" y="746" class="code" style="font-size:17px;fill:#FF8A92">S3 Tables + Redshift</text>
+<text x="998" y="790" class="bxt-s" style="font-size:19px;fill:#FF3B47">BUY: BOTH</text>
+
+<!-- card 4 MESH -->
+<rect x="1410" y="478" width="420" height="346" rx="16" fill="#14181B" stroke="#3A4854" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="1438" y="518" class="bxt-s" style="font-size:23px;fill:#8296A3">MESH</text>
+<line x1="1438" y1="536" x2="1802" y2="536" stroke="#2C3841" stroke-width="2"/>
+<text x="1438" y="570" class="bxs-s" style="font-size:17px;fill:#8296A3">An ownership model, not a store</text>
+<text x="1438" y="600" class="bxs-s" style="font-size:17px;fill:#8296A3">Domains own their own products</text>
+<text x="1438" y="630" class="bxs-s" style="font-size:17px;fill:#8296A3">Needs many teams to pay off</text>
+<text x="1438" y="660" class="bxs-s" style="font-size:17px;fill:#8296A3">Sits on top of one of the others</text>
+<line x1="1438" y1="686" x2="1802" y2="686" stroke="#2C3841" stroke-width="2"/>
+<text x="1438" y="716" class="th">ON AWS</text>
+<text x="1438" y="746" class="code" style="font-size:17px;fill:#4E6472">Lake Formation + RAM</text>
+<text x="1438" y="790" class="bxt-s" style="font-size:19px;fill:#8296A3">BUY: AUTONOMY</text>
+
+<!-- ══ VERDICT ══ -->
+<rect x="90" y="840" width="1740" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="118" y="876" class="bxs-s" style="font-size:20px;fill:#8CE8B8">One platform team, eight sources, retail reporting  →  <tspan style="fill:#FFFFFF">build the lakehouse.</tspan>  Revisit mesh when you have five domain teams and a queue.</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Do not pick the architecture with the best conference talks. Pick the one whose trade-off you are actually willing to live with.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 0 · Lesson 06</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Foundations for Data Engineers</text>
+</svg></div></body></html>

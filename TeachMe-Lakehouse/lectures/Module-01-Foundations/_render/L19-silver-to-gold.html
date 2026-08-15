@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 19</text>
+<text x="90" y="168" class="title">SILVER → GOLD: Shaped for the Question</text>
+<text x="90" y="212" class="sub">dbt builds star-schema tables inside Redshift, so Power BI stops computing and starts reading.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE GRAIN ══ -->
+<text x="90" y="300" class="cap">1 · THE STAR AND ITS GRAIN</text>
+<rect x="90" y="322" width="556" height="326" rx="18" fill="#1B2329" stroke="#4A5A66" stroke-width="3"/>
+<rect x="90" y="322" width="556" height="7" rx="3.5" fill="#8296A3"/>
+<text x="118" y="370" class="bxt">FACTS + SHARED DIMS</text>
+<text x="118" y="398" class="bxs-s" style="fill:#8FA2AF">one row per question, not per event</text>
+<line x1="118" y1="416" x2="618" y2="416" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="450" class="bxs-s">▪ Grain: site × date × dept × scenario</text>
+<text x="118" y="480" class="bxs-s">▪ scenario: '2026 A' · '2025 A' · 'Budget'</text>
+<text x="118" y="510" class="bxs-s">▪ Six UNION ALL legs, one column shape</text>
+<text x="118" y="540" class="bxs-s">▪ 5 gold facts share 4 conformed dims</text>
+<text x="118" y="570" class="bxs-s">▪ CY vs PY vs Budget = a filter, not a join</text>
+<text x="118" y="606" class="code-s">src/dbt/models/marts/gold/</text>
+<text x="118" y="630" class="code-s" style="fill:#8FA2AF">marts/dims/ dim_site dim_date dim_dept</text>
+
+<!-- ══ ZONE 2 · THE BUILD (blue) ══ -->
+<text x="682" y="300" class="cap">2 · HOW IT IS BUILT</text>
+<rect x="682" y="322" width="556" height="326" rx="18" fill="#12283F" stroke="#5AA9FF" stroke-width="3"/>
+<rect x="682" y="322" width="556" height="7" rx="3.5" fill="#5AA9FF"/>
+<text x="710" y="370" class="bxt">dbt, INCREMENTAL MERGE</text>
+<text x="710" y="398" class="bxs-s" style="fill:#94B4D4">native Redshift tables, not the lake</text>
+<line x1="710" y1="416" x2="1210" y2="416" stroke="#2C4560" stroke-width="2"/>
+<text x="710" y="450" class="bxs-s">▪ materialized = 'incremental'</text>
+<text x="710" y="480" class="bxs-s">▪ incremental_strategy = 'merge'</text>
+<text x="710" y="510" class="bxs-s">▪ unique_key = site, date, aagm, scenario</text>
+<text x="710" y="540" class="bxs-s">▪ Re-run a day and its rows are replaced</text>
+<text x="710" y="570" class="bxs-s">▪ dist = 'date', sort = date then site</text>
+<text x="710" y="606" class="code-s">models/marts/gold/unified_sales.sql:76</text>
+<text x="710" y="630" class="code-s" style="fill:#8FA2AF">gold_incremental_predicate('date')</text>
+
+<!-- ══ ZONE 3 · THE READ (green) ══ -->
+<text x="1274" y="300" class="cap">3 · WHAT POWER BI READS</text>
+<rect x="1274" y="322" width="556" height="326" rx="18" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<rect x="1274" y="322" width="556" height="7" rx="3.5" fill="#3FD98A"/>
+<text x="1302" y="370" class="bxt">DAX → SQL</text>
+<text x="1302" y="398" class="bxs-s" style="fill:#7FBFA0">measures computed once, then stored</text>
+<line x1="1302" y1="416" x2="1802" y2="416" stroke="#2A4A3A" stroke-width="2"/>
+<text x="1302" y="450" class="bxs-s">▪ Variance, achievement %, ABV live in SQL</text>
+<text x="1302" y="480" class="bxs-s">▪ 10 reporting views + 1 materialised</text>
+<text x="1302" y="510" class="bxs-s">▪ One definition, not one per report</text>
+<text x="1302" y="540" class="bxs-s">▪ Power BI reads native Redshift storage</text>
+<text x="1302" y="570" class="bxs-s">▪ No Spectrum left on the last mile</text>
+<text x="1302" y="606" class="code-s">models/marts/reporting/vw_*.sql</text>
+<text x="1302" y="630" class="code-s" style="fill:#8FA2AF">vw_sales_actuals_pyc.sql</text>
+
+<!-- flow arrows -->
+<line x1="654" y1="485" x2="674" y2="485" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+<line x1="1246" y1="485" x2="1266" y2="485" stroke="#C9D6DE" stroke-width="4" marker-end="url(#a)"/>
+
+<!-- ══ WHAT CHANGES HERE — the spine ══ -->
+<rect x="90" y="670" width="830" height="220" rx="18" fill="#E3000E" stroke="#FF6B72" stroke-width="3"/>
+<text x="122" y="708" class="edge" style="fill:#4A0206">WHAT CHANGES HERE</text>
+<text x="122" y="756" class="bxt-d">ANSWERS, NOT RECORDS.</text>
+<text x="122" y="800" class="bxs-d" style="fill:#1F0104">Rows are reshaped to the question the report asks. Every</text>
+<text x="122" y="830" class="bxs-d" style="fill:#1F0104">measure is computed once, in SQL, and stored. Power BI</text>
+<text x="122" y="860" class="bxs-d" style="fill:#1F0104">reads a number instead of deriving one.</text>
+
+<!-- ══ THE TRAP ══ -->
+<rect x="950" y="670" width="880" height="220" rx="18" fill="#1E1A10" stroke="#FFB84D" stroke-width="2.5"/>
+<text x="982" y="706" class="edge" style="fill:#FFB84D">THE 'All Dept' TRAP · CRIT-04</text>
+<text x="982" y="748" class="bxt-s">A helpful subtotal row that doubles every KPI.</text>
+<text x="982" y="784" class="bxs">unified_sales carries a synthetic dept = 'All Dept' row per site ×</text>
+<text x="982" y="812" class="bxs">date, so DAX can filter straight to it. Any rollup that SUMs across</text>
+<text x="982" y="840" class="bxs">dept must exclude it — or every store total comes out about 2× high.</text>
+<text x="982" y="872" class="code-s" style="fill:#8FA2AF">reporting/vw_store_performance_bands.sql:53  WHERE dept != 'All Dept'</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Gold is the answer sheet, not the ledger. And one subtotal row hiding inside a detail table doubles every total you compute.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 19</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

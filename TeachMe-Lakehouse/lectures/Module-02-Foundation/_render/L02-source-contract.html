@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3FD98A"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 2 · LESSON 02</text>
+<text x="90" y="168" class="title">Define the Source Contract First</text>
+<text x="90" y="212" class="sub">Write the interface every source must satisfy before you write any source. The engine must never learn a vendor's name.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ ZONE 1 · THE DECISION ══ -->
+<text x="90" y="300" class="cap">1 · THE DECISION</text>
+<rect x="90" y="316" width="1740" height="104" rx="14" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="356" class="bxt-s" style="font-size:24px">How does system number nine plug in?</text>
+<text x="118" y="392" class="bxs-s" style="font-size:18px;fill:#A9BAC6">Either the engine grows a branch for every vendor, or it never hears of them at all.</text>
+
+<rect x="1040" y="336" width="350" height="64" rx="12" fill="#231519" stroke="#7A3A40" stroke-width="2.5" stroke-dasharray="9 6"/>
+<line x1="1066" y1="359" x2="1084" y2="377" stroke="#FF6B73" stroke-width="3.5" stroke-linecap="round"/>
+<line x1="1084" y1="359" x2="1066" y2="377" stroke="#FF6B73" stroke-width="3.5" stroke-linecap="round"/>
+<text x="1100" y="376" class="avoid">if src == "oracle"</text>
+
+<rect x="1410" y="336" width="420" height="64" rx="12" fill="#12331F" stroke="#3FD98A" stroke-width="3"/>
+<polyline points="1440,368 1449,377 1466,357" fill="none" stroke="#3FD98A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1480" y="376" class="doit">Protocol + registry</text>
+
+<!-- ══ ZONE 2 · DO THIS ══ -->
+<text x="90" y="462" class="doit">2 · DO THIS</text>
+<rect x="90" y="478" width="1120" height="412" rx="16" fill="#131A1F" stroke="#3A4854" stroke-width="2.5"/>
+<text x="118" y="520" class="bxt-s" style="font-size:24px">WRITE THE CONTRACT, THEN REGISTER IMPLEMENTATIONS BY NAME</text>
+<line x1="118" y1="538" x2="1182" y2="538" stroke="#2C3841" stroke-width="2"/>
+
+<!-- left: the protocol -->
+<rect x="118" y="554" width="560" height="182" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="582" class="code" xml:space="preserve" style="fill:#8CE8B8">class SourceConnector(Protocol):</text>
+<text x="138" y="608" class="code" xml:space="preserve">    def configure(cfg)      -&gt; None</text>
+<text x="138" y="634" class="code" xml:space="preserve">    def read_full()         -&gt; DataFrame</text>
+<text x="138" y="660" class="code" xml:space="preserve">    def read_incremental(wm)-&gt; df, new_wm</text>
+<text x="138" y="686" class="code" xml:space="preserve">    def read_range(a, b)    -&gt; DataFrame</text>
+<text x="138" y="712" class="code" xml:space="preserve">    def emit_metrics()      -&gt; dict</text>
+
+<text x="118" y="764" class="bxs-s" style="font-size:18px">read_incremental <tspan style="fill:#FFFFFF">returns</tspan> the new watermark.</text>
+<text x="118" y="790" class="bxs-s" style="font-size:18px;fill:#FFB84D">The engine persists it — never the connector.</text>
+
+<!-- right: registry + adding a source -->
+<text x="706" y="582" class="bxt-s" style="font-size:20px;fill:#3FD98A">THE REGISTRY</text>
+<rect x="706" y="596" width="476" height="38" rx="8" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="726" y="621" class="code" style="fill:#8CE8B8">@register("oracle_jdbc")</text>
+<text x="706" y="660" class="bxs-s" style="font-size:18px">A decorator fills a dict; the job looks the</text>
+<text x="706" y="686" class="bxs-s" style="font-size:18px">class up by name at run time.</text>
+<line x1="706" y1="704" x2="1182" y2="704" stroke="#2C3841" stroke-width="2"/>
+<text x="706" y="734" class="bxt-s" style="font-size:20px;fill:#3FD98A">ADDING SOURCE #9</text>
+<text x="706" y="764" class="bxs-s" style="font-size:18px">1 new file · sources/oracle_jdbc.py</text>
+<text x="706" y="790" class="bxs-s" style="font-size:18px">1 import line · sources/__init__.py</text>
+
+<rect x="118" y="814" width="1064" height="56" rx="10" fill="#0B1013" stroke="#2A4A3A" stroke-width="2"/>
+<text x="138" y="848" class="code" xml:space="preserve" style="fill:#8CE8B8">the test:  grep -ri oracle glue_engine/  →  hits sources/oracle_jdbc.py and nothing else</text>
+
+<!-- ══ ZONE 3 · WHY ══ -->
+<text x="1270" y="462" class="cap">3 · WHY</text>
+<rect x="1270" y="478" width="560" height="204" rx="16" fill="#191F24" stroke="#3A4854" stroke-width="2.5"/>
+<text x="1298" y="514" class="bxs-s" style="font-size:18px">A JDBC pull, a paged REST call and a nightly</text>
+<text x="1298" y="540" class="bxs-s" style="font-size:18px">file drop all satisfy the same five methods.</text>
+<text x="1298" y="566" class="bxs-s" style="font-size:18px">Adding a source becomes additive — and a</text>
+<text x="1298" y="592" class="bxs-s" style="font-size:18px">connector may decline a mode it cannot do.</text>
+<line x1="1298" y1="608" x2="1802" y2="608" stroke="#2C3841" stroke-width="2"/>
+<text x="1298" y="636" class="bxt-s" style="font-size:18px;fill:#FF6B73">IF YOU DON'T</text>
+<text x="1298" y="662" class="bxs-s" style="font-size:18px;fill:#C69AA0">Source #9 edits twenty unrelated files.</text>
+
+<!-- ══ ZONE 4 · ON APPAREL GROUP ══ -->
+<text x="1270" y="710" class="agbox">4 · ON APPAREL GROUP</text>
+<rect x="1270" y="726" width="560" height="164" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1298" y="760" class="bxs-s" style="font-size:18px;fill:#E8D5B0">RMS · SIM · XStore — full + incremental</text>
+<text x="1298" y="788" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Epsilon · MoEngage — incremental by cursor</text>
+<text x="1298" y="816" class="bxs-s" style="font-size:18px;fill:#E8D5B0">Magento · Vemco · Irisys — full only</text>
+<text x="1298" y="850" class="bxt-s" style="font-size:19px;fill:#FFB84D">The Oracle branch lands in ONE file</text>
+
+<!-- ══ PLAIN ENGLISH ══ -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">A wall socket. The kettle knows nothing about the power station; it just fits the plug. Define the socket before you buy appliances.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 2 · Lesson 02</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>

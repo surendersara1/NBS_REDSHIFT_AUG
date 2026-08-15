@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C9D6DE"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 1 · LESSON 02</text>
+<text x="90" y="168" class="title">Lake vs Warehouse vs Lakehouse</text>
+<text x="90" y="212" class="sub">Cheap and dumb, fast and strict, or both? What each one is good at — and which one we built.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- ══ 1 · DATA LAKE ══ -->
+<text x="90" y="300" class="cap">1 · DATA LAKE</text>
+<rect x="90" y="322" width="560" height="440" rx="18" fill="#1B2329" stroke="#4A5A66" stroke-width="3"/>
+<rect x="90" y="322" width="560" height="8" rx="4" fill="#8296A3"/>
+<text x="370" y="370" class="bxt" text-anchor="middle">DATA LAKE</text>
+<text x="370" y="402" class="bxs" text-anchor="middle" style="fill:#8FA2AF">a folder of files on object storage</text>
+<line x1="118" y1="422" x2="622" y2="422" stroke="#2C3841" stroke-width="2"/>
+
+<text x="118" y="456" class="edge-s" style="fill:#7A8C99">COST</text>
+<text x="622" y="456" class="bxs-s" text-anchor="end">Lowest — S3 per GB</text>
+<text x="118" y="486" class="edge-s" style="fill:#7A8C99">FLEXIBILITY</text>
+<text x="622" y="486" class="bxs-s" text-anchor="end">Any file, any shape</text>
+<text x="118" y="516" class="edge-s" style="fill:#7A8C99">SPEED</text>
+<text x="622" y="516" class="bxs-s" text-anchor="end">Slow — scan whole files</text>
+<text x="118" y="546" class="edge-s" style="fill:#7A8C99">SCHEMA</text>
+<text x="622" y="546" class="bxs-s" text-anchor="end">None until you read it</text>
+<text x="118" y="576" class="edge-s" style="fill:#7A8C99">GOVERNANCE</text>
+<text x="622" y="576" class="bxs-s" text-anchor="end">Bucket policies only</text>
+
+<line x1="118" y1="598" x2="622" y2="598" stroke="#2C3841" stroke-width="2"/>
+<text x="118" y="628" class="edge-s" style="fill:#3FD98A">GOOD AT</text>
+<text x="118" y="656" class="bxs-s">Keeping everything, cheaply, forever</text>
+<text x="118" y="690" class="edge-s" style="fill:#FF6B72">BAD AT</text>
+<text x="118" y="718" class="bxs-s">Answering a question quickly</text>
+<text x="118" y="748" class="code-s" style="fill:#5E7080">glue_engine/writers/raw_landing.py</text>
+
+<!-- ══ 2 · DATA WAREHOUSE ══ -->
+<text x="680" y="300" class="cap">2 · DATA WAREHOUSE</text>
+<rect x="680" y="322" width="560" height="440" rx="18" fill="#1A2430" stroke="#4A6A8A" stroke-width="3"/>
+<rect x="680" y="322" width="560" height="8" rx="4" fill="#5AA9FF"/>
+<text x="960" y="370" class="bxt" text-anchor="middle" style="fill:#7FBEFF">DATA WAREHOUSE</text>
+<text x="960" y="402" class="bxs" text-anchor="middle" style="fill:#94B4D4">a locked, indexed, tuned database</text>
+<line x1="708" y1="422" x2="1212" y2="422" stroke="#2C4560" stroke-width="2"/>
+
+<text x="708" y="456" class="edge-s" style="fill:#7A8C99">COST</text>
+<text x="1212" y="456" class="bxs-s" text-anchor="end">Highest — storage + compute</text>
+<text x="708" y="486" class="edge-s" style="fill:#7A8C99">FLEXIBILITY</text>
+<text x="1212" y="486" class="bxs-s" text-anchor="end">Tables only — load it first</text>
+<text x="708" y="516" class="edge-s" style="fill:#7A8C99">SPEED</text>
+<text x="1212" y="516" class="bxs-s" text-anchor="end">Fastest — it owns the bytes</text>
+<text x="708" y="546" class="edge-s" style="fill:#7A8C99">SCHEMA</text>
+<text x="1212" y="546" class="bxs-s" text-anchor="end">Strict, enforced on write</text>
+<text x="708" y="576" class="edge-s" style="fill:#7A8C99">GOVERNANCE</text>
+<text x="1212" y="576" class="bxs-s" text-anchor="end">Rich — roles and grants</text>
+
+<line x1="708" y1="598" x2="1212" y2="598" stroke="#2C4560" stroke-width="2"/>
+<text x="708" y="628" class="edge-s" style="fill:#3FD98A">GOOD AT</text>
+<text x="708" y="656" class="bxs-s">Fast, governed answers at scale</text>
+<text x="708" y="690" class="edge-s" style="fill:#FF6B72">BAD AT</text>
+<text x="708" y="718" class="bxs-s">Cost — and data it has not loaded</text>
+<text x="708" y="748" class="code-s" style="fill:#5E7080">src/dbt/models/marts/gold/</text>
+
+<!-- ══ 3 · LAKEHOUSE ══ -->
+<text x="1270" y="300" class="cap">3 · LAKEHOUSE — WHAT WE BUILT</text>
+<rect x="1270" y="322" width="560" height="440" rx="18" fill="#2A1418" stroke="#E3000E" stroke-width="3"/>
+<rect x="1270" y="322" width="560" height="8" rx="4" fill="#FF3B47"/>
+<text x="1550" y="370" class="bxt" text-anchor="middle" style="fill:#FF3B47">LAKEHOUSE</text>
+<text x="1550" y="402" class="bxs" text-anchor="middle" style="fill:#E0989C">the folder that acts like a database</text>
+<line x1="1298" y1="422" x2="1802" y2="422" stroke="#5A2A30" stroke-width="2"/>
+
+<text x="1298" y="456" class="edge-s" style="fill:#A08088">COST</text>
+<text x="1802" y="456" class="bxs-s" text-anchor="end">Lake price for storage</text>
+<text x="1298" y="486" class="edge-s" style="fill:#A08088">FLEXIBILITY</text>
+<text x="1802" y="486" class="bxs-s" text-anchor="end">Open files, table rules</text>
+<text x="1298" y="516" class="edge-s" style="fill:#A08088">SPEED</text>
+<text x="1802" y="516" class="bxs-s" text-anchor="end">Fast where it has to be</text>
+<text x="1298" y="546" class="edge-s" style="fill:#A08088">SCHEMA</text>
+<text x="1802" y="546" class="bxs-s" text-anchor="end">Enforced — and evolvable</text>
+<text x="1298" y="576" class="edge-s" style="fill:#A08088">GOVERNANCE</text>
+<text x="1802" y="576" class="bxs-s" text-anchor="end">Catalog + Lake Formation</text>
+
+<line x1="1298" y1="598" x2="1802" y2="598" stroke="#5A2A30" stroke-width="2"/>
+<text x="1298" y="628" class="edge-s" style="fill:#3FD98A">GOOD AT</text>
+<text x="1298" y="656" class="bxs-s">Both — open files, warehouse reads</text>
+<text x="1298" y="690" class="edge-s" style="fill:#FF6B72">BAD AT</text>
+<text x="1298" y="718" class="bxs-s">More moving parts to operate</text>
+<text x="1298" y="748" class="code-s">glue_engine/writers/s3_tables.py</text>
+
+<!-- ══ the three pieces we assembled ══ -->
+<text x="90" y="790" class="cap">WHAT WE ACTUALLY BUILT — THE THREE PIECES</text>
+<rect x="90" y="804" width="1740" height="82" rx="14" fill="#141A20" stroke="#2C3841" stroke-width="2.5"/>
+<line x1="690" y1="818" x2="690" y2="872" stroke="#2C3841" stroke-width="2"/>
+<line x1="1250" y1="818" x2="1250" y2="872" stroke="#2C3841" stroke-width="2"/>
+
+<text x="122" y="838" class="bxs">S3 Tables — lake economics</text>
+<text x="122" y="868" class="code-s">infra/modules/s3-data-lake/main.tf</text>
+
+<text x="722" y="838" class="bxs">Redshift Serverless — warehouse speed</text>
+<text x="722" y="868" class="code-s">infra/modules/redshift-serverless/</text>
+
+<text x="1282" y="838" class="bxs">Iceberg — the bridge between them</text>
+<text x="1282" y="868" class="code-s">infra/modules/catalog_federation/</text>
+
+<!-- plain english -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Lake = a folder of files. Warehouse = a locked, indexed database. Lakehouse = the folder that behaves like the database.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 1 · Lesson 02</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Tamimi Markets Data Lakehouse</text>
+</svg></div></body></html>

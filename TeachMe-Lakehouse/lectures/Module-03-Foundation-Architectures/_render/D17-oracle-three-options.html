@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_style.css"></head><body>
+<div id="slide">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8296A3"/></marker>
+</defs>
+<rect width="1920" height="1080" fill="#0E1418"/><rect width="1920" height="11" fill="#E3000E"/>
+
+<text x="90" y="104" class="eyebrow">MODULE 3 · ARCHITECTURE 17 · THE DECISION</text>
+<text x="90" y="168" class="title">Oracle — Three Ways In</text>
+<text x="90" y="212" class="sub">Three of the eight sources are Oracle. This is a real decision with real arguments, and it is worth a spike before committing.</text>
+<line x1="90" y1="248" x2="1830" y2="248" stroke="#243039" stroke-width="2"/>
+
+<!-- OPTION 1 GLUE -->
+<rect x="90" y="316" width="560" height="454" rx="16" fill="#231114" stroke="#E3000E" stroke-width="3.5"/>
+<text x="118" y="356" class="grp" style="font-size:22px;fill:#FF3B47">1 &#183; GLUE JDBC</text>
+<text x="622" y="356" class="code-s" text-anchor="end" style="fill:#C08A90">you build it</text>
+<line x1="118" y1="372" x2="622" y2="372" stroke="#6A2A30" stroke-width="2"/>
+<image href="../../_icons/onprem/database/oracle.png" x="170" y="396" width="56" height="56"/>
+<line x1="234" y1="424" x2="292" y2="424" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<image href="../../_icons/aws/analytics/glue.png" x="300" y="396" width="56" height="56"/>
+<line x1="364" y1="424" x2="422" y2="424" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<image href="../../_icons/aws/storage/simple-storage-service-s3.png" x="430" y="396" width="56" height="56"/>
+<text x="198" y="476" class="dlb" text-anchor="middle">Oracle</text>
+<text x="328" y="476" class="dlb" text-anchor="middle">Glue</text>
+<text x="458" y="476" class="dlb" text-anchor="middle">S3 / Iceberg</text>
+<line x1="118" y1="500" x2="622" y2="500" stroke="#6A2A30" stroke-width="2"/>
+<text x="118" y="534" class="icd" style="font-size:17px;fill:#E5B8BC">Full transformation control</text>
+<text x="118" y="568" class="icd" style="font-size:17px;fill:#E5B8BC">Lands in the lake &#8212; medallion intact</text>
+<text x="118" y="602" class="icd" style="font-size:17px;fill:#E5B8BC">Cheapest per row at XStore volume</text>
+<text x="118" y="636" class="icd" style="font-size:17px;fill:#FF8A92">You build it, and you operate it</text>
+<line x1="118" y1="664" x2="622" y2="664" stroke="#6A2A30" stroke-width="2"/>
+<text x="118" y="700" class="bxt-s" style="font-size:20px;fill:#FF3B47">DEFAULT FOR ALL THREE</text>
+<text x="118" y="736" class="icd" style="font-size:17px;fill:#E5B8BC">unless the spike says otherwise</text>
+
+<!-- OPTION 2 DMS -->
+<rect x="680" y="316" width="560" height="454" rx="16" fill="#0F1E17" stroke="#2A5A40" stroke-width="2.5"/>
+<text x="708" y="356" class="grp" style="font-size:22px;fill:#3FD98A">2 &#183; DMS &#183; CDC</text>
+<text x="1212" y="356" class="code-s" text-anchor="end" style="fill:#5E7080">reads the log</text>
+<line x1="708" y1="372" x2="1212" y2="372" stroke="#2A5A40" stroke-width="2"/>
+<image href="../../_icons/onprem/database/oracle.png" x="760" y="396" width="56" height="56"/>
+<line x1="824" y1="424" x2="882" y2="424" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<image href="../../_icons/aws/database/database-migration-service.png" x="890" y="396" width="56" height="56"/>
+<line x1="954" y1="424" x2="1012" y2="424" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<image href="../../_icons/aws/storage/simple-storage-service-s3.png" x="1020" y="396" width="56" height="56"/>
+<text x="788" y="476" class="dlb" text-anchor="middle">Oracle redo</text>
+<text x="918" y="476" class="dlb" text-anchor="middle">DMS</text>
+<text x="1048" y="476" class="dlb" text-anchor="middle">S3 / Redshift</text>
+<line x1="708" y1="500" x2="1212" y2="500" stroke="#2A5A40" stroke-width="2"/>
+<text x="708" y="534" class="icd" style="font-size:17px">Catches hard deletes &#8212; the decider</text>
+<text x="708" y="568" class="icd" style="font-size:17px">Minutes, not hours</text>
+<text x="708" y="602" class="icd" style="font-size:17px">Almost no query load on the source</text>
+<text x="708" y="636" class="icd" style="font-size:17px;fill:#C69AA0">Still a pipeline to operate</text>
+<line x1="708" y1="664" x2="1212" y2="664" stroke="#2A5A40" stroke-width="2"/>
+<text x="708" y="700" class="bxt-s" style="font-size:20px;fill:#3FD98A">IF DELETES MATTER</text>
+<text x="708" y="736" class="icd" style="font-size:17px">ask this of every table, week one</text>
+
+<!-- OPTION 3 ZERO-ETL -->
+<rect x="1270" y="316" width="560" height="454" rx="16" fill="#1F1A10" stroke="#8A6A3A" stroke-width="2.5"/>
+<text x="1298" y="356" class="grp" style="font-size:22px;fill:#FFB84D">3 &#183; ZERO-ETL</text>
+<text x="1802" y="356" class="code-s" text-anchor="end" style="fill:#B99A6A">no pipeline</text>
+<line x1="1298" y1="372" x2="1802" y2="372" stroke="#8A6A3A" stroke-width="2"/>
+<image href="../../_icons/onprem/database/oracle.png" x="1350" y="396" width="56" height="56"/>
+<line x1="1414" y1="424" x2="1472" y2="424" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<image href="../../_icons/aws/migration/migration-and-transfer.png" x="1480" y="396" width="56" height="56"/>
+<line x1="1544" y1="424" x2="1602" y2="424" stroke="#8296A3" stroke-width="2.5" marker-end="url(#aw)"/>
+<image href="../../_icons/aws/analytics/redshift.png" x="1610" y="396" width="56" height="56"/>
+<text x="1378" y="476" class="dlb" text-anchor="middle">Oracle</text>
+<text x="1508" y="476" class="dlb" text-anchor="middle">managed</text>
+<text x="1638" y="476" class="dlb" text-anchor="middle">Redshift only</text>
+<line x1="1298" y1="500" x2="1802" y2="500" stroke="#8A6A3A" stroke-width="2"/>
+<text x="1298" y="534" class="icd" style="font-size:17px;fill:#E8D5B0">No pipeline to build or operate</text>
+<text x="1298" y="568" class="icd" style="font-size:17px;fill:#C69AA0">Self-managed &#8594; Redshift <tspan style="fill:#FF8A92">only</tspan></text>
+<text x="1298" y="602" class="icd" style="font-size:17px;fill:#C69AA0">No transform in flight at all</text>
+<text x="1298" y="636" class="icd" style="font-size:17px;fill:#C69AA0">Ongoing cost on a huge table</text>
+<line x1="1298" y1="664" x2="1802" y2="664" stroke="#8A6A3A" stroke-width="2"/>
+<text x="1298" y="700" class="bxt-s" style="font-size:20px;fill:#FFB84D">SPIKE IT FIRST</text>
+<text x="1298" y="736" class="icd" style="font-size:17px;fill:#E8D5B0">one source, measured, before we commit</text>
+
+<!-- VERDICT -->
+<rect x="90" y="790" width="1740" height="100" rx="14" fill="#0B1013" stroke="#2A4A3A" stroke-width="2.5"/>
+<text x="118" y="820" class="icb" style="fill:#8CE8B8">DECIDE PER SOURCE, NOT ONCE FOR THE PLATFORM</text>
+<line x1="118" y1="834" x2="1802" y2="834" stroke="#1E3830" stroke-width="2"/>
+<text x="118" y="868" class="bxs-s" style="font-size:18px;fill:#A9E8C4">XStore&#8217;s volume argues for Glue. A small, slow-changing reference table argues for zero-ETL &#8212; or for not ingesting it at all and mounting it as a federated catalog (D06).</text>
+
+<!-- PLAIN ENGLISH -->
+<rect x="90" y="912" width="1740" height="86" rx="14" fill="#1A1E15" stroke="#4A431F" stroke-width="2.5"/>
+<text x="122" y="948" class="plainb">IN PLAIN ENGLISH</text>
+<text x="122" y="982" class="plain">Own a van, hire a courier, or have it delivered. The right answer depends on the parcel &#8212; and you are shipping three very different parcels.</text>
+
+<text x="90" y="1046" class="footc">TeachMe-Lakehouse · Module 3 · Architecture 17</text>
+<text x="1830" y="1046" class="foot" text-anchor="end">Apparel Group Data Platform</text>
+</svg></div></body></html>
