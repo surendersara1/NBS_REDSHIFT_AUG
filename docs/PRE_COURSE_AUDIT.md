@@ -3,8 +3,21 @@
 **Date:** 2026-08-16
 **Auditor:** Claude Opus 5, against the live AWS documentation MCP server
 **Scope:** CDK infrastructure, Glue ETL, the S3 → S3 Tables → Redshift
-federated-catalog path, and the operational scripts
+federated-catalog path, the operational scripts, and **`sql/01`–`sql/18`**
 **Course starts:** 2026-08-17
+
+> **Scope boundary, stated up front.** The repository contains **76 SQL
+> modules**. This audit covers the deployable platform and modules 01–18 —
+> the files that carry account-specific ARNs, bucket names and external-schema
+> DDL, i.e. everything that has to be *correct against a live AWS account*.
+>
+> Modules **19–76 were not audited.** They are self-contained teaching SQL:
+> a placeholder scan confirms they contain **zero** `<PLACEHOLDER>` tokens and
+> reference only illustrative account ids (`123456789012`). They therefore
+> cannot break the deploy path — but they are also not wired to the deployed
+> environment, and several (`64` Kinesis/MSK, `69` Zero-ETL, `59` Redshift ML)
+> describe services this CDK does not build. Treat those as
+> read-and-discuss, not run-as-is. See §7.
 
 ---
 
@@ -175,7 +188,8 @@ a deploy. Specifically still unproven:
 |---|---|
 | A real `cdk deploy` | Synth validates structure and the CFN resource spec. It does not catch IAM propagation timing, S3 Tables regional behaviour, or quota limits. |
 | The Glue Iceberg REST config | The `--conf` string wiring Spark to the S3 Tables REST catalog is written to the documented shape but has not run. Most likely single point of failure on day 2. |
-| Any SQL against a live cluster | All 18 files are documentation-verified, not execution-verified. |
+| Any SQL against a live cluster | Modules 01–18 are documentation-verified, not execution-verified. |
+| Modules 19–76 | Not audited at all. Low deploy risk (no placeholders, no account-specific ARNs), unknown teaching-correctness risk. |
 | The `ra3.large` price | The one figure in this repo not checked against a published table. |
 
 **Mitigation, and it is not optional: one person deploys end-to-end and runs
@@ -183,6 +197,33 @@ a deploy. Specifically still unproven:
 the largest residual risk into a known quantity while there is still time to
 react. `bootstrap_s3tables.sh --verify` is designed to be the fast checkpoint
 in that walk-through.
+
+---
+
+## 7. Modules 19–76 — what I can say without auditing them
+
+A structural scan, not a correctness review:
+
+| Property | Finding |
+|---|---|
+| Placeholder tokens | **Zero.** `render_sql.sh` has nothing to substitute in them, so it cannot half-render them. |
+| Account-specific ARNs | None real. Illustrative ids only (`123456789012`, `111222333444`). |
+| Deploy-path risk | **None.** They reference no resource this CDK creates. |
+| Runnable as-is against this environment | **Partly.** Modules that need only Redshift (SQL semantics, window functions, SCD, sort keys, CTEs) will run. Modules describing services this CDK does not build will not. |
+
+Modules that describe infrastructure the platform does **not** provision, and
+so cannot be run end-to-end on day one:
+
+- `59` Redshift ML — needs SageMaker
+- `63` Data Sharing Cross-Account — needs a second account/namespace
+- `64` Streaming Ingestion — needs Kinesis or MSK
+- `69` Zero-ETL Integrations — needs Aurora or DynamoDB
+
+Nothing is wrong with teaching these as concepts. The risk is a learner
+hitting a wall mid-lab because a file looks runnable and is not. **Cheapest
+mitigation: a one-line banner at the top of each of those four files saying
+"concept module — requires infrastructure outside this platform".** Fifteen
+minutes of work, and it removes the most likely source of day-3 confusion.
 
 ---
 

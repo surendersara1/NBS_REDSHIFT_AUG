@@ -20,7 +20,7 @@ Read this fully before running anything. Time to a working cluster: **about
 | Shell scripts parse | **Verified.** `bash -n` clean on all 4 |
 | Python parses | **Verified.** All 8 files |
 | Sample data generates | **Verified.** Runs, produces the injected defects |
-| SQL syntax vs AWS docs | **Verified 2026-08-16** against the Redshift Database Developer Guide |
+| SQL syntax vs AWS docs | **`sql/01`–`sql/18` verified 2026-08-16** against the Redshift Database Developer Guide. **Modules 19–76 not audited** — see [docs/PRE_COURSE_AUDIT.md §7](docs/PRE_COURSE_AUDIT.md) |
 | CDK deployed to AWS | **Never run.** No account has seen this |
 | Glue jobs executed | **Never run.** |
 | SQL executed on a cluster | **Never run.** |
@@ -293,6 +293,13 @@ Work through `sql/_resolved/` **in numeric order**. The dependency chain:
 
 Running `15` before `11` fails with *relation "fct_retail_sales" does not
 exist*. That is the one out-of-order failure worth warning the room about.
+
+**Modules `19`–`76`** are self-contained: no placeholders, no dependency on
+the deployed stack, runnable in any order once `01`–`04` have built the
+base tables. Four of them describe services this platform does not
+provision (`59` SageMaker, `63` second account, `64` Kinesis/MSK, `69`
+Aurora/DynamoDB) — teach those as concepts, not labs. They were not part of
+the pre-course audit; see [docs/PRE_COURSE_AUDIT.md §7](docs/PRE_COURSE_AUDIT.md).
 
 **`sql/03` §3.3 needs an IAM login, not a database login.** The auto-mounted
 `awsdatacatalog` requires Federated Access to Spectrum. In Query Editor v2
