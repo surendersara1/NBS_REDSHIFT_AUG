@@ -169,7 +169,7 @@ ORDER  BY relation_name;
 --     --resource '{"Table":{"DatabaseName":"<GLUE_DB>","TableWildcard":{}}}'
 --
 --   aws lakeformation grant-permissions \
---     --principal DataLakePrincipalIdentifier=arn:aws:iam::<ACCT>:role/<SPECTRUM_ROLE> \
+--     --principal DataLakePrincipalIdentifier=arn:aws:iam::<ACCT>:role/<SPECTRUM_ROLE_NAME> \
 --     --resource '{"Table":{"DatabaseName":"<GLUE_DB>","TableWildcard":{}}}' \
 --     --permissions SELECT
 

@@ -159,8 +159,14 @@ SELECT * FROM svv_rls_relation;
 -- =========================================================================
 
 -- People get read. Jobs get write.
-GRANT ROLE bi_reader TO learner01, learner02, learner03, learner04,
-                        learner05, learner06, learner07, learner08;
+-- PER-LEARNER DEPLOY MODEL: learner01..08 do not exist on your own cluster
+-- (you are nbsadmin). Granting to them fails with "user learner01 does not
+-- exist" and stops this file half-applied.
+GRANT ROLE bi_reader TO nbsadmin;
+
+-- SHARED-CLUSTER MODEL ONLY, after scripts/create_learners.sh:
+-- GRANT ROLE bi_reader TO learner01, learner02, learner03, learner04,
+--                         learner05, learner06, learner07, learner08;
 
 -- Lock down the default dumping ground. Every Redshift database ships with
 -- a `public` schema that PUBLIC can CREATE in — meaning any user can create

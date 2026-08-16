@@ -204,7 +204,10 @@ FROM ranked;
 
 ANALYZE analytics.fct_customer_metrics;
 
-SELECT ltv_tier, COUNT(*) AS rows, COUNT(DISTINCT customer_id) AS customers,
+-- `rows` is a RESERVED WORD in Redshift (it is the window-frame keyword), so
+-- `COUNT(*) AS rows` is a syntax error unless double-quoted. Renamed rather
+-- than quoted, because a quoted identifier is then case-sensitive forever.
+SELECT ltv_tier, COUNT(*) AS row_count, COUNT(DISTINCT customer_id) AS customers,
        ROUND(AVG(running_ltv), 2) AS avg_ltv
 FROM   analytics.fct_customer_metrics
 GROUP  BY ltv_tier

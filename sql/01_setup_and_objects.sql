@@ -88,9 +88,18 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA staging
 -- System privileges are role-only; a GROUP cannot hold them.
 GRANT ACCESS SYSTEM TABLE TO ROLE ops_role;
 
-GRANT ROLE engineer_role TO learner01, learner02, learner03, learner04,
-                            learner05, learner06, learner07, learner08;
-GRANT ROLE ops_role      TO learner01;   -- rotate the "on-call" learner daily
+-- PER-LEARNER DEPLOY MODEL: you are `nbsadmin` on your OWN cluster, so the
+-- learner01..learner08 users do NOT exist and granting to them fails with
+-- "user learner01 does not exist". Grant to yourself instead, which still
+-- exercises the whole RBAC path.
+GRANT ROLE engineer_role TO nbsadmin;
+GRANT ROLE ops_role      TO nbsadmin;
+
+-- SHARED-CLUSTER MODEL ONLY: if you consolidate onto one cluster and run
+-- scripts/create_learners.sh, use these instead of the two lines above.
+-- GRANT ROLE engineer_role TO learner01, learner02, learner03, learner04,
+--                             learner05, learner06, learner07, learner08;
+-- GRANT ROLE ops_role      TO learner01;   -- rotate the "on-call" learner daily
 
 -- Why the learner accounts are created with SYSLOG ACCESS UNRESTRICTED in
 -- that script: without it a non-superuser sees only their OWN rows in the

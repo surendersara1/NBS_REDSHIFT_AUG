@@ -214,7 +214,9 @@ SELECT owner, host, diskno, used, capacity,
 FROM   stv_partitions WHERE part_begin = 0;
 
 -- C.3 Locks — the "my query is hung" answer.
-SELECT l.table_id, t.table_name, l.last_update, l.lock_owner, l.lock_owner_pid,
+-- t."table", not t.table_name. SVV_TABLE_INFO names that column "table",
+-- which is a reserved word and therefore always needs the double quotes.
+SELECT l.table_id, t."table", l.last_update, l.lock_owner, l.lock_owner_pid,
        l.lock_mode, l.granted
 FROM   stv_locks l
 LEFT JOIN svv_table_info t ON t.table_id = l.table_id;

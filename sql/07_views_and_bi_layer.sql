@@ -224,13 +224,16 @@ UNION ALL
 SELECT schemaname, viewname, 'view'
 FROM   pg_views   WHERE schemaname = 'rpt'
 UNION ALL
-SELECT schema_name, table_name, 'matview'
+-- SVV_MV_INFO's column is `name`, not `table_name`. Verified against the
+-- Redshift Database Developer Guide: the columns are database_name,
+-- schema_name, user_name, name, is_stale, state, autorewrite, autorefresh.
+SELECT schema_name, name, 'matview'
 FROM   svv_mv_info WHERE schema_name = 'rpt'
 ORDER  BY kind, object_name;
 -- Expected: zero rows of kind 'table'.
 
 -- MV staleness — the question every BI user eventually asks.
-SELECT schema_name, table_name, is_stale, autorefresh, state
+SELECT schema_name, name, is_stale, autorefresh, state
 FROM   svv_mv_info
 WHERE  schema_name IN ('rpt','analytics');
 

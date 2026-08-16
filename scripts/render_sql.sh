@@ -65,6 +65,13 @@ MASTER_SECRET_ARN=$(out redshift MasterSecretArn)
 : "${TABLE_BUCKET_NAME:=${PREFIX}-tables-${STAGE}}"
 : "${CLUSTER_ID:=${PREFIX}-${STAGE}}"
 
+# The role NAME, not its ARN. sql/08 builds a Lake Formation principal as
+# arn:aws:iam::<ACCT>:role/<SPECTRUM_ROLE_NAME>; substituting a full ARN
+# there would produce arn:aws:iam::123:role/arn:aws:iam::123:role/... which
+# fails with an opaque "invalid principal" from Lake Formation.
+SPECTRUM_ROLE_NAME="${SPECTRUM_ROLE_ARN##*/}"
+: "${SPECTRUM_ROLE_NAME:=${PREFIX}-rs-spectrum-${STAGE}}"
+
 missing=0
 for v in ACCOUNT_ID RAW_BUCKET CURATED_BUCKET GLUE_DB SPECTRUM_ROLE_ARN \
          S3TABLES_ROLE_ARN TABLE_BUCKET_NAME TABLE_BUCKET_ARN RESOURCE_LINK \
@@ -96,6 +103,7 @@ for f in "${ROOT}"/sql/*.sql; do
       -e "s|<RESOURCE_LINK>|${RESOURCE_LINK}|g" \
       -e "s|<NAMESPACE>|${NAMESPACE}|g" \
       -e "s|<SPECTRUM_ROLE_ARN>|${SPECTRUM_ROLE_ARN}|g" \
+      -e "s|<SPECTRUM_ROLE_NAME>|${SPECTRUM_ROLE_NAME}|g" \
       -e "s|<SPECTRUM_ROLE>|${SPECTRUM_ROLE_ARN}|g" \
       -e "s|<S3TABLES_ROLE_ARN>|${S3TABLES_ROLE_ARN}|g" \
       -e "s|<TABLE_BUCKET_ARN>|${TABLE_BUCKET_ARN}|g" \

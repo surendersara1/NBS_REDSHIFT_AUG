@@ -130,7 +130,11 @@ FROM 's3://<RAW_BUCKET>/child/'
 IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 FORMAT AS CSV
 IGNOREHEADER 1
-TIMEFORMAT 'YYYY-MM-DD HH:MI:SS'
+-- HH24, not HH. In Redshift datetime format strings HH means HH12, so a
+-- 24-hour timestamp like '2026-08-14 15:30:00' fails to parse with HH and
+-- every afternoon row lands in STL_LOAD_ERRORS. This is the single most
+-- common COPY format bug.
+TIMEFORMAT 'YYYY-MM-DD HH24:MI:SS'
 BLANKSASNULL
 EMPTYASNULL
 MAXERROR 100
