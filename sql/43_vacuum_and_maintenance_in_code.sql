@@ -149,7 +149,7 @@ client = boto3.client('redshift-data')
 def run_redshift_maintenance(table_name):
     # VACUUM must run in its own statement outside an explicit transaction block
     response = client.execute_statement(
-        ClusterIdentifier='nbs-coaching-dev',
+        ClusterIdentifier='<CLUSTER_ID>',
         Database='coaching',
         SecretArn='<MASTER_SECRET_ARN>',
         Sql=f'VACUUM DELETE ONLY {table_name};'

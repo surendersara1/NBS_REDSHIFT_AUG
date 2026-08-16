@@ -59,9 +59,9 @@ ORDER  BY s.starttime;
 --       import boto3
 --       rs = boto3.client('redshift-data')
 --       r = rs.execute_statement(
---               ClusterIdentifier='nbs-coaching-dev',
+--               ClusterIdentifier='<CLUSTER_ID>',
 --               Database='coaching',
---               SecretArn='<MasterSecretArn>',
+--               SecretArn='<MASTER_SECRET_ARN>',
 --               Sql='SELECT segment, SUM(gross_amount) FROM analytics.'
 --                   'fct_customer_orders GROUP BY segment')
 --       # asynchronous: poll, then fetch
@@ -85,7 +85,7 @@ ORDER  BY s.starttime;
 --
 -- (c) IAM-based temporary credentials — no stored password anywhere:
 --       aws redshift get-cluster-credentials \
---         --cluster-identifier nbs-coaching-dev --db-user app_svc \
+--         --cluster-identifier <CLUSTER_ID> --db-user app_svc \
 --         --db-name coaching --duration-seconds 3600
 -- =========================================================================
 
