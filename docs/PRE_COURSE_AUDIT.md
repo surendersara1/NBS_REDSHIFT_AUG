@@ -8,7 +8,19 @@ federated-catalog path, the operational scripts, and **`sql/01`–`sql/18`**
 
 > **Scope boundary, stated up front.** The repository contains **76 SQL
 > modules**. This audit covers the **deployable platform** — CDK, Glue jobs,
-> scripts — plus **`sql/03`** (rewritten) and **`sql/14`** (read).
+> scripts — plus **23 of the 76 SQL modules read line by line**:
+>
+> | | Modules |
+> |---|---|
+> | **Read in full** | `01`–`14`, `16`, `43`, `59`, `60`, `63`, `64`, `67`, `69`, `75` |
+> | **Bugs found and fixed in** | `01`, `02`, `06`, `07`, `08`, `09`, `16`, `59`, `60`, `63`, `64`, `67`, `69`, `75` |
+> | **Read, found clean** | `03`, `04`, `05`, `10`, `11`, `12`, `13`, `14` |
+> | **NOT READ** | `15`, `17`, `18`, `19`–`42`, `44`–`58`, `61`, `62`, `65`, `66`, `68`, `70`–`74`, `76` — **53 modules** |
+>
+> The 53 unread modules had a structural scan only (placeholder inventory,
+> hardcoded-ARN search). **Nine bugs were found in the 23 modules that were
+> read.** There is no reason to assume the unread 53 are cleaner — that rate
+> extrapolates to roughly 20 more defects. Budget a second review pass.
 >
 > **The other 74 SQL modules were not reviewed line by line.** What was done
 > across all 76 is a *structural* scan: placeholder inventory, hardcoded-ARN
