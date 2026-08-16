@@ -36,7 +36,8 @@ class LakehouseStack(Stack):
         scope: Construct,
         construct_id: str,
         *,
-        project: str,
+        prefix: str,
+        prefix_snake: str,
         stage: str,
         raw_bucket: s3.IBucket,
         curated_bucket: s3.IBucket,
@@ -48,7 +49,12 @@ class LakehouseStack(Stack):
 
         retain = stage == "prod"
         removal = RemovalPolicy.RETAIN if retain else RemovalPolicy.DESTROY
+
+        # The namespace lives INSIDE this learner's own table bucket, so it
+        # needs no learner suffix - two learners can both have `coaching`.
+        # Keeping it constant means sql/03 reads the same for everyone.
         namespace_name = "coaching"
+        self.namespace_name = namespace_name
 
         # ------------------------------------------------------------------
         # A) S3 Tables bucket. Ref returns the ARN, not the name — use the
@@ -57,7 +63,7 @@ class LakehouseStack(Stack):
         self.table_bucket = s3t.CfnTableBucket(
             self,
             "TableBucket",
-            table_bucket_name=f"{project}-tables-{stage}",   # 3-63 lowercase, no dots
+            table_bucket_name=f"{prefix}-tables-{stage}",   # 3-63 lowercase, no dots
             encryption_configuration=s3t.CfnTableBucket.EncryptionConfigurationProperty(
                 sse_algorithm="aws:kms",
                 kms_key_arn=cmk.key_arn,
@@ -69,6 +75,10 @@ class LakehouseStack(Stack):
             ),
         )
         self.table_bucket_arn = self.table_bucket.attr_table_bucket_arn
+        # Needed verbatim by the Glue resource link and the Lake Formation
+        # grants in scripts/bootstrap_s3tables.sh, so it is exported rather
+        # than re-derived from the ARN by string surgery at three call sites.
+        self.table_bucket_name = f"{prefix}-tables-{stage}"
 
         self.namespace = s3t.CfnNamespace(
             self,
@@ -143,12 +153,19 @@ class LakehouseStack(Stack):
                         ]
                     )
                 ),
+                # LOWERCASE. AWS::S3Tables::Table Compaction.Status accepts
+                # only 'enabled'/'disabled', while the TableBucket's
+                # UnreferencedFileRemoval.Status above accepts 'Enabled'/
+                # 'Disabled'. Same service, same template, opposite casing.
+                # `cdk synth` reports the mismatch as a W3030 warning rather
+                # than an error, so it survives synth and fails the deploy.
                 compaction=s3t.CfnTable.CompactionProperty(
-                    status="Enabled",
+                    status="enabled",
                     target_file_size_mb=128,
                 ),
+                # Lowercase, same as Compaction.Status above.
                 snapshot_management=s3t.CfnTable.SnapshotManagementProperty(
-                    status="Enabled",
+                    status="enabled",
                     min_snapshots_to_keep=3,
                     max_snapshot_age_hours=168,
                 ),
@@ -161,7 +178,7 @@ class LakehouseStack(Stack):
         #    Spectrum points its external schema at — the S3 Tables side is
         #    reached separately through the s3tablescatalog federated catalog.
         # ------------------------------------------------------------------
-        self.glue_database_name = f"{project.replace('-', '_')}_raw_{stage}"
+        self.glue_database_name = f"{prefix_snake}_raw_{stage}"
         self.glue_db = glue.CfnDatabase(
             self,
             "RawDatabase",
@@ -182,7 +199,7 @@ class LakehouseStack(Stack):
         self.glue_role = iam.Role(
             self,
             "GlueJobRole",
-            role_name=f"{project}-glue-{stage}",
+            role_name=f"{prefix}-glue-{stage}",
             assumed_by=iam.ServicePrincipal("glue.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSGlueServiceRole")
@@ -280,7 +297,7 @@ class LakehouseStack(Stack):
         self.job_raw_to_bronze = glue.CfnJob(
             self,
             "JobRawToBronze",
-            name=f"{project}-raw-to-bronze-{stage}",
+            name=f"{prefix}-raw-to-bronze-{stage}",
             role=self.glue_role.role_arn,
             glue_version="5.0",
             worker_type="G.1X",
@@ -300,7 +317,7 @@ class LakehouseStack(Stack):
         self.job_bronze_to_silver = glue.CfnJob(
             self,
             "JobBronzeToSilver",
-            name=f"{project}-bronze-to-silver-{stage}",
+            name=f"{prefix}-bronze-to-silver-{stage}",
             role=self.glue_role.role_arn,
             glue_version="5.0",
             worker_type="G.1X",
@@ -318,6 +335,19 @@ class LakehouseStack(Stack):
         )
 
         CfnOutput(self, "TableBucketArnOut", value=self.table_bucket_arn)
+        CfnOutput(self, "TableBucketName", value=self.table_bucket_name)
+        CfnOutput(self, "NamespaceName", value=namespace_name)
         CfnOutput(self, "GlueDatabaseName", value=self.glue_database_name)
+        # The Glue resource link that sql/03 points its external schema at.
+        # Created by scripts/bootstrap_s3tables.sh, not by CloudFormation:
+        # a resource link is a Glue database whose TargetDatabase lives in a
+        # federated catalog, and CFN's AWS::Glue::Database has no property for
+        # the federated CatalogId form '<account>:s3tablescatalog/<bucket>'.
+        CfnOutput(
+            self,
+            "ResourceLinkName",
+            value=f"{prefix_snake}_s3t_link",
+            description="Glue resource link name for the S3 Tables namespace",
+        )
         CfnOutput(self, "RawToBronzeJob", value=self.job_raw_to_bronze.ref)
         CfnOutput(self, "BronzeToSilverJob", value=self.job_bronze_to_silver.ref)

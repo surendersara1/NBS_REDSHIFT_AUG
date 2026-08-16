@@ -83,32 +83,50 @@ sql/
                                habits to unlearn
   18_applications_transactions_wlm.sql  Data API vs JDBC, serialization
                                retries, WLM, the 6-step tuning runbook
-scripts/create_learners.sh     eight logins, passwords only in Secrets Manager
-docs/NAMING.md                 why the bucket is nbs-raw-suren
+scripts/bootstrap_s3tables.sh  s3tablescatalog + resource link + Lake Formation
+                               grants; idempotent, with --verify
+scripts/render_sql.sh          resolves placeholders -> sql/_resolved/
+scripts/create_learners.sh     eight logins on ONE shared cluster; unused in the
+                               per-learner-deploy model, kept for reference
+docs/PRE_COURSE_AUDIT.md       what was broken before the course, and the proof
+docs/NAMING.md                 why the bucket is nbs-<slug>-raw-<account>
 docs/AWS_LABS_REFERENCES.md    what to clone from AWS and what it is good for
 CURRICULUM.md                  the five-day plan
 ```
 
 ## Deploy
 
+**Every learner deploys their own copy.** Pick a slug (2–12 lowercase chars)
+and use it everywhere — it is what keeps eight deployments from colliding in
+one account. `cdk` refuses to synthesize without it.
+
 ```bash
+npm install -g aws-cdk@latest                       # CLI must be >= 2.1136.0
+
 cd infra
-python -m venv .venv && .venv/Scripts/activate     # Windows
+python -m venv .venv && source .venv/Scripts/activate   # Windows
 pip install -r requirements.txt
 
 cd ../data && python generate_sample_data.py && cd ../infra
 
+export USER_SLUG=suren                              # <-- yours
 cdk bootstrap                                       # once per account/region
-cdk deploy --all --require-approval never
+cdk deploy --all -c user=$USER_SLUG --require-approval never
 ```
 
-Then, using the stack outputs:
+Then wire S3 Tables to Redshift, run the pipeline, and resolve the SQL:
 
 ```bash
-./scripts/create_learners.sh nbs-coaching-dev coaching <MasterSecretArn>
-aws glue start-job-run --job-name nbs-coaching-raw-to-bronze-dev
-aws glue start-job-run --job-name nbs-coaching-bronze-to-silver-dev
+cd ..
+./scripts/bootstrap_s3tables.sh --user $USER_SLUG   # catalog + link + LF grants
+aws glue start-job-run --job-name nbs-$USER_SLUG-raw-to-bronze-dev
+aws glue start-job-run --job-name nbs-$USER_SLUG-bronze-to-silver-dev
+./scripts/render_sql.sh --user $USER_SLUG           # -> sql/_resolved/
 ```
+
+⚠ **Raise the VPC quota before the course.** The default is 5 VPCs per
+region; each learner's stack creates one, so the sixth deploy fails. See
+[SETUP.md §1](SETUP.md).
 
 Open **Redshift Query Editor v2** in the console and work through `sql/`
 **in numeric order** — the files build on each other's objects:
@@ -154,23 +172,37 @@ teaches SQL and Lambda UDFs instead. MV auto-refresh changed priority on
 
 ## Cost
 
-Roughly **$0.24–0.30/hour** for the `ra3.large` node — confirm against
-current pricing for your region, as this is the one number here that is not
-verified against a published table. Everything else is negligible at this
-data volume. For an 8-hour teaching day that is a few dollars.
+Per learner: roughly **$0.25/hour** for the `ra3.large` node plus
+**~$0.04/hour** for the Glue and KMS interface endpoints. Everything else is
+negligible at this data volume.
 
-**Pause the cluster overnight** — paused clusters bill for storage only:
+**Eight learners, five 8-hour days, paused overnight: roughly $100–130.**
 
 ```bash
-aws redshift pause-cluster  --cluster-identifier nbs-coaching-dev
-aws redshift resume-cluster --cluster-identifier nbs-coaching-dev
+aws redshift pause-cluster  --cluster-identifier nbs-$USER_SLUG-dev
+aws redshift resume-cluster --cluster-identifier nbs-$USER_SLUG-dev
 ```
 
-Tear the whole thing down with `cdk destroy --all`. Buckets are set to
-auto-delete in `dev` so the destroy will not hang on non-empty buckets.
+Note that **interface endpoints keep billing while the cluster is paused**
+(~$27 across eight learners for a week of wall-clock). That is the price of
+running no NAT gateway, which would cost ~$32/month each. `cdk destroy`
+nightly instead of pausing if that matters.
+
+Tear down with `cdk destroy --all -c user=$USER_SLUG`. Three things it will
+not remove — see [SETUP.md §10](SETUP.md).
 
 ## Status
 
-Not yet deployed to an account. The CDK has not been `cdk synth`-ed against
-real credentials, and the SQL has not been executed against a live cluster —
-see the handover notes for the specific items to verify on first deploy.
+Audited and corrected 2026-08-16 — see
+[docs/PRE_COURSE_AUDIT.md](docs/PRE_COURSE_AUDIT.md) for the full finding
+list and evidence.
+
+| | State |
+|---|---|
+| CDK synthesizes | **Verified.** 3 stacks, exit 0, zero CFN validation warnings |
+| Per-learner isolation | **Verified.** `suren` vs `priya` synth, zero name overlap |
+| SQL vs AWS docs | **Verified** against the Redshift Database Developer Guide |
+| Deployed to an account | **Never run.** The first deploy is a real first deploy |
+
+Budget half a day for one person to walk the path end-to-end before the other
+seven start.

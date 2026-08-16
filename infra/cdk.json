@@ -7,12 +7,17 @@
   "context": {
     "project": "nbs-coaching",
     "stage": "dev",
-    "raw_bucket": "nbs-raw-suren",
+    "nodes": "1",
+
+    "_comment_user": "There is deliberately NO default `user` here. Every learner must pass -c user=<theirname>, and app.py exits with an explanation if they do not. A default would let two people deploy identical resource names into one account and collide mid-deploy.",
+    "_comment_raw_bucket": "`raw_bucket` is derived in app.py as nbs-<user>-raw-<account>. Set it here only to force a specific bucket name.",
+
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": ["aws"],
     "@aws-cdk/aws-iam:minimizePolicies": true,
     "@aws-cdk/core:enablePartitionLiterals": true,
-    "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": true
+    "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": true,
+    "@aws-cdk/core:defaultCrossStackReferences": "strong"
   }
 }

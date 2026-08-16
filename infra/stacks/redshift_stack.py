@@ -40,15 +40,17 @@ class RedshiftStack(Stack):
         scope: Construct,
         construct_id: str,
         *,
-        project: str,
+        prefix: str,
         stage: str,
         vpc: ec2.IVpc,
         raw_bucket: s3.IBucket,
         curated_bucket: s3.IBucket,
         glue_database_name: str,
         table_bucket_arn: str,
+        table_bucket_name: str,
+        namespace_name: str,
         cmk: kms.IKey,
-        nodes: int = 2,
+        nodes: int = 1,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -65,7 +67,7 @@ class RedshiftStack(Stack):
         self.spectrum_role = iam.Role(
             self,
             "SpectrumRole",
-            role_name=f"{project}-redshift-spectrum-{stage}",
+            role_name=f"{prefix}-rs-spectrum-{stage}",
             assumed_by=iam.ServicePrincipal("redshift.amazonaws.com"),
             description="Redshift Spectrum: S3 read, Glue catalog read, UNLOAD write",
         )
@@ -129,7 +131,7 @@ class RedshiftStack(Stack):
         self.s3tables_role = iam.Role(
             self,
             "S3TablesRole",
-            role_name=f"{project}-redshift-s3tables-{stage}",
+            role_name=f"{prefix}-rs-s3tables-{stage}",
             assumed_by=iam.ServicePrincipal("redshift.amazonaws.com"),
             description="Redshift -> S3 Tables via the s3tablescatalog federated catalog",
         )
@@ -189,7 +191,7 @@ class RedshiftStack(Stack):
         subnet_group = redshift.CfnClusterSubnetGroup(
             self,
             "SubnetGroup",
-            description=f"{project} coaching cluster subnets",
+            description=f"{prefix} coaching cluster subnets",
             subnet_ids=vpc.select_subnets(
                 subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
             ).subnet_ids,
@@ -199,7 +201,11 @@ class RedshiftStack(Stack):
             self,
             "ClusterSg",
             vpc=vpc,
-            description="Redshift coaching cluster — no ingress by default",
+            # Plain ASCII only. CloudFormation validates GroupDescription
+            # against ^([a-z,A-Z,0-9,. _\-:/()#,@[\]+=&;{}!$*])*$ and an
+            # em-dash fails it at deploy time with a pattern error that does
+            # not name the offending field.
+            description="Redshift coaching cluster: no ingress by default",
             allow_all_outbound=True,
         )
         # Intra-SG ingress so Glue connections (if added later) can reach 5439.
@@ -218,7 +224,7 @@ class RedshiftStack(Stack):
         self.cluster = redshift.CfnCluster(
             self,
             "Cluster",
-            cluster_identifier=f"{project}-{stage}",
+            cluster_identifier=f"{prefix}-{stage}",
             # 1 node  -> single-node (ra3.large supports node range 1)
             # 2+ nodes -> multi-node; ra3.large multi-node range is 2-16
             cluster_type=("single-node" if nodes == 1 else "multi-node"),
@@ -267,3 +273,6 @@ class RedshiftStack(Stack):
         CfnOutput(self, "SpectrumRoleArn", value=self.spectrum_role.role_arn)
         CfnOutput(self, "S3TablesRoleArn", value=self.s3tables_role.role_arn)
         CfnOutput(self, "TableBucketArn", value=table_bucket_arn)
+        CfnOutput(self, "TableBucketNameOut", value=table_bucket_name)
+        CfnOutput(self, "NamespaceNameOut", value=namespace_name)
+        CfnOutput(self, "DatabaseName", value="coaching")

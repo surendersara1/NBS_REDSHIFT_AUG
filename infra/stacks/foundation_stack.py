@@ -1,9 +1,17 @@
-"""FoundationStack — network, buckets, and the CMK everything else encrypts with.
+"""FoundationStack - network, buckets, and the CMK everything else encrypts with.
 
 Kept deliberately small. A teaching cluster does not need NAT gateways
-(~$32/mo each); Redshift reaches S3 and Glue through gateway/interface
-endpoints instead, which cost nothing for the gateway and very little for
-the interface.
+(~$32/mo each); Redshift reaches S3, Glue and KMS through gateway/interface
+endpoints instead, which cost nothing for the gateway and very little for the
+interfaces.
+
+NOTE ON PLAIN ASCII IN CFN DESCRIPTIONS
+CloudFormation validates SecurityGroup GroupDescription against
+    ^([a-z,A-Z,0-9,. _\\-:/()#,@[\\]+=&;{}!$*])*$
+An em-dash is not in that set, so a description written with typographic
+punctuation fails at deploy time with a pattern-match error that names no
+field. Descriptions that reach CloudFormation are therefore plain ASCII.
+Comments and docstrings are free to use whatever they like.
 """
 from aws_cdk import (
     CfnOutput,
@@ -22,7 +30,7 @@ class FoundationStack(Stack):
         scope: Construct,
         construct_id: str,
         *,
-        project: str,
+        prefix: str,
         stage: str,
         raw_bucket_name: str,
         **kwargs,
@@ -33,14 +41,16 @@ class FoundationStack(Stack):
         removal = RemovalPolicy.RETAIN if retain else RemovalPolicy.DESTROY
 
         # ------------------------------------------------------------------
-        # A) CMK. One key for the whole teaching estate — buckets, Redshift,
-        #    and the S3 Tables bucket in LakehouseStack all reference it.
+        # A) CMK. One key per learner - buckets, Redshift, and the S3 Tables
+        #    bucket in LakehouseStack all reference it.
+        #
+        #    The alias is account-unique, so it carries the learner prefix.
         # ------------------------------------------------------------------
         self.cmk = kms.Key(
             self,
             "Cmk",
-            alias=f"alias/{project}-{stage}",
-            description="NBS Redshift coaching — S3, Redshift, and S3 Tables encryption",
+            alias=f"alias/{prefix}-{stage}",
+            description="NBS Redshift coaching: S3, Redshift and S3 Tables encryption",
             enable_key_rotation=True,
             removal_policy=removal,
         )
@@ -49,6 +59,13 @@ class FoundationStack(Stack):
         # B) VPC. Two AZs because a Redshift cluster subnet group requires at
         #    least one subnet, but ClusterSubnetGroup is far less painful to
         #    resize later with two. No NAT: nat_gateways=0 keeps this free.
+        #
+        #    QUOTA WARNING: the default limit is 5 VPCs per region per
+        #    account. Eight learners deploying into ONE account will hit it on
+        #    the sixth deploy with "The maximum number of VPCs has been
+        #    reached". Either raise the quota first (Service Quotas -> VPC ->
+        #    "VPCs per Region") or give learners separate accounts.
+        #    See SETUP.md section 1.
         # ------------------------------------------------------------------
         self.vpc = ec2.Vpc(
             self,
@@ -70,18 +87,39 @@ class FoundationStack(Stack):
             ],
         )
 
-        # S3 gateway endpoint — free, and required for COPY/UNLOAD to reach S3
+        # S3 gateway endpoint - free, and required for COPY/UNLOAD to reach S3
         # from an isolated subnet without a NAT gateway.
         self.vpc.add_gateway_endpoint(
             "S3Endpoint",
             service=ec2.GatewayVpcEndpointAwsService.S3,
         )
 
-        # Glue interface endpoint — Spectrum's external schema resolves table
+        # Glue interface endpoint - Spectrum's external schema resolves table
         # metadata through the Glue Data Catalog API.
         self.vpc.add_interface_endpoint(
             "GlueEndpoint",
             service=ec2.InterfaceVpcEndpointAwsService.GLUE,
+            subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ),
+        )
+
+        # KMS interface endpoint - REQUIRED, and the reason is subtle.
+        #
+        # The cluster runs with enhanced_vpc_routing=True, which forces ALL
+        # COPY/UNLOAD traffic through the VPC rather than the Redshift-managed
+        # network path. Every bucket here is SSE-KMS encrypted, so each COPY
+        # and UNLOAD needs a KMS Decrypt/GenerateDataKey call. With enhanced
+        # VPC routing on, isolated subnets, and no NAT, that call has no route
+        # out and the COPY hangs until it times out.
+        #
+        # The failure mode is the worst kind: no error at submit time, no
+        # AccessDenied, just a query that sits in RUNNING and eventually fails
+        # on connection timeout. Costs about $0.01/hr/AZ - cheap next to a
+        # morning lost to it.
+        self.vpc.add_interface_endpoint(
+            "KmsEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.KMS,
             subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
             ),
@@ -92,8 +130,9 @@ class FoundationStack(Stack):
         #
         #    NOTE ON THE NAME: S3 bucket names must be lowercase and may not
         #    contain underscores, so the requested "NBS_RAW_SUREN" is not a
-        #    legal bucket name — CloudFormation rejects it at create time.
-        #    The kebab-case equivalent "nbs-raw-suren" is used instead.
+        #    legal bucket name - CloudFormation rejects it at create time.
+        #    The kebab-case equivalent is used instead, with the learner slug
+        #    and account id appended for global uniqueness.
         #    See docs/NAMING.md.
         # ------------------------------------------------------------------
         self.raw_bucket = s3.Bucket(
