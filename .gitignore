@@ -4,3 +4,9 @@ __pycache__/
 cdk.out/
 *.swp
 .DS_Store
+
+# ── Archived: TeachMe-Lakehouse ──────────────────────────────
+# These files are kept on disk as a personal backup but are NOT
+# tracked by git.  The last committed version is preserved in
+# git history (commit before this .gitignore change).
+TeachMe-Lakehouse/
