@@ -1,0 +1,20 @@
+# Shell scripts MUST keep LF endings.
+#
+# This repo is authored on Windows, where git's autocrlf converts LF to CRLF
+# on checkout. A .sh file with CRLF endings fails on macOS and Linux with:
+#
+#     bash: ./scripts/render_sql.sh: /usr/bin/env bash^M: bad interpreter
+#
+# Learners run these from their own laptops, so this is not hypothetical.
+*.sh    text eol=lf
+
+# Python and SQL are read by Glue (Linux) and by Redshift. Keep them LF for
+# the same reason, and so diffs stay clean across the team's mixed machines.
+*.py    text eol=lf
+*.sql   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+
+# CSV seed data: LF, so the row counts the Glue jobs assert against do not
+# shift with a stray carriage return in the last column.
+*.csv   text eol=lf
