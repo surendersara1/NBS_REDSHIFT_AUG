@@ -76,14 +76,14 @@ ARCHITECTURE:
 -- Scale UP before the nightly ETL window:
 -- (Run this via AWS CLI, SDK, or Redshift Scheduler — not SQL)
 -- aws redshift resize-cluster \
---     --cluster-identifier my-warehouse \
+--     --cluster-identifier <CLUSTER_ID> \
 --     --cluster-type multi-node \
 --     --number-of-nodes 12 \
 --     --classic false
 
 -- Scale DOWN after ETL completes:
 -- aws redshift resize-cluster \
---     --cluster-identifier my-warehouse \
+--     --cluster-identifier <CLUSTER_ID> \
 --     --number-of-nodes 6 \
 --     --classic false
 
@@ -109,27 +109,27 @@ FROM SVV_CLUSTER_INFO;            -- Redshift system view
 -- Example: Scale to 12 nodes every night at 1:00 AM UTC for ETL
 -- aws redshift create-scheduled-action \
 --     --scheduled-action-name "nightly-scale-up" \
---     --target-action '{"ResizeCluster":{"ClusterIdentifier":"my-warehouse","NumberOfNodes":12}}' \
+--     --target-action '{"ResizeCluster":{"ClusterIdentifier":"<CLUSTER_ID>","NumberOfNodes":12}}' \
 --     --schedule "cron(0 1 * * ? *)" \
---     --iam-role "arn:aws:iam::123456789012:role/RedshiftSchedulerRole" \
+--     --iam-role "<SCHEDULER_ROLE_ARN>" \
 --     --scheduled-action-description "Scale up for nightly ETL"
 
 -- Scale back to 6 nodes at 6:00 AM UTC after ETL completes
 -- aws redshift create-scheduled-action \
 --     --scheduled-action-name "morning-scale-down" \
---     --target-action '{"ResizeCluster":{"ClusterIdentifier":"my-warehouse","NumberOfNodes":6}}' \
+--     --target-action '{"ResizeCluster":{"ClusterIdentifier":"<CLUSTER_ID>","NumberOfNodes":6}}' \
 --     --schedule "cron(0 6 * * ? *)" \
---     --iam-role "arn:aws:iam::123456789012:role/RedshiftSchedulerRole"
+--     --iam-role "<SCHEDULER_ROLE_ARN>"
 
 -- Weekend pause (Friday 10 PM → Monday 6 AM)
 -- aws redshift create-scheduled-action \
 --     --scheduled-action-name "weekend-pause" \
---     --target-action '{"PauseCluster":{"ClusterIdentifier":"my-warehouse"}}' \
+--     --target-action '{"PauseCluster":{"ClusterIdentifier":"<CLUSTER_ID>"}}' \
 --     --schedule "cron(0 22 ? * FRI *)"
 
 -- aws redshift create-scheduled-action \
 --     --scheduled-action-name "monday-resume" \
---     --target-action '{"ResumeCluster":{"ClusterIdentifier":"my-warehouse"}}' \
+--     --target-action '{"ResumeCluster":{"ClusterIdentifier":"<CLUSTER_ID>"}}' \
 --     --schedule "cron(0 6 ? * MON *)"
 
 

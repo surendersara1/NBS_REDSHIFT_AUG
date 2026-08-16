@@ -151,7 +151,7 @@ def run_redshift_maintenance(table_name):
     response = client.execute_statement(
         ClusterIdentifier='nbs-coaching-dev',
         Database='coaching',
-        SecretArn='arn:aws:secretsmanager:us-east-1:123456789012:secret:master',
+        SecretArn='<MASTER_SECRET_ARN>',
         Sql=f'VACUUM DELETE ONLY {table_name};'
     )
     print(f"Triggered maintenance statement: {response['Id']}")

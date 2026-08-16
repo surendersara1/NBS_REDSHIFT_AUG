@@ -66,7 +66,7 @@ ARCHITECTURE:
 -- Create the external schema pointing to Kinesis
 CREATE EXTERNAL SCHEMA kinesis_clickstream
 FROM KINESIS
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftStreamingRole';
+IAM_ROLE '<KINESIS_ROLE_ARN>';
 -- NOTE: Unlike Spectrum schemas (which need a Glue database), Kinesis schemas
 -- don't need a database — they connect directly to the stream.
 
@@ -111,7 +111,7 @@ SELECT
     CAST(JSON_EXTRACT_PATH_TEXT(
         kinesis_data, 'ts') AS TIMESTAMP)   AS event_timestamp
 
-FROM kinesis_clickstream."clickstream-events"
+FROM kinesis_clickstream."<KINESIS_STREAM_NAME>"
 -- The stream name is quoted because Kinesis stream names can contain hyphens.
 WHERE is_utf8(kinesis_data)                 -- Skip malformed binary records
   AND CAN_JSON_PARSE(kinesis_data);         -- Skip non-JSON records gracefully
@@ -127,8 +127,8 @@ SELECT
     event_type,
     COUNT(DISTINCT user_id)         AS unique_users,
     COUNT(*)                        AS event_count,
-    COUNT(*) FILTER (WHERE event_type = 'purchase')
-        * 100.0 / NULLIF(COUNT(*) FILTER (WHERE event_type = 'page_view'), 0)
+    SUM(CASE WHEN event_type = 'purchase'  THEN 1 ELSE 0 END)
+        * 100.0 / NULLIF(SUM(CASE WHEN event_type = 'page_view' THEN 1 ELSE 0 END), 0)
         AS conversion_rate_pct
 FROM bronze.mv_clickstream_raw
 WHERE approximate_arrival_timestamp >= DATEADD(minute, -5, SYSDATE)
@@ -212,9 +212,9 @@ $$;
 
 -- CREATE EXTERNAL SCHEMA msk_transactions
 -- FROM MSK
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftMSKRole'
+-- IAM_ROLE '<MSK_ROLE_ARN>'
 -- AUTHENTICATION { none | iam }
--- CLUSTER_ARN 'arn:aws:kafka:us-east-1:123456789012:cluster/my-msk-cluster/abc-123';
+-- CLUSTER_ARN '<MSK_CLUSTER_ARN>';
 
 -- CREATE MATERIALIZED VIEW bronze.mv_kafka_transactions
 -- AUTO REFRESH YES
@@ -226,7 +226,7 @@ $$;
 --     kafka_key,
 --     JSON_PARSE(kafka_value) AS payload,
 --     refresh_time
--- FROM msk_transactions."transactions-topic"
+-- FROM msk_transactions."<MSK_TOPIC_NAME>"
 -- WHERE is_utf8(kafka_value)
 --   AND CAN_JSON_PARSE(kafka_value);
 

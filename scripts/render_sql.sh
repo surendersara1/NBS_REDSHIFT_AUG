@@ -49,10 +49,13 @@ RAW_BUCKET=$(out foundation RawBucketName)
 CURATED_BUCKET=$(out foundation CuratedBucketName)
 GLUE_DB=$(out lakehouse GlueDatabaseName)
 TABLE_BUCKET_NAME=$(out lakehouse TableBucketName)
+TABLE_BUCKET_ARN=$(out lakehouse TableBucketArnOut)
 NAMESPACE=$(out lakehouse NamespaceName)
 RESOURCE_LINK=$(out lakehouse ResourceLinkName)
 SPECTRUM_ROLE_ARN=$(out redshift SpectrumRoleArn)
 S3TABLES_ROLE_ARN=$(out redshift S3TablesRoleArn)
+CLUSTER_ID=$(out redshift ClusterIdentifier)
+MASTER_SECRET_ARN=$(out redshift MasterSecretArn)
 
 # Fallbacks: these are derived deterministically from the learner slug, so a
 # missing output should not block rendering. If the stack is simply not
@@ -60,10 +63,12 @@ S3TABLES_ROLE_ARN=$(out redshift S3TablesRoleArn)
 : "${RESOURCE_LINK:=${PREFIX_SNAKE}_s3t_link}"
 : "${NAMESPACE:=coaching}"
 : "${TABLE_BUCKET_NAME:=${PREFIX}-tables-${STAGE}}"
+: "${CLUSTER_ID:=${PREFIX}-${STAGE}}"
 
 missing=0
 for v in ACCOUNT_ID RAW_BUCKET CURATED_BUCKET GLUE_DB SPECTRUM_ROLE_ARN \
-         S3TABLES_ROLE_ARN TABLE_BUCKET_NAME RESOURCE_LINK NAMESPACE; do
+         S3TABLES_ROLE_ARN TABLE_BUCKET_NAME TABLE_BUCKET_ARN RESOURCE_LINK \
+         NAMESPACE CLUSTER_ID MASTER_SECRET_ARN; do
   if [ -z "${!v}" ] || [ "${!v}" = "None" ]; then
     echo "  MISSING: ${v}" >&2
     missing=1
@@ -93,23 +98,43 @@ for f in "${ROOT}"/sql/*.sql; do
       -e "s|<SPECTRUM_ROLE_ARN>|${SPECTRUM_ROLE_ARN}|g" \
       -e "s|<SPECTRUM_ROLE>|${SPECTRUM_ROLE_ARN}|g" \
       -e "s|<S3TABLES_ROLE_ARN>|${S3TABLES_ROLE_ARN}|g" \
+      -e "s|<TABLE_BUCKET_ARN>|${TABLE_BUCKET_ARN}|g" \
+      -e "s|<CLUSTER_ID>|${CLUSTER_ID}|g" \
+      -e "s|<MASTER_SECRET_ARN>|${MASTER_SECRET_ARN}|g" \
       "$f" > "${OUT}/${base}"
 done
 
 echo
 echo "Wrote $(ls -1 "${OUT}" | wc -l) resolved files to sql/_resolved/"
-echo
-echo "Remaining placeholders are INTENTIONAL - you fill these in as you work:"
-echo "  <QUERY_ID>           whichever query you are investigating"
-echo "  <YOUR_IAM_ROLE_NAME> your own IAM role, from 'aws sts get-caller-identity'"
-echo
-remaining=$(grep -oh '<[A-Z_][A-Z_0-9]*>' "${OUT}"/*.sql 2>/dev/null | sort | uniq -c || true)
-echo "${remaining}"
 
-unexpected=$(echo "${remaining}" | grep -vE 'QUERY_ID|YOUR_IAM_ROLE_NAME|^\s*$' || true)
+# ---------------------------------------------------------------------------
+# Two classes of placeholder, and the distinction matters.
+#
+#   RESOLVED    substituted above from this learner's stack outputs. If any
+#               survive, the render is broken and we exit non-zero.
+#
+#   EXTERNAL    name infrastructure this CDK deliberately does NOT build
+#               (Kinesis, MSK, SageMaker, Aurora, DynamoDB, a second Redshift
+#               account). They are supposed to survive. The modules using
+#               them are concept modules, not runnable labs.
+# ---------------------------------------------------------------------------
+EXTERNAL='QUERY_ID|YOUR_IAM_ROLE_NAME|CONSUMER_NAMESPACE|CONSUMER_ACCOUNT_ID|PRODUCER_NAMESPACE|PRODUCER_ACCOUNT_ID|KINESIS_ROLE_ARN|KINESIS_STREAM_NAME|MSK_ROLE_ARN|MSK_CLUSTER_ARN|MSK_TOPIC_NAME|SAGEMAKER_ROLE_ARN|ML_S3_BUCKET|AURORA_CLUSTER_ARN|REDSHIFT_NAMESPACE_ARN|DYNAMODB_TABLE_ARN|DYNAMODB_ROLE_ARN|SCHEDULER_ROLE_ARN|EMR_ROLE_ARN|SSH_ROLE_ARN'
+
+remaining=$(grep -oh '<[A-Z_][A-Z_0-9]*>' "${OUT}"/*.sql 2>/dev/null | sort | uniq -c || true)
+
+echo
+echo "Placeholders still present (EXPECTED - these name infrastructure this"
+echo "platform does not create; see docs/PLACEHOLDERS.md):"
+echo "${remaining}" | grep -E "${EXTERNAL}" || echo "  none"
+
+unexpected=$(echo "${remaining}" | grep -vE "${EXTERNAL}" | grep -v '^\s*$' || true)
 if [ -n "${unexpected}" ]; then
-  echo
-  echo "WARNING: unresolved placeholders that should have been substituted:" >&2
+  echo >&2
+  echo "ERROR: these should have been substituted from stack outputs but were not." >&2
+  echo "       The rendered SQL is NOT safe to hand to a learner." >&2
   echo "${unexpected}" >&2
   exit 1
 fi
+
+echo
+echo "OK - every stack-resolvable placeholder was substituted."

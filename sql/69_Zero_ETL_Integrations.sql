@@ -82,8 +82,8 @@ ARCHITECTURE:
 -- Step 2: Create the zero-ETL integration (AWS Console or CLI):
 -- aws rds create-integration \
 --     --integration-name aurora-to-redshift \
---     --source-arn arn:aws:rds:us-east-1:123456789012:cluster:my-aurora-pg \
---     --target-arn arn:aws:redshift-serverless:us-east-1:123456789012:namespace/my-namespace \
+--     --source-arn <AURORA_CLUSTER_ARN> \
+--     --target-arn <REDSHIFT_NAMESPACE_ARN> \
 --     --tags Key=Environment,Value=Production
 
 -- Step 3: Create a database in Redshift from the integration
@@ -182,8 +182,8 @@ $$;
 
 -- Setup (AWS Console / CLI):
 -- aws dynamodb create-table-export \
---     --table-arn arn:aws:dynamodb:us-east-1:123456789012:table/UserSessions \
---     --s3-bucket my-export-bucket \
+--     --table-arn <DYNAMODB_TABLE_ARN> \
+--     --s3-bucket <CURATED_BUCKET> \
 --     --export-type INCREMENTAL_EXPORT
 
 -- In Redshift, create a database from the DynamoDB integration:

@@ -28,7 +28,7 @@ raw S3 files causes 60-second BI timeouts and saturates S3 GET rate limits.
 THE SOLUTION: TRUE HYBRID STORAGE TIERS (S3 OBJECT STORE + REDSHIFT RMS)
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  1. BRONZE TIER (Amazon S3 / S3 Tables)                                                                     │
-│     • Location: Amazon S3 Object Storage (`s3://enterprise-lake/bronze/`)                                    │
+│     • Location: Amazon S3 Object Storage (`s3://<RAW_BUCKET>/bronze/`)                                    │
 │     • Format: Raw Immutable JSON / Snappy Parquet partitioned by ingestion date                             │
 │     • Catalog: AWS Glue Data Catalog or Amazon S3 Tables (Apache Iceberg REST Catalog)                       │
 │     • Queried by: Redshift Spectrum & External Table Engines (Spark, EMR, Athena)                            │
@@ -54,7 +54,7 @@ THE SOLUTION: TRUE HYBRID STORAGE TIERS (S3 OBJECT STORE + REDSHIFT RMS)
                                        ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  4. COLD ARCHIVAL TIER (Amazon S3 Intelligent-Tiering / Glacier Flexible Archive)                            │
-│     • Location: Amazon S3 Archive (`s3://enterprise-lake/archive/web_engagement/`)                           │
+│     • Location: Amazon S3 Archive (`s3://<RAW_BUCKET>/archive/web_engagement/`)                           │
 │     • Format: Snappy Parquet partitioned by `event_date`                                                     │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
@@ -171,7 +171,7 @@ Trust Relationship (Trust Policy):
 
 Required Permissions Policy (Attach to IAM Role):
 1. S3 Permissions (Read/Write for Data Lake & UNLOAD/COPY):
-   - "s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket" on "arn:aws:s3:::enterprise-lake-*"
+   - "s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket" on "arn:aws:s3:::<RAW_BUCKET>*"
 2. AWS Glue Data Catalog Permissions (For Redshift Spectrum):
    - "glue:GetDatabase", "glue:GetDatabases", "glue:GetTable", "glue:GetTables",
      "glue:GetPartition", "glue:GetPartitions", "glue:CreateTable", "glue:BatchCreatePartition"
@@ -184,8 +184,8 @@ STEP 2: ATTACH THE IAM ROLE TO YOUR REDSHIFT CLUSTER / SERVERLESS NAMESPACE
 --------------------------------------------------------------------------------------
 AWS CLI:
 aws redshift modify-cluster-iam-roles \
-    --cluster-identifier nbs-redshift-cluster \
-    --add-iam-roles arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole
+    --cluster-identifier <CLUSTER_ID> \
+    --add-iam-roles <SPECTRUM_ROLE_ARN>
 
 STEP 3: CREATE EXTERNAL SCHEMAS IN REDSHIFT
 --------------------------------------------------------------------------------------
@@ -195,22 +195,22 @@ STEP 3: CREATE EXTERNAL SCHEMAS IN REDSHIFT
 -- CREATE EXTERNAL SCHEMA ext_lake_glue
 -- FROM DATA CATALOG
 -- DATABASE 'lakehouse_analytics_db'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
+-- IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 -- CREATE EXTERNAL DATABASE IF NOT EXISTS;
 
 -- (B) Modern Amazon S3 Tables (Apache Iceberg Managed Table Bucket):
 -- CREATE EXTERNAL SCHEMA ext_s3_tables
 -- FROM S3TABLES
--- CATALOG 'arn:aws:s3tables:us-east-1:123456789012:bucket/enterprise-analytics-bucket'
+-- CATALOG '<TABLE_BUCKET_ARN>'
 -- NAMESPACE 'silver_telemetry'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole';
+-- IAM_ROLE '<SPECTRUM_ROLE_ARN>';
 
 -- (C) Centralized AWS Lake Formation Governed External Schema:
 -- CREATE EXTERNAL SCHEMA ext_lake_formation_governed
 -- FROM DATA CATALOG
 -- DATABASE 'governed_lake_db'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
--- CATALOG_ID '123456789012';
+-- IAM_ROLE '<SPECTRUM_ROLE_ARN>'
+-- CATALOG_ID '<ACCOUNT_ID>';
 
 
 -- ===================================================================================
@@ -231,7 +231,7 @@ CREATE EXTERNAL TABLE ext_lake_glue.ext_bronze_web_events (
 )
 PARTITIONED BY (ingestion_date DATE)
 STORED AS PARQUET
-LOCATION 's3://enterprise-lake-us-east-1/bronze/web_events/';
+LOCATION 's3://<RAW_BUCKET>/bronze/web_events/';
 */
 
 -- Local Sandbox Emulation of Bronze Landing Table (For standalone cluster execution):
@@ -392,8 +392,8 @@ $$;
 /*
 PRODUCTION COPY SYNTAX:
 COPY silver_web_events
-FROM 's3://my-enterprise-lake-us-east-1/manifests/2026-08-15-batch.manifest'
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
+FROM 's3://<CURATED_BUCKET>/manifests/2026-08-15-batch.manifest'
+IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 FORMAT AS PARQUET
 MANIFEST
 COMPUPDATE OFF
@@ -455,7 +455,7 @@ ALTER TABLE silver_web_events APPEND FROM stage_web_events_append;
 -- ===================================================================================
 /*
 THE PROBLEM: WHAT HAPPENS IF WE DIRECTLY OVERWRITE A S3 TARGET PREFIX?
-When an ETL pipeline runs `UNLOAD ... TO 's3://lake/clicks/'`:
+When an ETL pipeline runs `UNLOAD ... TO 's3://<CURATED_BUCKET>/clicks/'`:
 1. Partial File Visibility: Redshift writes 64 independent part files (`0000_part_00.parquet`, `0001_part_00.parquet`).
    If a BI query via Spectrum or Athena runs at the same moment, it reads an incomplete, corrupted snapshot.
 2. Event Notification Storms: Overwriting 100 part files simultaneously triggers 100 concurrent 
@@ -464,7 +464,7 @@ When an ETL pipeline runs `UNLOAD ... TO 's3://lake/clicks/'`:
    plain S3 prefix overwrites provide zero read-isolation during writes.
 
 THE ENTERPRISE SOLUTION: BLUE/GREEN ATOMIC S3 PARTITION PROMOTION
-Step 1: Write new Parquet data to an isolated staging prefix: `s3://lake/staging/batch_id/`
+Step 1: Write new Parquet data to an isolated staging prefix: `s3://<CURATED_BUCKET>/staging/batch_id/`
 Step 2: Validate row count and data integrity checksums.
 Step 3: Execute an atomic metadata swap in the Glue Data Catalog or Apache Iceberg catalog 
         pointing the partition location directly to the validated staging folder.
@@ -486,7 +486,7 @@ BEGIN
     -- Step 1: In production, export new partition data to isolated staging path via UNLOAD
     -- UNLOAD ('SELECT * FROM silver_web_events WHERE event_date = ''' || p_partition_date || '''')
     -- TO p_s3_staging_prefix
-    -- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
+    -- IAM_ROLE '<SPECTRUM_ROLE_ARN>'
     -- FORMAT AS PARQUET
     -- CLEANPATH
     -- MANIFEST;
@@ -621,8 +621,8 @@ BEGIN
 
     -- Step 2: In production: UNLOAD cold history prior to v_cutoff_date to S3 Parquet archive
     -- UNLOAD ('SELECT * FROM gold_fct_web_engagement WHERE event_date < ''' || v_cutoff_date || '''')
-    -- TO 's3://enterprise-lakehouse-us-east-1/archive/web_engagement/'
-    -- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSpectrumLakehouseRole'
+    -- TO 's3://<CURATED_BUCKET>/archive/web_engagement/'
+    -- IAM_ROLE '<SPECTRUM_ROLE_ARN>'
     -- FORMAT AS PARQUET
     -- PARTITION BY (event_date)
     -- CLEANPATH;

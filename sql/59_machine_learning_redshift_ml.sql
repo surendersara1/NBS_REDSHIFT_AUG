@@ -115,13 +115,13 @@ FROM (
 )
 TARGET churned
 FUNCTION fn_predict_churn
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftMLSageMakerRole'
+IAM_ROLE '<SAGEMAKER_ROLE_ARN>'
 AUTO ON
 MODEL_TYPE XGBOOST
 PROBLEM_TYPE BINARY_CLASSIFICATION
 OBJECTIVE 'F1'
 SETTINGS (
-    S3_BUCKET 'my-redshift-ml-bucket-us-east-1',
+    S3_BUCKET '<ML_S3_BUCKET>',
     MAX_RUNTIME 3600
 );
 */

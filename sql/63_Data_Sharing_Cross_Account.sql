@@ -45,7 +45,7 @@ ARCHITECTURE:
 │                                 │  │   cross-region datashare)                    │
 │  CREATE DATABASE risk_db        │  │  CREATE DATABASE compliance_db               │
 │    FROM DATASHARE ds_gold_...   │  │    FROM DATASHARE ds_gold_...                │
-│    OF NAMESPACE 'abc123...'     │  │    OF ACCOUNT '111222333444'                 │
+│    OF NAMESPACE 'abc123...'     │  │    OF ACCOUNT '<CONSUMER_ACCOUNT_ID>'                 │
 │                                 │  │    NAMESPACE 'abc123...'                     │
 │  SELECT * FROM risk_db          │  │                                              │
 │    .analytics.fact_trades       │  │  -- EU regulators see live data, zero copy   │
@@ -96,12 +96,12 @@ ALTER DATASHARE ds_gold_analytics
 -- Step 3: Grant usage to a consumer namespace (same account)
 -- Find the consumer's namespace with: SELECT current_namespace;
 GRANT USAGE ON DATASHARE ds_gold_analytics
-  TO NAMESPACE '8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
+  TO NAMESPACE '<CONSUMER_NAMESPACE>';
 
 -- Step 4: Grant usage to a consumer in a DIFFERENT AWS account
 -- This requires AWS RAM (Resource Access Manager) to authorize the account.
 GRANT USAGE ON DATASHARE ds_gold_analytics
-  TO ACCOUNT '111222333444';
+  TO ACCOUNT '<CONSUMER_ACCOUNT_ID>';
 -- After this, the consumer account must ACCEPT the datashare via the Redshift
 -- console or AWS CLI before creating a database from it.
 
@@ -117,13 +117,13 @@ GRANT USAGE ON DATASHARE ds_gold_analytics
 -- Same-account consumer:
 CREATE DATABASE risk_analytics_db
   FROM DATASHARE ds_gold_analytics
-  OF NAMESPACE '8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
+  OF NAMESPACE '<CONSUMER_NAMESPACE>';
 
 -- Cross-account consumer:
 CREATE DATABASE compliance_eu_db
   FROM DATASHARE ds_gold_analytics
-  OF ACCOUNT '111222333444'
-  NAMESPACE '8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
+  OF ACCOUNT '<CONSUMER_ACCOUNT_ID>'
+  NAMESPACE '<CONSUMER_NAMESPACE>';
 
 -- Now query as if it were a local table:
 SELECT
@@ -210,15 +210,15 @@ ORDER BY data_scanned_gb DESC;
 --
 -- -- Producer side (BAD):
 -- UNLOAD ('SELECT * FROM analytics.fact_trades WHERE trade_date = ''2026-08-14''')
--- TO 's3://data-transfer-bucket/fact_trades/dt=2026-08-14/'
--- IAM_ROLE 'arn:aws:iam::role/RedshiftUnloadRole'
+-- TO 's3://<CURATED_BUCKET>/fact_trades/dt=2026-08-14/'
+-- IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 -- FORMAT AS PARQUET
 -- ALLOWOVERWRITE;
 --
 -- -- Consumer side (BAD):
 -- COPY analytics.fact_trades
--- FROM 's3://data-transfer-bucket/fact_trades/dt=2026-08-14/'
--- IAM_ROLE 'arn:aws:iam::role/RedshiftCopyRole'
+-- FROM 's3://<CURATED_BUCKET>/fact_trades/dt=2026-08-14/'
+-- IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 -- FORMAT AS PARQUET;
 --
 -- THE GOOD WAY: Data sharing (zero copy, zero lag, zero cost)
@@ -258,7 +258,7 @@ ALTER DATASHARE ds_gold_analytics
 
 -- Revoke access from a specific consumer:
 REVOKE USAGE ON DATASHARE ds_gold_analytics
-  FROM NAMESPACE '8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
+  FROM NAMESPACE '<CONSUMER_NAMESPACE>';
 
 -- Remove specific objects:
 ALTER DATASHARE ds_gold_analytics REMOVE TABLE analytics.dim_product;
@@ -287,8 +287,8 @@ DROP DATABASE risk_analytics_db;
 -- Cross-region consumer setup (on eu-west-1 cluster):
 CREATE DATABASE compliance_eu_db
   FROM DATASHARE ds_gold_analytics
-  OF ACCOUNT '999888777666'         -- Producer's AWS account
-  NAMESPACE 'prod-us-east-1-ns'     -- Producer's namespace
+  OF ACCOUNT '<PRODUCER_ACCOUNT_ID>'         -- Producer's AWS account
+  NAMESPACE '<PRODUCER_NAMESPACE>'     -- Producer's namespace
   REGION 'us-east-1';               -- Producer's region
 
 -- Then query locally:
@@ -378,5 +378,5 @@ $$;
 -- CALL admin.sp_setup_datashare(
 --     'ds_gold_analytics',
 --     'analytics',
---     '8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d'
+--     '<CONSUMER_NAMESPACE>'
 -- );

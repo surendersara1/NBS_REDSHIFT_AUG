@@ -72,8 +72,8 @@ ARCHITECTURE:
 --   4. Self-describing: schema is embedded in the file footer
 
 COPY gold.fact_transactions
-FROM 's3://data-lake/gold/transactions/dt=2026-08-14/'
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftCopyRole'
+FROM 's3://<CURATED_BUCKET>/gold/transactions/dt=2026-08-14/'
+IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 FORMAT AS PARQUET;
 
 -- Parquet COPY auto-maps columns by NAME (not position).
@@ -89,8 +89,8 @@ FORMAT AS PARQUET;
 -- Real-world CSV files are messy. Here's how to handle common problems:
 
 COPY staging.stg_legacy_transactions
-FROM 's3://data-lake/bronze/legacy/transactions_2026-08-14.csv.gz'
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftCopyRole'
+FROM 's3://<CURATED_BUCKET>/bronze/legacy/transactions_2026-08-14.csv.gz'
+IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 DELIMITER ','
 IGNOREHEADER 1                          -- Skip the header row
 GZIP                                     -- File is gzip-compressed
@@ -166,22 +166,22 @@ LIMIT 20;
 --   3. Mandatory mode: COPY fails if ANY listed file is missing (data validation)
 --   4. Cross-bucket: can reference files from multiple S3 buckets
 
--- Manifest file format (s3://data-lake/manifests/2026-08-14.manifest):
+-- Manifest file format (s3://<CURATED_BUCKET>/manifests/2026-08-14.manifest):
 /*
 {
   "entries": [
-    {"url": "s3://data-lake/gold/transactions/part-00000.parquet", "mandatory": true},
-    {"url": "s3://data-lake/gold/transactions/part-00001.parquet", "mandatory": true},
-    {"url": "s3://data-lake/gold/transactions/part-00002.parquet", "mandatory": true},
-    {"url": "s3://data-lake/gold/transactions/part-00003.parquet", "mandatory": true}
+    {"url": "s3://<CURATED_BUCKET>/gold/transactions/part-00000.parquet", "mandatory": true},
+    {"url": "s3://<CURATED_BUCKET>/gold/transactions/part-00001.parquet", "mandatory": true},
+    {"url": "s3://<CURATED_BUCKET>/gold/transactions/part-00002.parquet", "mandatory": true},
+    {"url": "s3://<CURATED_BUCKET>/gold/transactions/part-00003.parquet", "mandatory": true}
   ]
 }
 */
 
 -- Load using the manifest:
 COPY gold.fact_transactions
-FROM 's3://data-lake/manifests/2026-08-14.manifest'
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftCopyRole'
+FROM 's3://<CURATED_BUCKET>/manifests/2026-08-14.manifest'
+IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 FORMAT AS PARQUET
 MANIFEST;                                -- ← Key keyword
 
@@ -196,8 +196,8 @@ MANIFEST;                                -- ← Key keyword
 
 -- Flat JSON (auto-mapping):
 COPY staging.stg_api_events
-FROM 's3://data-lake/bronze/api-events/2026-08-14/'
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftCopyRole'
+FROM 's3://<CURATED_BUCKET>/bronze/api-events/2026-08-14/'
+IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 FORMAT AS JSON 'auto'
 MAXERROR 50
 GZIP;
@@ -206,7 +206,7 @@ GZIP;
 -- Source JSON: {"user": {"id": 123, "name": "Alice"}, "event": "click", "ts": "2026-08-14T10:00:00Z"}
 -- Target table: (user_id INT, user_name VARCHAR, event_type VARCHAR, event_ts TIMESTAMP)
 
--- JSONPaths file (s3://data-lake/config/event_jsonpaths.json):
+-- JSONPaths file (s3://<CURATED_BUCKET>/config/event_jsonpaths.json):
 /*
 {
   "jsonpaths": [
@@ -220,9 +220,9 @@ GZIP;
 
 -- COPY with JSONPaths:
 -- COPY staging.stg_api_events
--- FROM 's3://data-lake/bronze/api-events/2026-08-14/'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftCopyRole'
--- FORMAT AS JSON 's3://data-lake/config/event_jsonpaths.json'
+-- FROM 's3://<CURATED_BUCKET>/bronze/api-events/2026-08-14/'
+-- IAM_ROLE '<SPECTRUM_ROLE_ARN>'
+-- FORMAT AS JSON 's3://<CURATED_BUCKET>/config/event_jsonpaths.json'
 -- TIMEFORMAT 'auto'
 -- MAXERROR 50;
 
@@ -278,8 +278,8 @@ GROUP BY query;
 -- Source files: Partitioned by event_date, sorted by user_id within each file.
 
 COPY gold.fact_events
-FROM 's3://data-lake/gold/events/dt=2026-08-14/'
-IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftCopyRole'
+FROM 's3://<CURATED_BUCKET>/gold/events/dt=2026-08-14/'
+IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 FORMAT AS PARQUET
 COMPUPDATE OFF                           -- Don't re-analyze compression
 STATUPDATE OFF;                          -- Don't re-analyze stats (do it manually after)
@@ -305,7 +305,7 @@ DECLARE
     v_errors        INT;
 BEGIN
     -- Build dynamic S3 path
-    v_s3_path := 's3://data-lake/gold/transactions/dt='
+    v_s3_path := 's3://<CURATED_BUCKET>/gold/transactions/dt='
               || TO_CHAR(p_load_date, 'YYYY-MM-DD') || '/';
 
     -- Step 1: Idempotent delete (re-runnable)
@@ -317,7 +317,7 @@ BEGIN
     -- Step 2: COPY from S3
     EXECUTE 'COPY gold.fact_transactions '
          || 'FROM ''' || v_s3_path || ''' '
-         || 'IAM_ROLE ''arn:aws:iam::123456789012:role/RedshiftCopyRole'' '
+         || 'IAM_ROLE ''<SPECTRUM_ROLE_ARN>'' '
          || 'FORMAT AS PARQUET';
 
     GET DIAGNOSTICS v_loaded = ROW_COUNT;
@@ -351,17 +351,17 @@ $$;
 -- COPY from DynamoDB:
 -- COPY staging.stg_dynamo_items
 -- FROM 'dynamodb://UserSessions'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftDynamoRole'
+-- IAM_ROLE '<DYNAMODB_ROLE_ARN>'
 -- READRATIO 50;    -- Max % of DynamoDB provisioned throughput to consume
 
 -- COPY from EMR (HDFS):
 -- COPY staging.stg_hadoop_data
 -- FROM 'emr://j-XXXXX/user/hadoop/output/'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftEMRRole'
+-- IAM_ROLE '<EMR_ROLE_ARN>'
 -- FORMAT AS PARQUET;
 
 -- COPY from SSH (remote host):
 -- COPY staging.stg_remote_data
--- FROM 's3://ssh-manifest/my_ssh_manifest'
--- IAM_ROLE 'arn:aws:iam::123456789012:role/RedshiftSSHRole'
+-- FROM 's3://<CURATED_BUCKET>/ssh-manifest/my_ssh_manifest'
+-- IAM_ROLE '<SSH_ROLE_ARN>'
 -- SSH;
