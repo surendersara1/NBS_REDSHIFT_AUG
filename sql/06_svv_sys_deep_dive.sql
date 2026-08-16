@@ -143,7 +143,11 @@ WHERE  query_id = <QUERY_ID>
 ORDER  BY step_sec DESC;
 -- Zero rows returned = nothing moved between nodes = a collocated join.
 --
--- is_rrscan (was the sort key used?) lives in STL_SCAN:
+-- is_rrscan (was the sort key used?) exists in BOTH SYS_QUERY_DETAIL and
+-- STL_SCAN — verified against the SYS_QUERY_DETAIL column reference. Files
+-- 10 and 11 read it from SYS_QUERY_DETAIL, which is the preferred modern
+-- source. STL_SCAN is shown here because it also carries rows_pre_filter,
+-- which is the "how many rows did the scan actually emit" number:
 SELECT slice, type, rows, rows_pre_filter, is_rrscan
 FROM   stl_scan WHERE query = <QUERY_ID> AND tbl > 0 ORDER BY slice;
 

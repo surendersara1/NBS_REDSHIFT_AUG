@@ -118,7 +118,9 @@ FROM 's3://<RAW_BUCKET>/parent/'
 IAM_ROLE '<SPECTRUM_ROLE_ARN>'
 CSV
 IGNOREHEADER 1
-GZIP
+-- NO GZIP. This prefix holds the plain customers.csv that the CDK uploads,
+-- and GZIP against an uncompressed file fails the whole load. Add GZIP only
+-- when the producer actually writes .gz — it is not a free "handle either".
 TIMEFORMAT 'auto'
 DATEFORMAT 'YYYY-MM-DD'
 BLANKSASNULL          -- '   ' becomes NULL
