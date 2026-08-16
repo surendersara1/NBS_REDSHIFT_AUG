@@ -7,11 +7,15 @@ federated-catalog path, the operational scripts, and **`sql/01`–`sql/18`**
 **Course starts:** 2026-08-17
 
 > **Scope boundary, stated up front.** The repository contains **76 SQL
-> modules**. This audit covers the deployable platform and modules 01–18 —
-> the files that carry account-specific ARNs, bucket names and external-schema
-> DDL, i.e. everything that has to be *correct against a live AWS account*.
+> modules**. This audit covers the **deployable platform** — CDK, Glue jobs,
+> scripts — plus **`sql/03`** (rewritten) and **`sql/14`** (read).
 >
-> Modules **19–76 were not audited.** They are self-contained teaching SQL:
+> **The other 74 SQL modules were not reviewed line by line.** What was done
+> across all 76 is a *structural* scan: placeholder inventory, hardcoded-ARN
+> search, and dependency-order check. That is enough to say they will not
+> break the deploy, and not enough to say the SQL in them is correct.
+>
+> Modules **19–76** are additionally self-contained teaching SQL:
 > a placeholder scan confirms they contain **zero** `<PLACEHOLDER>` tokens and
 > reference only illustrative account ids (`123456789012`). They therefore
 > cannot break the deploy path — but they are also not wired to the deployed
@@ -188,8 +192,9 @@ a deploy. Specifically still unproven:
 |---|---|
 | A real `cdk deploy` | Synth validates structure and the CFN resource spec. It does not catch IAM propagation timing, S3 Tables regional behaviour, or quota limits. |
 | The Glue Iceberg REST config | The `--conf` string wiring Spark to the S3 Tables REST catalog is written to the documented shape but has not run. Most likely single point of failure on day 2. |
-| Any SQL against a live cluster | Modules 01–18 are documentation-verified, not execution-verified. |
-| Modules 19–76 | Not audited at all. Low deploy risk (no placeholders, no account-specific ARNs), unknown teaching-correctness risk. |
+| Any SQL against a live cluster | Nothing has been executed. `sql/03` is documentation-verified but not run. |
+| `sql/01`, `02`, `04`–`13`, `15`–`18` | **Not reviewed line by line.** These carry real ARNs and external-schema DDL, so they are the highest-value target for the next review pass. Their correctness rests on the original authors' claim, not on this audit. |
+| Modules 19–76 | Not reviewed. Low deploy risk (no placeholders, no real ARNs), unknown teaching-correctness risk. |
 | The `ra3.large` price | The one figure in this repo not checked against a published table. |
 
 **Mitigation, and it is not optional: one person deploys end-to-end and runs

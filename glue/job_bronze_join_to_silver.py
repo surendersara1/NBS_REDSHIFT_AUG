@@ -48,7 +48,13 @@ joined = (
     .join(F.broadcast(customers.alias("c")), on="customer_id", how="left")
     .select(
         F.col("o.order_id"),
-        F.col("o.customer_id"),
+        # UNQUALIFIED, deliberately. `on="customer_id"` is a USING-style join:
+        # Spark coalesces the key into a SINGLE output column that belongs to
+        # neither alias. `F.col("o.customer_id")` here is ambiguous and can
+        # fail analysis with "cannot resolve 'o.customer_id'" depending on the
+        # Spark version. Every other column below is unique to one side, so
+        # the alias resolves fine there.
+        F.col("customer_id"),
         F.col("c.customer_name"),
         F.col("c.segment"),
         F.col("c.country"),

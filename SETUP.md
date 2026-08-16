@@ -20,7 +20,7 @@ Read this fully before running anything. Time to a working cluster: **about
 | Shell scripts parse | **Verified.** `bash -n` clean on all 4 |
 | Python parses | **Verified.** All 8 files |
 | Sample data generates | **Verified.** Runs, produces the injected defects |
-| SQL syntax vs AWS docs | **`sql/01`–`sql/18` verified 2026-08-16** against the Redshift Database Developer Guide. **Modules 19–76 not audited** — see [docs/PRE_COURSE_AUDIT.md §7](docs/PRE_COURSE_AUDIT.md) |
+| SQL syntax vs AWS docs | **`sql/03` only.** Rewritten and verified against the Redshift Database Developer Guide. The other 75 modules had a structural scan (placeholders, ARNs, dependency order) but **no line-by-line review** — see [docs/PRE_COURSE_AUDIT.md](docs/PRE_COURSE_AUDIT.md) |
 | CDK deployed to AWS | **Never run.** No account has seen this |
 | Glue jobs executed | **Never run.** |
 | SQL executed on a cluster | **Never run.** |
