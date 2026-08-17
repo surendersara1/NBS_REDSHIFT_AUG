@@ -1,10 +1,10 @@
 # Setup — from empty laptop to first query
 
-**Every learner deploys their own copy.** Each person runs these steps with
-their own AWS credentials and their own `user` slug. Nothing is shared except
-the AWS account (if you are all in one) and the `s3tablescatalog` federated
-catalog, which the first person to run the bootstrap script creates for
-everyone.
+**Every learner deploys their own copy into their own AWS account.** Each
+person runs these steps with their own credentials, in their own account, with
+their own VPC and their own `user` slug. **Nothing is shared** — not the
+account, not the VPC, not the `s3tablescatalog` federated catalog, which the
+bootstrap script creates once inside each learner's own account.
 
 Read this fully before running anything. Time to a working cluster: **about
 45 minutes**, most of it waiting for Redshift to create.
@@ -87,20 +87,31 @@ If either fails, install AWS CLI v2 from the MSI installer — not via `pip`.
   ```
   `UnknownOperation` on the second means S3 Tables is not in that region.
 
-### ⚠ VPC quota — raise this BEFORE the course, it takes hours to approve
+### Deployment model: one AWS account per learner
 
-The default limit is **5 VPCs per region per account**. Each learner's
-FoundationStack creates one. **Eight learners in one account fail on the
-sixth deploy** with `The maximum number of VPCs has been reached`, roughly
-four minutes in, leaving a ROLLBACK_COMPLETE stack to delete by hand.
+**Each learner deploys into their own AWS account, with their own VPC.**
+That is the model this course runs on, and it removes the single worst
+pre-course risk.
 
-Either:
+**There is no VPC quota problem.** The default limit is 5 VPCs per region
+*per account*; each learner's FoundationStack creates exactly one, in their
+own account. Nothing to raise, nothing to request, nothing that has to be
+approved before Monday.
 
-- **Raise the quota** — Service Quotas → Amazon VPC → "VPCs per Region" →
-  request 15. Approval is usually fast but is not instant. Do it today.
-- **Or give each learner their own AWS account.** No quota problem, and
-  `s3tablescatalog` then has to be created once per account (the bootstrap
-  script does it automatically either way).
+What being in separate accounts *does* mean — all of it self-serve, and all
+of it per learner rather than centrally:
+
+- **`cdk bootstrap` runs in every account.** Once per account + region. See §3.
+- **`s3tablescatalog` is created in every account.** `bootstrap_s3tables.sh`
+  does this automatically; there is no shared catalog to coordinate.
+- **Lake Formation data lake admin is a two-minute self-serve step.** Each
+  learner adds themselves in their own account (§1, Account requirements).
+  If they own the account, nobody has to grant them anything first.
+- **Resource names cannot collide**, so the `-c user=<slug>` context is now
+  about *identification* rather than collision avoidance. It is still
+  required — `render_sql.sh` and the bootstrap script both key off the slug.
+- **Module `63` (cross-account data sharing) becomes genuinely runnable.**
+  Two learners can pair their accounts instead of treating it as concept-only.
 
 ---
 
@@ -158,10 +169,13 @@ to synthesize without it:
 ERROR: -c user=<yourname> is required.
 ```
 
-That guard is deliberate. Without it, the second person to deploy into a
-shared account collides on the bucket names, the three IAM role names, the
-KMS alias, the Glue database, the S3 Tables bucket and the cluster
-identifier — and fails *midway*, not at the start.
+That guard is deliberate. With one account per learner nothing can collide, so
+the slug is not load-bearing for isolation — but it still names every resource
+(`nbs-<slug>-*`), and `render_sql.sh` and `bootstrap_s3tables.sh` both key off
+it. The guard also keeps the naming honest if anyone ever does share an
+account: without it, a second deploy would collide on the bucket names, the
+three IAM role names, the KMS alias, the Glue database, the S3 Tables bucket
+and the cluster identifier — and fail *midway*, not at the start.
 
 ```bash
 cd ../infra
@@ -296,10 +310,17 @@ exist*. That is the one out-of-order failure worth warning the room about.
 
 **Modules `19`–`76`** are self-contained: no placeholders, no dependency on
 the deployed stack, runnable in any order once `01`–`04` have built the
-base tables. Four of them describe services this platform does not
-provision (`59` SageMaker, `63` second account, `64` Kinesis/MSK, `69`
-Aurora/DynamoDB) — teach those as concepts, not labs. They were not part of
-the pre-course audit; see [docs/PRE_COURSE_AUDIT.md §7](docs/PRE_COURSE_AUDIT.md).
+base tables. Three describe services this platform does not provision
+(`59` SageMaker, `64` Kinesis/MSK, `69` Aurora/DynamoDB) — teach those as
+concepts, not labs.
+
+**`63` (cross-account data sharing) is the exception, and it is now a real
+lab.** It needs two accounts, and with one account per learner the room has
+eight. Pair people up and have them share a datashare across their own two
+accounts — this is the module that benefits most from the per-account model.
+
+All 76 modules have now been read line by line and their defects fixed; see
+[docs/PRE_COURSE_AUDIT.md §8](docs/PRE_COURSE_AUDIT.md).
 
 **`sql/03` §3.3 needs an IAM login, not a database login.** The auto-mounted
 `awsdatacatalog` requires Federated Access to Spectrum. In Query Editor v2
@@ -315,7 +336,8 @@ Ranked by likelihood, each with the actual fix:
 
 1. **CDK CLI too old** → schema 54.0.0 mismatch at `cdk synth`.
    `npm install -g aws-cdk@latest`. See §1.
-2. **VPC quota** → sixth learner's deploy fails four minutes in. See §1.
+2. **Account not `cdk bootstrap`-ed** → deploy fails immediately. Every
+   learner runs it once in their own account + region. See §3.
 3. **Not a Lake Formation admin** → bootstrap reports grant failures,
    `sql/03` returns an empty table list with no error. See §5.
 4. **`sql/03` §3.3 connected as a database user** → empty `awsdatacatalog`.
@@ -332,7 +354,12 @@ Ranked by likelihood, each with the actual fix:
 
 ---
 
-## 9. Cost — this is 8× what it used to be
+## 9. Cost — eight separate bills, not one
+
+Because every learner is in their own AWS account, **each account carries one
+learner's cost**, not eight. Nobody sees an 8× bill; there are eight ~1× bills.
+The aggregate below matters for budgeting across the group, not for any single
+account.
 
 Per learner, roughly:
 
@@ -342,7 +369,8 @@ Per learner, roughly:
 | Glue + KMS interface endpoints (2 AZ each) | ~$0.04/hr | ~$0.96 |
 | Glue jobs, S3, S3 Tables | negligible at this volume | <$0.10 |
 
-**Eight learners, five 8-hour days, paused overnight: roughly $100–130.**
+**Per learner account, five 8-hour days, paused overnight: roughly $13–17.**
+**Across all eight accounts: roughly $100–130.**
 
 Confirm `ra3.large` against current pricing for your region — it is the one
 number here not verified against a published table.
@@ -359,10 +387,10 @@ aws redshift resume-cluster --cluster-identifier nbs-$USER_SLUG-dev
 Resume takes a few minutes — start it before the room arrives.
 
 **Interface endpoints do NOT stop when the cluster pauses.** The Glue and KMS
-endpoints bill ~$0.04/hr per learner continuously — about $27 across eight
-learners for a week of wall-clock time. That is the price of not running a
-NAT gateway (which would be ~$32/month *each*). Accept it, or `cdk destroy`
-nightly rather than pausing.
+endpoints bill ~$0.04/hr continuously — roughly **$3.40 in each learner's own
+account** for a week of wall-clock time, about $27 across all eight. That is
+the price of not running a NAT gateway (which would be ~$32/month *each*).
+Accept it, or `cdk destroy` nightly rather than pausing.
 
 ---
 
@@ -385,8 +413,9 @@ aws glue delete-database --name nbs_${USER_SLUG}_s3t_link --region us-east-1
 # 2. S3 Tables namespace/tables, if the table bucket refuses to delete
 aws s3tables list-tables --table-bucket-arn <TableBucketArn>
 
-# 3. The shared s3tablescatalog — LEAVE IT unless you are the last one out.
-#    Deleting it breaks every other learner in the account.
+# 3. The s3tablescatalog federated catalog. It is YOURS -- one per account --
+#    so with one account per learner there is nobody else to break by
+#    removing it. Delete it if you want the account fully clean.
 #    aws glue delete-catalog --catalog-id s3tablescatalog
 ```
 
@@ -396,15 +425,24 @@ aws s3tables list-tables --table-bucket-arn <TableBucketArn>
 
 Give each learner:
 
-1. Their own AWS credentials, with the permissions in §1.
-2. **Their own `user` slug**, assigned by you so no two clash.
+1. Credentials for **their own AWS account**, with the permissions in §1.
+2. **Their own `user` slug.** Names cannot collide across separate accounts,
+   so this is for identification and for the scripts that key off it — not
+   for collision avoidance. Any short lowercase name works.
 3. This file, and [CURRICULUM.md](CURRICULUM.md) — the five-day plan.
 
-Do centrally, before day one:
+Do before day one:
 
-- Raise the VPC quota (§1) — this is the one that cannot be fixed on the day.
-- Confirm every learner is a Lake Formation data lake admin (§1).
-- Have one person deploy end-to-end and run `sql/01` through `sql/04`.
+- **Nothing centrally blocking.** With one account per learner there is no
+  shared quota to raise and no shared catalog to provision. This is the main
+  practical advantage of the per-account model.
+- Each learner: `cdk bootstrap` in their own account + region (§3), and add
+  themselves as Lake Formation data lake admin (§1). Both are self-serve and
+  take minutes.
+- Have one person deploy end-to-end and run `sql/01` through `sql/04`
+  **before the other seven start.** This is still the highest-value hour you
+  can spend — it converts "never been deployed" into a known quantity while
+  there is time to react.
 
 The one instruction worth repeating on day one: **run the files in order,
 and read the comments.** The comments carry the teaching; the SQL is just

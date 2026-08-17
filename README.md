@@ -124,9 +124,12 @@ aws glue start-job-run --job-name nbs-$USER_SLUG-bronze-to-silver-dev
 ./scripts/render_sql.sh --user $USER_SLUG           # -> sql/_resolved/
 ```
 
-⚠ **Raise the VPC quota before the course.** The default is 5 VPCs per
-region; each learner's stack creates one, so the sixth deploy fails. See
-[SETUP.md §1](SETUP.md).
+**One AWS account per learner.** Each person deploys into their own account
+with their own VPC, so nothing is shared and nothing can collide. The 5-VPC
+default limit is per account and one VPC per account is nowhere near it —
+**there is no quota to raise.** Each learner runs `cdk bootstrap` once in
+their own account and adds themselves as Lake Formation data lake admin; both
+are self-serve. See [SETUP.md §1](SETUP.md).
 
 Open **Redshift Query Editor v2** in the console and work through `sql/`
 **in numeric order** — the files build on each other's objects:

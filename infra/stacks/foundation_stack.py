@@ -60,12 +60,11 @@ class FoundationStack(Stack):
         #    least one subnet, but ClusterSubnetGroup is far less painful to
         #    resize later with two. No NAT: nat_gateways=0 keeps this free.
         #
-        #    QUOTA WARNING: the default limit is 5 VPCs per region per
-        #    account. Eight learners deploying into ONE account will hit it on
-        #    the sixth deploy with "The maximum number of VPCs has been
-        #    reached". Either raise the quota first (Service Quotas -> VPC ->
-        #    "VPCs per Region") or give learners separate accounts.
-        #    See SETUP.md section 1.
+        #    VPC QUOTA: not an issue for this course. The default limit is 5
+        #    VPCs per region per ACCOUNT, and each learner deploys into their
+        #    own account, creating exactly one. Nothing to raise.
+        #    (It would only bite if several learners shared one account, which
+        #    is not the model here.) See SETUP.md section 1.
         # ------------------------------------------------------------------
         self.vpc = ec2.Vpc(
             self,

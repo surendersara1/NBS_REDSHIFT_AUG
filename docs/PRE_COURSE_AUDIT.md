@@ -25,9 +25,10 @@ federated-catalog path, the operational scripts, and **all 76 SQL modules**
 >
 > Modules **19–76** remain self-contained teaching SQL: zero `<PLACEHOLDER>`
 > tokens, illustrative account ids only (`123456789012`). They cannot break the
-> deploy path. Several (`64` Kinesis/MSK, `69` Zero-ETL, `59` Redshift ML,
-> `63` cross-account sharing) describe services this CDK does not build. Treat
-> those as read-and-discuss, not run-as-is. See §7.
+> deploy path. Three (`59` Redshift ML, `64` Kinesis/MSK, `69` Zero-ETL)
+> describe services this CDK does not build — read-and-discuss, not run-as-is.
+> `63` cross-account sharing **is** runnable: every learner has their own AWS
+> account, so pairs can share between two real accounts. See §7.
 
 ---
 
@@ -35,22 +36,29 @@ federated-catalog path, the operational scripts, and **all 76 SQL modules**
 
 The platform was built to a **single shared cluster** model. The course is
 being run on a **per-learner deploy** model — eight people each running
-`cdk deploy` with their own AWS credentials.
+`cdk deploy` **in their own AWS account**, each with their own VPC.
 
 That change of model, plus an independent correctness pass against current
 AWS documentation, surfaced **12 defects, 6 of them course-stopping.** All 12
-are fixed. Two items remain that cannot be fixed in code and need an
-administrative action before Monday.
+are fixed. A second pass then read all 76 SQL modules line by line and fixed
+substantially more (§8).
 
-**Recommendation: approve, conditional on the two pre-course actions in
-§4.** The code is now structurally sound and documentation-verified. It has
-still never been deployed to a real AWS account — that gap is unchanged by
-this audit and is the main residual risk (§5).
+**Recommendation: approve.** There is **no blocking pre-course action.** An
+earlier revision of this document called for raising a VPC quota; that was
+based on a shared-account assumption which is not the model in use, and it is
+withdrawn in §4.1. The remaining prerequisites — `cdk bootstrap` and Lake
+Formation data lake admin — are self-serve inside each learner's own account.
+
+The code is structurally sound and documentation-verified. It has still
+**never been deployed to a real AWS account** — that gap is unchanged and is
+now the main residual risk (§5), which is why the §5 walk-through still
+matters even though nothing formally blocks.
 
 ### Before the audit
 
-- Eight learners could not deploy. The second deploy onward would have failed
-  midway on name collisions, leaving broken stacks to clean up by hand.
+- Resource names were hardcoded, so any two learners sharing an account would
+  have collided midway through the second deploy. Moot under one account per
+  learner, but the names are per-learner now regardless.
 - Any deploy that got that far would have failed on two CloudFormation
   validation errors.
 - If a deploy had succeeded, `sql/03` — the S3 Tables → Redshift lesson,
@@ -74,7 +82,7 @@ clarity.
 
 | # | Sev | Finding | Status |
 |---|-----|---------|--------|
-| 1 | S1 | **13 resource names hardcoded.** Buckets, 3 IAM roles, KMS alias, cluster id, Glue DB, S3 Tables bucket, 2 Glue jobs and 3 stack names were fixed strings. The 2nd–8th learner deploying into one account collides on all of them, ~4 min in. | Fixed |
+| 1 | ~~S1~~ → S3 | **13 resource names hardcoded.** Buckets, 3 IAM roles, KMS alias, cluster id, Glue DB, S3 Tables bucket, 2 Glue jobs and 3 stack names were fixed strings. Rated S1 on the assumption of a shared account, where the 2nd–8th learner would collide ~4 min in. **With one account per learner, collisions cannot occur** — the fix stands and is still correct, but it buys identification, not isolation. Downgraded. | Fixed |
 | 2 | S1 | **`sql/03` federated-catalog syntax wrong in three ways.** `DATABASE` was given the S3 namespace instead of the Glue resource link name; `CATALOG_ID` used the composite `<account>:s3tablescatalog/<bucket>` form where AWS requires a bare account id; the mandatory `REGION` clause was absent. | Fixed |
 | 3 | S1 | **Lake Formation grants entirely missing.** Not in the code, not in the docs. Without them `CREATE EXTERNAL SCHEMA` *succeeds* and returns an empty table list — no error, no AccessDenied. The worst failure mode in the platform. | Fixed |
 | 4 | S1 | **Glue resource link documented as optional.** SETUP.md said "needed only for Method 2". AWS requires it for **all three** query methods. | Fixed |
@@ -156,36 +164,54 @@ Every change to `sql/03` traces to a specific AWS page, read during the audit:
 | File | Change |
 |---|---|
 | `infra/app.py` | Required, validated `user` context; every name derived from it; `nodes` default 1 |
-| `infra/stacks/foundation_stack.py` | Per-learner names; KMS interface endpoint; ASCII-only CFN descriptions; VPC quota warning |
+| `infra/stacks/foundation_stack.py` | Per-learner names; KMS interface endpoint; ASCII-only CFN descriptions; VPC quota note (later corrected — not applicable under one account per learner) |
 | `infra/stacks/lakehouse_stack.py` | Per-learner names; status casing; exports table-bucket name, namespace, resource-link name |
 | `infra/stacks/redshift_stack.py` | Per-learner names; ASCII SG description; extra outputs |
 | `infra/cdk.json` | Removed the shared-name defaults that made collisions possible |
 | `sql/03_s3tables_federated_catalog.sql` | Rewritten. Correct syntax, all three methods, preflight checks, and a failure-mode guide |
 | `scripts/bootstrap_s3tables.sh` | **New.** Automates the three prerequisites; idempotent; `--verify` and `--grants-only` |
 | `scripts/render_sql.sh` | Per-learner; new placeholders; fails loudly on partial render |
-| `SETUP.md` | Rewritten for per-learner deploy; quota and Lake Formation prerequisites; 8× cost model |
+| `SETUP.md` | Rewritten for per-learner deploy; later corrected to one-account-per-learner — quota section withdrawn, Lake Formation made self-serve, cost restated as eight ~1× bills rather than one 8× bill |
 | `README.md` | Deploy flow, cost, status |
 
 ---
 
-## 4. Two actions needed before Monday — neither is code
+## 4. Pre-course actions — both now self-serve, neither blocking
 
-### 4.1 Raise the VPC quota ⚠ do this today
+> **Corrected 2026-08-16.** This section originally listed two blocking
+> actions on the assumption of a shared AWS account. That assumption was
+> wrong. **Each learner has their own AWS account and their own VPC.** One
+> action is withdrawn entirely; the other becomes a two-minute self-serve
+> step. **There is nothing centrally blocking before Monday.**
 
-Default is **5 VPCs per region per account**. Each learner's stack creates
-one. **The sixth learner's deploy fails** with `The maximum number of VPCs has
-been reached`, about four minutes in, leaving a `ROLLBACK_COMPLETE` stack.
+### 4.1 ~~Raise the VPC quota~~ — WITHDRAWN, does not apply
 
-Service Quotas → Amazon VPC → "VPCs per Region" → request **15**.
+**This finding was wrong, and it was the more urgent of the two.** It assumed
+eight learners deploying into one shared AWS account. They are not: **each
+learner has their own AWS account and their own VPC.**
 
-Approval is usually quick but is not instant, and it cannot be worked around
-on the morning. The alternative is one AWS account per learner.
+The VPC limit of 5 is *per account*. One VPC per account is nowhere near it.
+There is nothing to raise, nothing to request, and no lead time to plan for.
 
-### 4.2 Confirm Lake Formation data lake admin for every learner
+The per-account model also dissolves the premise behind finding #1 in §1 —
+resource-name collisions cannot happen across separate accounts. The
+per-learner naming work is still in place and still correct; it now serves
+identification rather than isolation, and the scripts key off the slug.
 
-The S3 Tables path needs it. Lake Formation console → Administrative roles
-and tasks. `./scripts/bootstrap_s3tables.sh --user <slug> --verify` reports
-clearly if it is missing.
+### 4.2 Lake Formation data lake admin — self-serve, in each learner's account
+
+The S3 Tables path needs it. In the shared-account model this needed a central
+admin to grant eight people. With one account per learner, **each learner adds
+themselves** in their own account: Lake Formation console → Administrative
+roles and tasks. If they own the account, nobody has to act first.
+
+`./scripts/bootstrap_s3tables.sh --user <slug> --verify` reports clearly if it
+is missing. Same for `cdk bootstrap` — once per account + region, self-serve.
+
+**The one thing still worth doing centrally** is the §5 mitigation: have one
+person deploy end-to-end and run `sql/01`–`sql/04` before the other seven
+start. That is unchanged by the account model, and it remains the highest-value
+half-day available, because nothing here has ever been deployed.
 
 ---
 
@@ -225,7 +251,10 @@ Modules that describe infrastructure the platform does **not** provision, and
 so cannot be run end-to-end on day one:
 
 - `59` Redshift ML — needs SageMaker
-- `63` Data Sharing Cross-Account — needs a second account/namespace
+- ~~`63` Data Sharing Cross-Account — needs a second account/namespace~~
+  **Now runnable.** With one AWS account per learner the room has eight
+  accounts. Pair learners and have them share a datashare between their own
+  two accounts — this module gains the most from the per-account model.
 - `64` Streaming Ingestion — needs Kinesis or MSK
 - `69` Zero-ETL Integrations — needs Aurora or DynamoDB
 
