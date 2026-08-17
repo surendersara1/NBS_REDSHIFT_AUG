@@ -10,30 +10,23 @@ federated-catalog path, the operational scripts, and **`sql/01`–`sql/18`**
 > modules**. This audit covers the **deployable platform** — CDK, Glue jobs,
 > scripts — plus **23 of the 76 SQL modules read line by line**:
 >
+> **UPDATE — all 76 modules have now been read line by line.**
+>
 > | | Modules |
 > |---|---|
-> | **Read in full** | `01`–`14`, `16`, `43`, `59`, `60`, `63`, `64`, `67`, `69`, `75` |
-> | **Bugs found and fixed in** | `01`, `02`, `06`, `07`, `08`, `09`, `16`, `59`, `60`, `63`, `64`, `67`, `69`, `75` |
-> | **Read, found clean** | `03`, `04`, `05`, `10`, `11`, `12`, `13`, `14` |
-> | **NOT READ** | `15`, `17`, `18`, `19`–`42`, `44`–`58`, `61`, `62`, `65`, `66`, `68`, `70`–`74`, `76` — **53 modules** |
+> | **Read in full** | **`01`–`76` — all 76** |
+> | **Bugs found and fixed in** | `01`, `02`, `06`, `07`, `08`, `09`, `16`, `19`, `20`, `23`, `24`, `25`, `26`, `28`, `29`, `30`, `31`, `33`, `34`, `35`, `36`, `37`, `38`, `40`, `42`, `43`, `44`, `45`, `46`, `47`, `49`, `50`, `51`, `52`, `53`, `54`, `56`, `57`, `58`, `59`, `60`, `62`, `63`, `64`, `65`, `66`, `67`, `68`, `69`, `70`, `71`, `72`, `73`, `74`, `75`, `76` |
+> | **Read, found clean** | `03`, `04`, `05`, `10`–`15`, `17`, `18`, `21`, `22`, `27`, `32`, `39`, `41`, `48`, `55`, `61` |
 >
-> The 53 unread modules had a structural scan only (placeholder inventory,
-> hardcoded-ARN search). **Nine bugs were found in the 23 modules that were
-> read.** There is no reason to assume the unread 53 are cleaner — that rate
-> extrapolates to roughly 20 more defects. Budget a second review pass.
+> The earlier estimate — "roughly 20 more defects" in the then-unread modules —
+> was low. The second pass found **substantially more than that**, including
+> several that would stop a lesson dead. The complete list is in §8.
 >
-> **The other 74 SQL modules were not reviewed line by line.** What was done
-> across all 76 is a *structural* scan: placeholder inventory, hardcoded-ARN
-> search, and dependency-order check. That is enough to say they will not
-> break the deploy, and not enough to say the SQL in them is correct.
->
-> Modules **19–76** are additionally self-contained teaching SQL:
-> a placeholder scan confirms they contain **zero** `<PLACEHOLDER>` tokens and
-> reference only illustrative account ids (`123456789012`). They therefore
-> cannot break the deploy path — but they are also not wired to the deployed
-> environment, and several (`64` Kinesis/MSK, `69` Zero-ETL, `59` Redshift ML)
-> describe services this CDK does not build. Treat those as
-> read-and-discuss, not run-as-is. See §7.
+> Modules **19–76** remain self-contained teaching SQL: zero `<PLACEHOLDER>`
+> tokens, illustrative account ids only (`123456789012`). They cannot break the
+> deploy path. Several (`64` Kinesis/MSK, `69` Zero-ETL, `59` Redshift ML,
+> `63` cross-account sharing) describe services this CDK does not build. Treat
+> those as read-and-discuss, not run-as-is. See §7.
 
 ---
 
@@ -205,8 +198,7 @@ a deploy. Specifically still unproven:
 | A real `cdk deploy` | Synth validates structure and the CFN resource spec. It does not catch IAM propagation timing, S3 Tables regional behaviour, or quota limits. |
 | The Glue Iceberg REST config | The `--conf` string wiring Spark to the S3 Tables REST catalog is written to the documented shape but has not run. Most likely single point of failure on day 2. |
 | Any SQL against a live cluster | Nothing has been executed. `sql/03` is documentation-verified but not run. |
-| `sql/01`, `02`, `04`–`13`, `15`–`18` | **Not reviewed line by line.** These carry real ARNs and external-schema DDL, so they are the highest-value target for the next review pass. Their correctness rests on the original authors' claim, not on this audit. |
-| Modules 19–76 | Not reviewed. Low deploy risk (no placeholders, no real ARNs), unknown teaching-correctness risk. |
+| Any SQL executed on a live cluster | All 76 modules are now read and documentation-verified, but **none has been run.** Every fix in §8 is verified against the AWS documentation, not against a running Redshift. |
 | The `ra3.large` price | The one figure in this repo not checked against a published table. |
 
 **Mitigation, and it is not optional: one person deploys end-to-end and runs
@@ -260,3 +252,77 @@ reading of the documentation. Both are now closed.
 The honest risk is not the code. It is that a first deploy is a first
 deploy, and there are eight of them happening at once on a Monday morning.
 §4 and the §5 mitigation are what make that acceptable.
+
+---
+
+## 8. Second pass — modules 19–76 read line by line
+
+**Date:** 2026-08-16 · **Method:** every system-view column, function name and
+syntax construct checked against the live AWS documentation before any edit.
+
+The first pass estimated ~20 further defects. The real number was higher, and
+the severity was higher: several modules could not have run at all.
+
+### 8.1 Things that would fail outright
+
+| Where | Defect |
+|---|---|
+| `66`, `71`, `72`, `73`, `74`, `76` + 6 more | **Three schemas — `lab`, `gold`, `etl` — are referenced by 12 modules and created by none.** `sql/01` makes staging/analytics/admin, `sql/07` makes rpt. Every one of those 12 modules failed on its first statement. Also added `silver`, `bronze`, `bi`. |
+| `26`, `34`, `44`, `45`, `46`, `47`, `50`, `52`, `62` | **`ON COMMIT DROP` — nine modules.** Redshift's `CREATE TABLE` and `CREATE TABLE AS` grammars have no `ON COMMIT` clause; temp tables are session-scoped. Module `45` taught it as "the mandatory standard". |
+| `71` | **`LATERAL ( … )` keyword.** Absent from the documented FROM-clause grammar. Redshift provides lateral *semantics* via PartiQL unnesting, not the keyword. §5 was live SQL. |
+| `73`, `69` | **`MERGE … WHEN MATCHED AND <cond>` and an alias on the MERGE target.** Neither exists in Redshift's grammar. Module `32` states this correctly; `73` and `69` contradicted it. |
+| `56` | **`IFF()`** — Snowflake, not Redshift. |
+| `58` | **`FNVD32_1`, `FNVD64_1`, `MURMUR3_32`** — the real names are `FNV_HASH` and `MURMUR3_32_HASH`. |
+| `57` | **PostGIS `<->` operator** — Redshift has no indexes to back it. Also `ST_DWithin` called on `GEOGRAPHY` with a metre threshold; it takes `GEOMETRY` and measures degrees. |
+| `52` | Materialized view selected `event_timestamp` and `region` from a table declared with only `sale_id` and `amount`. |
+| `54` | Example selected `id` from a subquery that did not project it. |
+
+### 8.2 Wrong system-view columns (all verified against the docs)
+
+`23`, `24`, `33`, `50` — `sys_query_detail` has no `slice`, `local_scanned_bytes`
+or `is_diskbased` · `26` — `svl_query_summary` uses `query`/`label`, not
+`query_id`/`step_name` · `35` — `sys_query_history` has `service_class_id`,
+`queue_time`, `execution_time` · `42` — no `error_code` · `44` — the lock-triage
+queries used SVV_TRANSACTIONS columns against STL_LOCKS · `65` —
+`short_query_accelerated` (a *character*, not boolean), not `is_accelerated` ·
+`68` — SVV_TABLE_INFO is `schema`/`"table"`, not `schemaname`/`tablename` ·
+`70` — five invalid columns on STL_WLM_RULE_ACTION, plus a nonexistent
+`data_scanned_bytes` on SYS_SERVERLESS_USAGE · `74` — seven invalid columns on
+SVL_QUERY_METRICS_SUMMARY, which is one row per *query*, in *seconds*.
+
+### 8.3 Silently wrong results — the dangerous class
+
+These ran without error and taught the wrong thing.
+
+| Where | Defect |
+|---|---|
+| `20`, `49`, `50`, `53` | **`SYSDATE` returns transaction start, not statement start.** A procedure body is one transaction, so every `DATEDIFF(ms, v_step_start, SYSDATE)` logged **0**. Module `20` exists to teach per-step duration tracking; it recorded zeros. `GETDATE()` is the statement-scoped one. Module `53` documented the two backwards. |
+| `76` | **The benchmarking lab could never pass its own correctness gate.** Its SLOW and FAST procedures filtered *different columns* (`created_at` vs `order_date`), so the Step 6 diff always reported FAIL. The module teaches "an optimisation must not change the output". |
+| `66`, `76` | Seeded data from `stl_scan`, a system **log** table, so row counts varied per cluster and never reached the stated volume — breaking the "reproduce reliably" practice the lab teaches. |
+| 17 blocks in 15 modules | Cross-join generators whose factors multiplied to **less than their `LIMIT`**, so the LIMIT never bound. Module `25` promised "~199,980 rows" — exact for 200,000 generated, but it generated 30,000. |
+| `38` | `CHARGEBACK` was unreachable (every multiple of 20 is a multiple of 10, tested first), so that column was always 0.00. |
+| `36` | Generated user_ids collided with the hand-crafted ones, so the bulk rows outranked them and the tie-breaker demonstration produced the wrong winner. |
+| `73` | SCD2 change-detection hash concatenated five nullable columns with no `NVL` and no delimiter: one NULL made the hash NULL and the change undetectable. |
+| `49` | Claimed to log stage failures; the handler only re-raised. |
+
+### 8.4 Not changed — flagged instead
+
+- **`IS DISTINCT FROM`** (module `56`): the AWS docs neither list nor exclude it.
+  Working code was left alone rather than edited on a guess.
+- **Module `61`**: RLS is enabled on `customer_pii_master` and the GDPR purge
+  procedure then `UPDATE`s it. Redshift's restrictions on DML against
+  RLS-protected tables were not confirmed either way. Worth a live test.
+- **Module `66`** seeds 50M rows — several minutes and a few GB on a single-node
+  `ra3.large`. A smaller `LIMIT` is noted inline for time-constrained sessions.
+
+### 8.5 Verified clean after the pass
+
+All 32 data generators reach their `LIMIT`. No unsupported token (`ON COMMIT`,
+`LATERAL (`, `IFF(`, `FNVD*`, `MURMUR3_32`, `local_scanned_bytes`,
+`is_accelerated`, `WHEN MATCHED AND`, `<->`) survives outside explanatory
+comments. No module runs `VACUUM`, `ALTER TABLE APPEND` or
+`CREATE EXTERNAL TABLE` inside a stored procedure, which Redshift forbids.
+Every schema-qualified reference now resolves to a schema that is created,
+except the external ones (`spectrum_raw`, `s3t_bronze`, `aurora_source`, and
+the datashare databases in `63`), which come from `CREATE EXTERNAL SCHEMA`,
+`CREATE DATABASE FROM INTEGRATION` and `CREATE DATABASE FROM DATASHARE`.

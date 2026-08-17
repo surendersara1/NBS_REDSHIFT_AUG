@@ -436,6 +436,14 @@ AS $$
 $$ LANGUAGE sql;
 
 -- Feature 30: Python User-Defined Function (Python UDF for complex regex/parsing)
+-- ⚠ END OF SUPPORT — READ BEFORE TEACHING THIS AS AN OPTION.
+-- AWS ended support for Amazon Redshift Python UDFs after 30 June 2026 and is
+-- enforcing it in phases. That date is already behind us, so treat plpythonu as
+-- historical context, not as a tool to reach for. It is left commented out
+-- deliberately. Modern equivalents: a SQL UDF (Feature 29) for scalar logic, a
+-- Lambda UDF for anything needing a real runtime, or -- for the parsing case shown
+-- below -- Redshift's native regex functions, which cover it without a UDF at all:
+--   SELECT REGEXP_SUBSTR(url, '^(?:https?://)?([^/]+)', 1, 1, 'e');
 -- CREATE OR REPLACE FUNCTION py_extract_domain(p_url VARCHAR(500))
 -- RETURNS VARCHAR(100)
 -- IMMUTABLE

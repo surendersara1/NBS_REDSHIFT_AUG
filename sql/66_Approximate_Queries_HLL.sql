@@ -92,9 +92,27 @@ SELECT
     CASE seq % 5 WHEN 0 THEN 'US' WHEN 1 THEN 'GB' WHEN 2 THEN 'DE'
                  WHEN 3 THEN 'FR' ELSE 'JP' END,
     ROUND((RANDOM() * 0.05)::DECIMAL(10,4), 4)       AS impression_cost
+-- Deterministic row generator. The original read from stl_scan, a system LOG table --
+-- it is not "a large system table", it holds however many scan-step records the
+-- cluster happens to have logged. On a freshly deployed cluster that is often a few
+-- hundred rows, so LIMIT 50000000 never binds, every learner gets a different and much
+-- smaller dataset, and the exact-vs-approximate contrast this module exists to
+-- demonstrate disappears along with the row count.
+--
+-- NOTE ON RUNTIME: 50 million rows is the volume the module is written around, but it
+-- takes several minutes and a few GB on a single-node ra3.large. If you are short on
+-- time, drop the LIMIT to 5000000 -- the HLL contrast is still clearly visible, and
+-- every query below works unchanged.
 FROM (
     SELECT ROW_NUMBER() OVER () AS seq
-    FROM stl_scan       -- Large system table to generate rows
+    FROM (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) e
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) f
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) g
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) h
     LIMIT 50000000
 ) gen;
 
