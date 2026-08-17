@@ -146,7 +146,22 @@ SELECT
     CASE seq % 4 WHEN 0 THEN 'completed' WHEN 1 THEN 'shipped'
                  WHEN 2 THEN 'pending' ELSE 'cancelled' END,
     DATEADD(second, -(seq % 86400), SYSDATE)
-FROM (SELECT ROW_NUMBER() OVER () AS seq FROM stl_scan LIMIT 10000000) g;
+-- Deterministic row generator. The original seeded from stl_scan, a system LOG table
+-- whose row count depends on how much the cluster happens to have scanned -- on a fresh
+-- cluster it may hold a few hundred rows, so LIMIT 10000000 never binds and you get an
+-- unpredictable fraction of the intended data. That breaks Practice #1, "reproduce
+-- reliably with fixed inputs", which is the first thing this very module teaches.
+FROM (
+    SELECT ROW_NUMBER() OVER () AS seq
+    FROM (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) e
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) f
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) g2
+    LIMIT 10000000
+) g;
 
 -- Seed 1000 products:
 INSERT INTO lab.dim_products
@@ -156,7 +171,16 @@ SELECT
     CASE seq % 5 WHEN 0 THEN 'Electronics' WHEN 1 THEN 'Clothing'
                  WHEN 2 THEN 'Books' WHEN 3 THEN 'Home' ELSE 'Sports' END,
     'Brand ' || (seq % 50)
-FROM (SELECT ROW_NUMBER() OVER () AS seq FROM stl_scan LIMIT 1000) g;
+-- Deterministic again, and it matters twice over here: raw_orders.product_id spans
+-- 1..1000, so if dim_products came up short the INNER JOIN in the FAST procedure would
+-- silently drop orders and the correctness gate would fail for the wrong reason.
+FROM (
+    SELECT ROW_NUMBER() OVER () AS seq
+    FROM (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+    CROSS JOIN (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+    LIMIT 1000
+) g;
 
 ANALYZE lab.raw_orders;
 ANALYZE lab.dim_products;
@@ -186,7 +210,15 @@ BEGIN
         SELECT order_id, customer_id, order_date, product_id,
                quantity, unit_price, discount_pct, order_status
         FROM lab.raw_orders
-        WHERE DATE_TRUNC('day', created_at::TIMESTAMP) = p_load_date  -- Non-sargable!
+        -- Non-sargable: the SORTKEY column is wrapped in a function, so zone maps
+        -- cannot prune and Redshift reads every block.
+        -- NOTE: this filters the SAME column as the FAST version below (order_date),
+        -- just in its non-sargable form. That is deliberate and it is the whole point
+        -- of the lab: an optimisation must not change WHICH ROWS are selected. The
+        -- earlier version filtered created_at here and order_date in the FAST
+        -- procedure -- two different columns -- so the two procedures produced
+        -- different result sets and the Step 6 correctness gate could never pass.
+        WHERE DATE_TRUNC('day', order_date)::DATE = p_load_date
     LOOP
         -- ANTI-PATTERN 3: Correlated lookup per row
         SELECT product_name, category
@@ -234,7 +266,9 @@ $$;
 -- STEP 2: MEASURE BASELINE (Practice #2)
 -- ============================================================================
 
--- Capture baseline metrics:
+-- Capture baseline metrics (drop first: temp tables are session-scoped in Redshift,
+-- so re-running the lab on the same connection would otherwise fail):
+DROP TABLE IF EXISTS lab_baseline;
 CREATE TEMP TABLE lab_baseline AS
 SELECT
     query_id,
@@ -250,6 +284,7 @@ ORDER BY start_time DESC
 LIMIT 1;
 
 -- Capture output checksum (correctness gate):
+DROP TABLE IF EXISTS lab_baseline_checksum;
 CREATE TEMP TABLE lab_baseline_checksum AS
 SELECT
     COUNT(*)                AS row_count,
@@ -268,7 +303,8 @@ SELECT * FROM lab_baseline_checksum;
 
 -- The anti-patterns in the "bad" procedure:
 -- 1. Full table DELETE (should be date-filtered or use TRUNCATE)
--- 2. Non-sargable filter: DATE_TRUNC('day', created_at) — wraps column in function
+-- 2. Non-sargable filter: DATE_TRUNC('day', order_date) — wraps the SORTKEY in a
+--    function, defeating zone-map pruning (same rows, just read the slow way)
 -- 3. Cursor loop with row-by-row processing — 100-1000x slower than set-based
 -- 4. Correlated lookup per row — should be a JOIN
 -- 5. Single-row INSERT — should be INSERT...SELECT
@@ -337,6 +373,7 @@ $$;
 -- CALL lab.sp_build_fact_orders_FAST('2026-08-14');
 
 -- Capture new metrics:
+DROP TABLE IF EXISTS lab_after;
 CREATE TEMP TABLE lab_after AS
 SELECT
     query_id,
@@ -357,6 +394,7 @@ LIMIT 1;
 -- ============================================================================
 
 -- Capture output checksum AFTER optimization:
+DROP TABLE IF EXISTS lab_after_checksum;
 CREATE TEMP TABLE lab_after_checksum AS
 SELECT
     COUNT(*)                AS row_count,
