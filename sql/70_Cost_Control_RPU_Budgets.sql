@@ -143,9 +143,13 @@ LIMIT 20;
 -- Daily RPU consumption trend:
 SELECT
     DATE_TRUNC('day', start_time)::DATE         AS usage_date,
+    -- SYS_SERVERLESS_USAGE has exactly: start_time, end_time, compute_seconds,
+    -- compute_capacity, data_storage, cross_region_transferred_data, charged_seconds.
+    -- There is no data_scanned_bytes column here -- scan volume is a per-query metric,
+    -- not part of this 1-minute usage rollup. data_storage (MB) is what it does carry.
     SUM(compute_seconds) / 3600.0                AS compute_hours,
     SUM(charged_seconds) / 3600.0                AS charged_hours,
-    SUM(data_scanned_bytes) / (1024.0^4)          AS data_scanned_tb,
+    AVG(data_storage) / 1024.0                   AS avg_storage_gb,
     ROUND(SUM(charged_seconds) / 3600.0 * 0.375, 2) AS estimated_cost_usd
 FROM SYS_SERVERLESS_USAGE
 WHERE start_time >= DATEADD(day, -30, SYSDATE)
@@ -201,17 +205,22 @@ ORDER BY 1;
 */
 
 -- Check QMR violations:
+-- STL_WLM_RULE_ACTION has exactly: userid, query, service_class, rule, action,
+-- recordtime, action_value, service_class_name. It does NOT carry the metric name,
+-- the metric value or the threshold that tripped the rule -- those live in the WLM
+-- configuration, not in this log. Only the rule NAME is recorded here.
 SELECT
-    query_id,
-    rule_name,
-    action,                   -- 'abort', 'log', 'hop' (move to another queue)
-    metric_name,
-    metric_value,
-    threshold,
-    start_time
+    query,
+    service_class,
+    service_class_name,
+    rule,                     -- the rule name from the WLM config
+    action,                   -- 'log', 'hop(reassign)', 'hop(restart)', 'abort',
+                              -- 'change_query_priority', or 'none'
+    action_value,             -- the new priority when action = change_query_priority
+    recordtime
 FROM STL_WLM_RULE_ACTION
-WHERE start_time >= DATEADD(day, -7, SYSDATE)
-ORDER BY start_time DESC;
+WHERE recordtime >= DATEADD(day, -7, SYSDATE)
+ORDER BY recordtime DESC;
 
 
 -- ============================================================================
@@ -237,14 +246,16 @@ ORDER BY start_time DESC;
 -- COST: $5 per query (1TB × $5/TB) — 100x cheaper!
 
 -- Monitor Spectrum scan costs:
+-- SVL_S3QUERY_SUMMARY follows the old SVL naming: the columns are "query" and
+-- "starttime", not "query_id" and "start_time".
 SELECT
-    query_id,
+    query,
     segment,
     s3_scanned_rows,
     s3_scanned_bytes / (1024.0^4)     AS s3_scanned_tb,
     ROUND(s3_scanned_bytes / (1024.0^4) * 5.0, 2) AS estimated_spectrum_cost_usd
 FROM SVL_S3QUERY_SUMMARY
-WHERE start_time >= DATEADD(day, -1, SYSDATE)
+WHERE starttime >= DATEADD(day, -1, SYSDATE)
 ORDER BY s3_scanned_bytes DESC
 LIMIT 20;
 

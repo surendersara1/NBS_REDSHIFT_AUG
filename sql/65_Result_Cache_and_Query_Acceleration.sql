@@ -217,27 +217,31 @@ LIMIT 20;
 -- Workload Management → Query Acceleration settings.
 
 -- Verify QA status:
+-- COLUMN NAME AND TYPE BOTH MATTER: the column is short_query_accelerated, not
+-- is_accelerated, and it is CHARACTER(10) holding 'true' / 'false' / NULL -- not a
+-- boolean. Comparing it to TRUE fails; compare to the string 'true'.
+-- It is also populated only on provisioned clusters; on Serverless it is empty.
 SELECT
     query_id,
     query_text,
-    is_accelerated,          -- TRUE = ran on QA slices
+    short_query_accelerated,     -- 'true' = ran on SQA slices
     elapsed_time / 1000.0 AS elapsed_ms,
     queue_time / 1000.0 AS queue_ms
 FROM SYS_QUERY_HISTORY
 WHERE start_time >= DATEADD(hour, -1, SYSDATE)
-  AND is_accelerated = TRUE
+  AND short_query_accelerated = 'true'
 ORDER BY start_time DESC
 LIMIT 20;
 
 -- Calculate QA savings (how much queue time QA saved):
 SELECT
-    SUM(CASE WHEN is_accelerated THEN 1 ELSE 0 END) AS accelerated_queries,
+    SUM(CASE WHEN short_query_accelerated = 'true' THEN 1 ELSE 0 END) AS accelerated_queries,
     COUNT(*) AS total_queries,
     ROUND(
-        SUM(CASE WHEN is_accelerated THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+        SUM(CASE WHEN short_query_accelerated = 'true' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
         2
     ) AS pct_accelerated,
-    SUM(CASE WHEN is_accelerated THEN elapsed_time ELSE 0 END) / 1000000.0
+    SUM(CASE WHEN short_query_accelerated = 'true' THEN elapsed_time ELSE 0 END) / 1000000.0
         AS total_accelerated_seconds
 FROM SYS_QUERY_HISTORY
 WHERE start_time >= DATEADD(hour, -24, SYSDATE)
