@@ -132,6 +132,12 @@ $$;
 /*
 WHY IT'S GOOD:
 - Granular instrumentation: Captures `v_step_start` before each phase and logs exact milliseconds.
+- USES `GETDATE()`, NOT `SYSDATE`. This is the single most important detail in this module.
+  A procedure body runs inside ONE transaction, and `SYSDATE` returns the start time of the
+  *transaction*, not of the current statement -- so every `SYSDATE` in this procedure would
+  return the identical value and every `duration_ms` would be logged as 0. `GETDATE()`
+  returns the start of the current *statement* even inside a transaction block, which is
+  what makes per-step timing possible at all.
 - `GET DIAGNOSTICS ... ROW_COUNT`: Extracts exact database modifications per operation (Practice 97).
 - Persistent audit tracking: Logs each step directly into `etl_audit_log` (Practice 98, 99).
 - Collocated `USING` join for DELETE: Eliminates `IN (SELECT ...)` subplan materialization.
@@ -151,7 +157,7 @@ BEGIN
     -- STEP 1: Collocated DELETE of existing keys
     -- -------------------------------------------------------------------------------
     v_step_name  := '1. Delete matched customer records';
-    v_step_start := SYSDATE;
+    v_step_start := GETDATE();
     
     DELETE FROM dim_customer
     USING source_customer_updates s
@@ -160,13 +166,13 @@ BEGIN
     GET DIAGNOSTICS v_rows_affected = ROW_COUNT;
     
     INSERT INTO etl_audit_log (procedure_name, step_name, batch_window, start_time, end_time, duration_ms, rows_affected, status)
-    VALUES (v_proc_name, v_step_name, p_batch_window, v_step_start, SYSDATE, DATEDIFF(ms, v_step_start, SYSDATE), v_rows_affected, 'SUCCESS');
+    VALUES (v_proc_name, v_step_name, p_batch_window, v_step_start, GETDATE(), DATEDIFF(ms, v_step_start, GETDATE()), v_rows_affected, 'SUCCESS');
 
     -- -------------------------------------------------------------------------------
     -- STEP 2: Set-based INSERT of new records
     -- -------------------------------------------------------------------------------
     v_step_name  := '2. Bulk insert updated customer records';
-    v_step_start := SYSDATE;
+    v_step_start := GETDATE();
     
     INSERT INTO dim_customer (customer_id, customer_name, segment, status, updated_at)
     SELECT customer_id, customer_name, segment, status, updated_at
@@ -175,18 +181,18 @@ BEGIN
     GET DIAGNOSTICS v_rows_affected = ROW_COUNT;
     
     INSERT INTO etl_audit_log (procedure_name, step_name, batch_window, start_time, end_time, duration_ms, rows_affected, status)
-    VALUES (v_proc_name, v_step_name, p_batch_window, v_step_start, SYSDATE, DATEDIFF(ms, v_step_start, SYSDATE), v_rows_affected, 'SUCCESS');
+    VALUES (v_proc_name, v_step_name, p_batch_window, v_step_start, GETDATE(), DATEDIFF(ms, v_step_start, GETDATE()), v_rows_affected, 'SUCCESS');
 
     -- -------------------------------------------------------------------------------
     -- STEP 3: Refresh statistics after material modification (Practice 62)
     -- -------------------------------------------------------------------------------
     v_step_name  := '3. Analyze target table';
-    v_step_start := SYSDATE;
+    v_step_start := GETDATE();
     
     ANALYZE dim_customer;
     
     INSERT INTO etl_audit_log (procedure_name, step_name, batch_window, start_time, end_time, duration_ms, rows_affected, status)
-    VALUES (v_proc_name, v_step_name, p_batch_window, v_step_start, SYSDATE, DATEDIFF(ms, v_step_start, SYSDATE), 0, 'SUCCESS');
+    VALUES (v_proc_name, v_step_name, p_batch_window, v_step_start, GETDATE(), DATEDIFF(ms, v_step_start, GETDATE()), 0, 'SUCCESS');
 
 EXCEPTION WHEN OTHERS THEN
     v_err_msg := SUBSTRING(SQLERRM, 1, 990);

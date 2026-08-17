@@ -37,8 +37,13 @@ ANALYZE demo_orders_dates;
 -- ===================================================================================
 
 -- 1. SYSDATE vs GETDATE() vs NOW()
--- SYSDATE returns statement start time (UTC, no parentheses).
--- NOW() returns transaction start time.
+-- This is the opposite of what most developers assume, so read it twice:
+--   SYSDATE   -> start of the current TRANSACTION (UTC, no parentheses).
+--   NOW()     -> start of the current TRANSACTION (same instant as SYSDATE).
+--   GETDATE() -> start of the current STATEMENT, even inside a transaction block.
+-- CONSEQUENCE: a stored procedure body is ONE transaction, so SYSDATE is frozen for the
+-- whole procedure. Timing steps with SYSDATE records every duration as 0. Use GETDATE()
+-- for any elapsed-time measurement. See module 20.
 SELECT SYSDATE AS stmt_time_utc, GETDATE() AS getdate_utc, NOW() AS txn_start_time;
 
 -- 2. DATEADD (Adding intervals to timestamps)

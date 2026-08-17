@@ -89,26 +89,26 @@ BEGIN
         WHERE is_active = TRUE 
         ORDER BY run_order ASC
     ) LOOP
-        v_stage_start := SYSDATE;
+        v_stage_start := GETDATE();
         RAISE INFO 'Executing Stage [%]: % ...', rec.stage_name, rec.procedure_call;
 
         BEGIN
             -- Dynamically invoke the child procedure
             EXECUTE rec.procedure_call;
             
-            v_stage_duration := DATEDIFF(second, v_stage_start, SYSDATE);
+            v_stage_duration := DATEDIFF(second, v_stage_start, GETDATE());
             
             INSERT INTO audit_pipeline_executions (
                 pipeline_name, stage_name, start_time, end_time, duration_seconds, status
             ) VALUES (
-                p_pipeline_name, rec.stage_name, v_stage_start, SYSDATE, v_stage_duration, 'SUCCESS'
+                p_pipeline_name, rec.stage_name, v_stage_start, GETDATE(), v_stage_duration, 'SUCCESS'
             );
             
             RAISE INFO 'Stage [%] completed in % seconds.', rec.stage_name, v_stage_duration;
 
         EXCEPTION WHEN OTHERS THEN
             v_err_msg := SUBSTRING(SQLERRM, 1, 950);
-            v_stage_duration := DATEDIFF(second, v_stage_start, SYSDATE);
+            v_stage_duration := DATEDIFF(second, v_stage_start, GETDATE());
 
             -- Actually record the failure. On entering an exception block Redshift rolls
             -- back the current transaction and starts a NEW one for the handler, commits
@@ -118,7 +118,7 @@ BEGIN
             INSERT INTO audit_pipeline_executions (
                 pipeline_name, stage_name, start_time, end_time, duration_seconds, status, error_message
             ) VALUES (
-                p_pipeline_name, rec.stage_name, v_stage_start, SYSDATE, v_stage_duration, 'FAILED', v_err_msg
+                p_pipeline_name, rec.stage_name, v_stage_start, GETDATE(), v_stage_duration, 'FAILED', v_err_msg
             );
 
             -- Abort the orchestrator immediately to protect downstream data:

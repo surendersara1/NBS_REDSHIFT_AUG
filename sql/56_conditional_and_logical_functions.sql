@@ -82,8 +82,13 @@ SELECT GREATEST(100, 250, 85, 420) AS max_metric;
 -- 9. LEAST (Returning smallest value across multiple columns)
 SELECT LEAST(100, 250, 85, 420) AS min_metric;
 
--- 10. IFF (Single-line ternary condition: IFF(condition, true_val, false_val))
-SELECT id, annual_spend, IFF(annual_spend > 50000, 'HIGH_VALUE', 'STANDARD') AS tier_flag FROM demo_conditional_eval;
+-- 10. Single-line ternary — NOTE: Redshift has NO IFF (Snowflake) or IIF (SQL Server).
+-- Its conditional expressions are exactly: CASE, DECODE, GREATEST/LEAST, NVL/COALESCE,
+-- NVL2 and NULLIF. A compact CASE is the portable ternary; DECODE covers equality-only
+-- tests but cannot express the range comparison below.
+SELECT id, annual_spend,
+       CASE WHEN annual_spend > 50000 THEN 'HIGH_VALUE' ELSE 'STANDARD' END AS tier_flag
+FROM demo_conditional_eval;
 
 -- 11. Short-Circuiting Boolean Logic (AND evaluation order safety)
 SELECT id, annual_spend,

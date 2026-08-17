@@ -230,7 +230,9 @@ Because our tables are distributed by `user_id` (DISTSTYLE KEY), and practically
 OLAP function above uses `PARTITION BY user_id`, Redshift does not need to shuffle 
 any data across the network to compute the window frames. 
 This is called "Collocated Windowing" and it is the secret to scaling to petabytes. 
-If we partitioned by a column that wasn't the distkey, Redshift would throw a `DS_DIST_BOTH` 
-and the query would fail under petabyte loads.
+If we partitioned by a column that wasn't the distkey, the plan would show `DS_DIST_BOTH`:
+Redshift would redistribute both inputs across the network before it could build the window
+frames. That is a plan annotation, not an error -- the query still returns correct results,
+it just pays a full network shuffle, which is what makes it untenable at petabyte scale.
 --------------------------------------------------------------------------------------
 */

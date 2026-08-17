@@ -107,7 +107,7 @@ DECLARE
     v_rows_inserted BIGINT := 0;
     v_err_msg       VARCHAR(1000);
 BEGIN
-    v_proc_start := SYSDATE;
+    v_proc_start := GETDATE();
     RAISE INFO '[%] Starting master billing pipeline for batch date: % ...', v_proc_name, p_process_date;
 
     -- ===============================================================================
@@ -124,7 +124,7 @@ BEGIN
     -- ===============================================================================
     -- PHASE 2: PRIVATE STAGING WITH COLLOCATED DISTKEY & STATS (Practices 26, 29, 79)
     -- ===============================================================================
-    v_step_start := SYSDATE;
+    v_step_start := GETDATE();
     
     -- Redshift has no ON COMMIT clause and its temp tables are session-scoped, so an
     -- explicit drop is what makes this procedure safely re-runnable (Practice 26, 45).
@@ -149,12 +149,12 @@ BEGIN
 
     -- Refresh statistics on temp table immediately before join/merge (Practice 62, 79):
     ANALYZE #stg_billing_validated;
-    RAISE INFO 'Staging complete in % ms.', DATEDIFF(ms, v_step_start, SYSDATE);
+    RAISE INFO 'Staging complete in % ms.', DATEDIFF(ms, v_step_start, GETDATE());
 
     -- ===============================================================================
     -- PHASE 3: IDEMPOTENCY & SET-BASED LOAD (Practices 27, 42, 44)
     -- ===============================================================================
-    v_step_start := SYSDATE;
+    v_step_start := GETDATE();
 
     -- Step A: Range-restricted watermark purge (Zone Maps skip non-matching blocks)
     DELETE FROM fct_billing_settlement
@@ -165,12 +165,12 @@ BEGIN
     INSERT INTO fct_billing_settlement (
         invoice_id, account_id, billing_date, amount, currency, payment_status, loaded_at
     )
-    SELECT invoice_id, account_id, billing_date, amount, currency, payment_status, SYSDATE
+    SELECT invoice_id, account_id, billing_date, amount, currency, payment_status, GETDATE()
     FROM #stg_billing_validated;
     GET DIAGNOSTICS v_rows_inserted = ROW_COUNT;
 
     RAISE INFO 'DML complete in % ms: % deleted, % inserted.', 
-        DATEDIFF(ms, v_step_start, SYSDATE), v_rows_deleted, v_rows_inserted;
+        DATEDIFF(ms, v_step_start, GETDATE()), v_rows_deleted, v_rows_inserted;
 
     -- ===============================================================================
     -- PHASE 4: TARGET STATISTICS REFRESH (Practice 62)
@@ -183,11 +183,11 @@ BEGIN
     INSERT INTO master_pipeline_audit (
         procedure_name, batch_date, start_time, end_time, duration_ms, rows_deleted, rows_inserted, status
     ) VALUES (
-        v_proc_name, p_process_date, v_proc_start, SYSDATE, DATEDIFF(ms, v_proc_start, SYSDATE), 
+        v_proc_name, p_process_date, v_proc_start, GETDATE(), DATEDIFF(ms, v_proc_start, GETDATE()), 
         v_rows_deleted, v_rows_inserted, 'SUCCESS'
     );
 
-    RAISE INFO '[%] Finished successfully in % ms.', v_proc_name, DATEDIFF(ms, v_proc_start, SYSDATE);
+    RAISE INFO '[%] Finished successfully in % ms.', v_proc_name, DATEDIFF(ms, v_proc_start, GETDATE());
 
 EXCEPTION WHEN OTHERS THEN
     v_err_msg := SUBSTRING(SQLERRM, 1, 950);
@@ -212,7 +212,7 @@ $$;
 -- (d) Explain Plan: Collocated Insert with Zero Network Movement (DS_DIST_NONE):
 EXPLAIN
 INSERT INTO fct_billing_settlement (invoice_id, account_id, billing_date, amount, currency, payment_status, loaded_at)
-SELECT invoice_id, account_id, billing_date, amount, currency, payment_status, SYSDATE
+SELECT invoice_id, account_id, billing_date, amount, currency, payment_status, GETDATE()
 FROM raw_billing_landing
 WHERE billing_date = '2026-08-15'::DATE;
 

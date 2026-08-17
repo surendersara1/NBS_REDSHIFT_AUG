@@ -32,7 +32,10 @@ CONS: Consumes physical storage, backups cost money.
 */
 CREATE TABLE IF NOT EXISTS gold_sales_fct (
     sale_id BIGINT,
-    amount DECIMAL(10,2)
+    amount DECIMAL(10,2),
+    -- event_timestamp and region are required by the materialized view in section 6.
+    event_timestamp TIMESTAMP,
+    region VARCHAR(50)
 )
 DISTSTYLE KEY DISTKEY (sale_id)
 SORTKEY (sale_id);
@@ -66,14 +69,22 @@ CONS: App developers assume they evaporate after the procedure ends. THEY DO NOT
       They evaporate when the *connection* closes. If you use a connection pool, 
       they live forever and bloat the cluster.
 */
--- The Standard Temp Table (lives until connection closes)
+-- The Standard Temp Table (lives until the connection closes)
 CREATE TEMP TABLE #temp_raw_data (id INT);
 
--- The Optimized Temp Table (evaporates instantly at the end of the transaction)
--- USE THIS 99% OF THE TIME IN STORED PROCEDURES.
+-- IMPORTANT: Redshift has NO "ON COMMIT" clause. PostgreSQL offers
+-- ON COMMIT DROP / DELETE ROWS / PRESERVE ROWS; Redshift's CREATE TABLE and
+-- CREATE TABLE AS grammars accept none of them, so `ON COMMIT DROP` is a syntax
+-- error rather than a no-op. Session scope is the ONLY scope available.
+-- The managed pattern in a stored procedure is therefore an explicit drop at both
+-- ends -- on the way in so the procedure is re-runnable, on the way out so the
+-- table does not outlive the call on a pooled connection.
+DROP TABLE IF EXISTS #temp_safe_data;
 CREATE TEMP TABLE #temp_safe_data (
     id INT
-) ON COMMIT DROP;
+);
+-- ... procedure body uses #temp_safe_data ...
+DROP TABLE IF EXISTS #temp_safe_data;
 
 
 -- ===================================================================================
@@ -160,7 +171,8 @@ GROUP BY 1, 2;
 /*
 1. Is it the final Gold layer? -> STANDARD PERMANENT TABLE.
 2. Is it a massive Staging table? -> PERMANENT TABLE with BACKUP NO.
-3. Is it intermediate processing in a procedure? -> TEMP TABLE ... ON COMMIT DROP.
+3. Is it intermediate processing in a procedure? -> TEMP TABLE, dropped explicitly
+   at both ends of the procedure (Redshift has no ON COMMIT clause).
 4. Is it a Petabyte of cold historical data? -> EXTERNAL TABLE (Spectrum).
 5. Are you building a BI layer to hide column names? -> LATE BINDING VIEW.
 6. Is it a heavy aggregation queried constantly? -> MATERIALIZED VIEW.
