@@ -82,10 +82,11 @@ THE METHOD (EVERY TIME, WITHOUT EXCEPTION):
 ======================================================================================
 */
 
--- The lab schema is not created anywhere else in this repo; these modules are the
--- only users of it. Without this line every lab.* reference below fails with
--- "schema "lab" does not exist".
+-- These schemas are referenced throughout this module but are not created by
+-- sql/01 (staging, analytics, admin) or sql/07 (rpt). Without these lines every
+-- qualified reference below fails with 'schema does not exist'.
 CREATE SCHEMA IF NOT EXISTS lab;
+
 
 -- ============================================================================
 -- LAB SETUP: CREATE THE "SLOW" PROCEDURE AND SEED DATA

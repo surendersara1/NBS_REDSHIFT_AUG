@@ -52,6 +52,12 @@ ARCHITECTURE:
 ======================================================================================
 */
 
+-- These schemas are referenced throughout this module but are not created by
+-- sql/01 (staging, analytics, admin) or sql/07 (rpt). Without these lines every
+-- qualified reference below fails with 'schema does not exist'.
+CREATE SCHEMA IF NOT EXISTS gold;
+CREATE SCHEMA IF NOT EXISTS etl;
+
 -- ============================================================================
 -- SECTION 1: DATA SETUP — SOURCE AND DIMENSION TABLES
 -- ============================================================================
@@ -105,7 +111,15 @@ AS $$
 DECLARE
     v_merged INT;
 BEGIN
-    MERGE INTO gold.dim_customer_type1 AS tgt
+    -- REDSHIFT MERGE GRAMMAR (verbatim from the docs):
+    --   MERGE INTO target_table USING source_table [ [AS] alias ] ON match_condition
+    --   [ WHEN MATCHED THEN { UPDATE SET ... | DELETE }
+    --     WHEN NOT MATCHED THEN INSERT ... | REMOVE DUPLICATES ]
+    -- Note what is NOT there: no alias on the TARGET, and no
+    -- "WHEN MATCHED AND <condition>". Both are syntax errors in Redshift.
+    -- For Type 1 the extra condition was only an optimisation -- overwriting an
+    -- unchanged row with identical values is a no-op -- so it is simply dropped.
+    MERGE INTO gold.dim_customer_type1
     USING (
         -- Deduplicate: take the latest record per customer
         SELECT customer_id, customer_name, email, city, state_code,
@@ -118,14 +132,9 @@ BEGIN
         )
         WHERE rn = 1
     ) AS src
-    ON tgt.customer_id = src.customer_id
+    ON gold.dim_customer_type1.customer_id = src.customer_id
 
-    WHEN MATCHED AND (
-        tgt.customer_name   <> src.customer_name OR
-        tgt.email           <> src.email OR
-        tgt.city            <> src.city OR
-        tgt.membership_tier <> src.membership_tier
-    ) THEN UPDATE SET
+    WHEN MATCHED THEN UPDATE SET
         customer_name   = src.customer_name,
         email           = src.email,
         city            = src.city,
@@ -180,7 +189,11 @@ DECLARE
     v_expired INT;
     v_inserted INT;
 BEGIN
-    -- Step 1: Identify changed records using hash comparison
+    -- Step 1: Identify changed records using hash comparison.
+    -- Drop first: Redshift temp tables are session-scoped, so a previous failed run on
+    -- this connection can leave tmp_changes behind and break the CREATE.
+    DROP TABLE IF EXISTS tmp_changes;
+
     CREATE TEMP TABLE tmp_changes AS
     SELECT
         src.customer_id,
@@ -190,8 +203,12 @@ BEGIN
         src.state_code,
         src.membership_tier,
         src.source_updated,
-        CHECKSUM(src.customer_name || src.email || src.city
-                 || src.state_code || src.membership_tier) AS new_hash
+        -- NVL every part and separate with '|'. Without NVL a single NULL column makes
+        -- the whole concatenation NULL, the hash NULL, and the change undetectable.
+        -- Without the delimiter, 'AB'||'C' and 'A'||'BC' collide into the same hash.
+        CHECKSUM(NVL(src.customer_name,'') || '|' || NVL(src.email,'') || '|'
+                 || NVL(src.city,'') || '|' || NVL(src.state_code,'') || '|'
+                 || NVL(src.membership_tier,'')) AS new_hash
     FROM (
         SELECT *, ROW_NUMBER() OVER (
             PARTITION BY customer_id ORDER BY source_updated DESC
@@ -202,8 +219,9 @@ BEGIN
         ON src.customer_id = tgt.customer_id AND tgt.is_current = TRUE
     WHERE src.rn = 1
       AND (tgt.customer_key IS NULL    -- New customer
-           OR tgt.row_hash <> CHECKSUM(src.customer_name || src.email || src.city
-                                       || src.state_code || src.membership_tier));
+           OR tgt.row_hash <> CHECKSUM(NVL(src.customer_name,'') || '|' || NVL(src.email,'') || '|'
+                                       || NVL(src.city,'') || '|' || NVL(src.state_code,'') || '|'
+                                       || NVL(src.membership_tier,'')));
 
     -- Step 2: Expire existing current rows for changed customers
     UPDATE gold.dim_customer_type2
@@ -272,10 +290,33 @@ CREATE OR REPLACE PROCEDURE etl.sp_load_dim_customer_type3()
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_merged INT;
+    v_updated  INT;
+    v_inserted INT;
 BEGIN
-    MERGE INTO gold.dim_customer_type3 AS tgt
-    USING (
+    -- WHY THIS IS NOT A MERGE:
+    -- Type 3 must shift current -> previous ONLY when a tracked attribute actually
+    -- changed; shifting unconditionally would overwrite the previous value with the
+    -- current one on every run and destroy the very history the type exists to keep.
+    -- Redshift's MERGE cannot express that: there is no "WHEN MATCHED AND <condition>",
+    -- and pre-filtering the source is also ruled out because a MERGE source subquery
+    -- may not reference the target ("Source view/subquery in Merge statement cannot
+    -- reference target table"). The correct Redshift form is a conditional UPDATE
+    -- followed by an INSERT for customers not yet present.
+
+    -- Step 1: shift current -> previous, for genuinely changed customers only.
+    UPDATE gold.dim_customer_type3
+    SET city_previous  = gold.dim_customer_type3.city_current,
+        state_previous = gold.dim_customer_type3.state_current,
+        tier_previous  = gold.dim_customer_type3.tier_current,
+        previous_since = gold.dim_customer_type3.current_since,
+        city_current   = src.city,
+        state_current  = src.state_code,
+        tier_current   = src.membership_tier,
+        current_since  = src.source_updated,
+        customer_name  = src.customer_name,
+        email          = src.email,
+        updated_at     = GETDATE()
+    FROM (
         SELECT customer_id, customer_name, email, city, state_code,
                membership_tier, source_updated
         FROM (
@@ -284,41 +325,44 @@ BEGIN
             ) AS rn
             FROM staging.stg_customers
         ) WHERE rn = 1
-    ) AS src
-    ON tgt.customer_id = src.customer_id
+    ) src
+    WHERE gold.dim_customer_type3.customer_id = src.customer_id
+      -- NVL guards both sides: a plain <> against a NULL yields UNKNOWN, which would
+      -- silently skip the change for any customer with a NULL city or tier.
+      AND (NVL(gold.dim_customer_type3.city_current, '~') <> NVL(src.city, '~')
+        OR NVL(gold.dim_customer_type3.tier_current, '~') <> NVL(src.membership_tier, '~'));
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
 
-    WHEN MATCHED AND (
-        tgt.city_current    <> src.city OR
-        tgt.tier_current    <> src.membership_tier
-    ) THEN UPDATE SET
-        -- Shift current → previous
-        city_previous   = tgt.city_current,
-        state_previous  = tgt.state_current,
-        tier_previous   = tgt.tier_current,
-        previous_since  = tgt.current_since,
-        -- Set new current values
-        city_current    = src.city,
-        state_current   = src.state_code,
-        tier_current    = src.membership_tier,
-        current_since   = src.source_updated,
-        customer_name   = src.customer_name,
-        email           = src.email,
-        updated_at      = SYSDATE
-
-    WHEN NOT MATCHED THEN INSERT (
+    -- Step 2: brand-new customers, which have no previous value yet.
+    INSERT INTO gold.dim_customer_type3 (
         customer_id, customer_name, email,
         city_current, state_current, tier_current,
         city_previous, state_previous, tier_previous,
         current_since, previous_since, updated_at
-    ) VALUES (
+    )
+    SELECT
         src.customer_id, src.customer_name, src.email,
         src.city, src.state_code, src.membership_tier,
         NULL, NULL, NULL,
-        src.source_updated, NULL, SYSDATE
+        src.source_updated, NULL, GETDATE()
+    FROM (
+        SELECT customer_id, customer_name, email, city, state_code,
+               membership_tier, source_updated
+        FROM (
+            SELECT *, ROW_NUMBER() OVER (
+                PARTITION BY customer_id ORDER BY source_updated DESC
+            ) AS rn
+            FROM staging.stg_customers
+        ) WHERE rn = 1
+    ) src
+    WHERE NOT EXISTS (
+        SELECT 1 FROM gold.dim_customer_type3 t
+        WHERE t.customer_id = src.customer_id
     );
+    GET DIAGNOSTICS v_inserted = ROW_COUNT;
 
-    GET DIAGNOSTICS v_merged = ROW_COUNT;
-    RAISE INFO 'SCD Type 3: Merged % rows.', v_merged;
+    RAISE INFO 'SCD Type 3: % customers shifted, % new customers inserted.',
+               v_updated, v_inserted;
 END;
 $$;
 

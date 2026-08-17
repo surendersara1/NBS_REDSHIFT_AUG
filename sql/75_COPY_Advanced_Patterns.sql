@@ -60,6 +60,12 @@ ARCHITECTURE:
 ======================================================================================
 */
 
+-- These schemas are referenced throughout this module but are not created by
+-- sql/01 (staging, analytics, admin) or sql/07 (rpt). Without these lines every
+-- qualified reference below fails with 'schema does not exist'.
+CREATE SCHEMA IF NOT EXISTS gold;
+CREATE SCHEMA IF NOT EXISTS etl;
+
 -- ============================================================================
 -- SECTION 1: COPY FROM PARQUET (THE GOLD STANDARD)
 -- ============================================================================
