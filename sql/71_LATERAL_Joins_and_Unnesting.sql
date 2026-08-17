@@ -44,6 +44,11 @@ ARCHITECTURE:
 ======================================================================================
 */
 
+-- The lab schema is not created anywhere else in this repo; these modules are the
+-- only users of it. Without this line every lab.* reference below fails with
+-- "schema "lab" does not exist".
+CREATE SCHEMA IF NOT EXISTS lab;
+
 -- ============================================================================
 -- SECTION 1: DATA GENERATION
 -- ============================================================================

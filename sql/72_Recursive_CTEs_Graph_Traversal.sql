@@ -62,6 +62,11 @@ ARCHITECTURE:
 ======================================================================================
 */
 
+-- The lab schema is not created anywhere else in this repo; these modules are the
+-- only users of it. Without this line every lab.* reference below fails with
+-- "schema "lab" does not exist".
+CREATE SCHEMA IF NOT EXISTS lab;
+
 -- ============================================================================
 -- SECTION 1: DATA GENERATION — ORG CHART HIERARCHY
 -- ============================================================================
@@ -164,7 +169,10 @@ WITH RECURSIVE reporting_chain AS (
         mgr.title,
         mgr.manager_id,
         rc.level + 1,
-        rc.chain || ' → ' || mgr.employee_name
+        -- Cast the recursive member to the SAME width as the anchor. Redshift matches
+        -- the two members' column types positionally, and an uncast concatenation
+        -- widens to a different VARCHAR length than the anchor's VARCHAR(2000).
+        (rc.chain || ' → ' || mgr.employee_name)::VARCHAR(2000)
     FROM lab.employees mgr
     JOIN reporting_chain rc ON mgr.employee_id = rc.manager_id
 )
@@ -299,7 +307,7 @@ WITH RECURSIVE bom_explosion AS (
         unit_cost,
         1 AS level,
         quantity AS total_qty,
-        'BIKE-001' || ' → ' || child_part_id AS path
+        ('BIKE-001' || ' → ' || child_part_id)::VARCHAR(2000) AS path
     FROM lab.bom
     WHERE parent_part_id = 'BIKE-001'
 
@@ -313,7 +321,7 @@ WITH RECURSIVE bom_explosion AS (
         b.unit_cost,
         be.level + 1,
         be.total_qty * b.quantity AS total_qty,
-        be.path || ' → ' || b.child_part_id
+        (be.path || ' → ' || b.child_part_id)::VARCHAR(2000)
     FROM lab.bom b
     JOIN bom_explosion be ON b.parent_part_id = be.child_part_id
 )

@@ -4,7 +4,7 @@ MODULE 60: ENTERPRISE HYBRID STORAGE ARCHITECTURE & LAKEHOUSE DEEP DIVE
 ======================================================================================
 MAPPED BEST PRACTICES (from PROCEDURE_OPTIMIZATION_BEST_PRACTICES_MASTER_FILE.md):
 - Practice 8: SORT KEY -> ZONE MAPS skips blocks (1MB immutable block mechanics in RMS).
-- Practice 26, 79: Staging in collocated #TEMP tables with ON COMMIT DROP and ANALYZE.
+- Practice 26, 79: Staging in collocated #TEMP tables with an explicit DROP and ANALYZE.
 - Practice 29: Collocated Distribution Keys (DISTSTYLE KEY) across fact and staging.
 - Practice 42: Complete Idempotency & Zero-Downtime Partition Swaps.
 - Practice 44: High-Performance MERGE vs ALTER TABLE APPEND pointer swapping.
