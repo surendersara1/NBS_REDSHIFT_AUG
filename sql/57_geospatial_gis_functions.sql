@@ -27,15 +27,17 @@ CREATE TABLE demo_spatial_stores (
 );
 
 INSERT INTO demo_spatial_stores (store_id, store_name, latitude, longitude, geom, geog) VALUES 
-(1, 'Downtown NYC Flagship', 40.7128, -74.0060, 
-    ST_Point(-74.0060, 40.7128), 
-    ST_MakePoint(-74.0060, 40.7128)::GEOGRAPHY),
-(2, 'Brooklyn Store', 40.6782, -73.9442, 
-    ST_Point(-73.9442, 40.6782), 
-    ST_MakePoint(-73.9442, 40.6782)::GEOGRAPHY),
-(3, 'Los Angeles Outlet', 34.0522, -118.2437, 
-    ST_Point(-118.2437, 34.0522), 
-    ST_MakePoint(-118.2437, 34.0522)::GEOGRAPHY);
+-- GEOGRAPHY values are built with the documented constructor ST_GeogFromText rather
+-- than by casting a GEOMETRY, which is not a documented conversion.
+(1, 'Downtown NYC Flagship', 40.7128, -74.0060,
+    ST_Point(-74.0060, 40.7128),
+    ST_GeogFromText('POINT(-74.0060 40.7128)')),
+(2, 'Brooklyn Store', 40.6782, -73.9442,
+    ST_Point(-73.9442, 40.6782),
+    ST_GeogFromText('POINT(-73.9442 40.6782)')),
+(3, 'Los Angeles Outlet', 34.0522, -118.2437,
+    ST_Point(-118.2437, 34.0522),
+    ST_GeogFromText('POINT(-118.2437 34.0522)'));
 
 ANALYZE demo_spatial_stores;
 
@@ -119,15 +121,25 @@ SELECT store_id, ST_SRID(ST_SetSRID(geom, 4326)) AS srid_code FROM demo_spatial_
 SELECT ST_IsValid(ST_GeomFromText('POLYGON((0 0, 2 2, 0 2, 2 0, 0 0))')) AS is_bowtie_polygon_valid;
 
 -- 19. ST_DWithin (Testing if two geometries are within a radius threshold)
+-- TWO TRAPS HERE, both easy to get wrong:
+--   (a) ST_DWithin takes GEOMETRY. It is NOT one of the functions AWS lists as accepting
+--       GEOGRAPHY, so passing the geog column is wrong.
+--   (b) It measures EUCLIDEAN distance in the units of the coordinate system. For
+--       lon/lat that is DEGREES, not metres -- so a threshold of 50000 is meaningless.
+-- For a genuine metre-based radius on Earth, compare ST_DistanceSphere instead.
 SELECT a.store_name AS store_a, b.store_name AS store_b,
-       ST_DWithin(a.geog, b.geog, 50000) AS within_50km_threshold
+       ST_DistanceSphere(a.geom, b.geom) <= 50000 AS within_50km_threshold,
+       ST_DWithin(a.geom, b.geom, 0.5)             AS within_half_a_degree
 FROM demo_spatial_stores a, demo_spatial_stores b
 WHERE a.store_id = 1 AND b.store_id = 2;
 
 -- 20. K-Nearest Neighbors (KNN) Spatial Proximity Search
 -- Find closest store to customer location (-73.9851, 40.7488 — Empire State Bldg):
+-- NOTE: Redshift has NO PostGIS "<->" nearest-neighbour operator. That operator exists
+-- in PostGIS to exploit a GiST index, and Redshift has no indexes at all. Order by the
+-- distance function directly -- identical result, and the only supported form.
 SELECT store_id, store_name,
        ROUND(ST_DistanceSphere(geom, ST_Point(-73.9851, 40.7488)), 2) AS distance_meters
 FROM demo_spatial_stores
-ORDER BY geom <-> ST_Point(-73.9851, 40.7488)
+ORDER BY ST_DistanceSphere(geom, ST_Point(-73.9851, 40.7488)) ASC
 LIMIT 1;

@@ -50,14 +50,21 @@ SELECT user_id, SHA2(email, 256) AS sha256_hash FROM demo_crypto_users;
 -- 4. SHA2-512 (512-bit military-grade secure hash)
 SELECT user_id, SHA2(ssn, 512) AS sha512_hash FROM demo_crypto_users;
 
--- 5. CHECKSUM (Fast 64-bit integer hash code — ideal for numeric partition distribution)
+-- 5. CHECKSUM (Fast INTEGER hash code — ideal for numeric partition distribution)
 SELECT user_id, CHECKSUM(email) AS numeric_hash_code FROM demo_crypto_users;
 
--- 6. FNVD32_1 & FNVD64_1 (Fowler-Noll-Vo 32-bit and 64-bit non-cryptographic hash)
-SELECT user_id, FNVD32_1(email) AS fnv32_hash, FNVD64_1(email) AS fnv64_hash FROM demo_crypto_users;
+-- 6. FNV_HASH (Fowler-Noll-Vo 64-bit non-cryptographic hash)
+-- NAME MATTERS: the function is FNV_HASH. There is no FNVD32_1 or FNVD64_1 in Redshift.
+-- The optional second argument is a SEED, which is how you fold several columns into a
+-- single hash without concatenating them into a string first.
+SELECT user_id,
+       FNV_HASH(email)                        AS fnv_hash,
+       FNV_HASH(last_name, FNV_HASH(first_name)) AS fnv_combined_name_hash
+FROM demo_crypto_users;
 
--- 7. MURMUR3_32 & MURMUR3_128 (High-performance Murmur3 hashing for distributed bucketing)
-SELECT user_id, MURMUR3_32(user_id::VARCHAR) AS murmur32_code FROM demo_crypto_users;
+-- 7. MURMUR3_32_HASH (High-performance Murmur3 hashing for distributed bucketing)
+-- NAME MATTERS: the function is MURMUR3_32_HASH. There is no MURMUR3_32 or MURMUR3_128.
+SELECT user_id, MURMUR3_32_HASH(user_id::VARCHAR) AS murmur32_code FROM demo_crypto_users;
 
 -- 8. Salted Hashing for Identity Matching (Preventing rainbow table attacks)
 SELECT user_id, SHA2('NBS_STATIC_SALT_2026_' || LOWER(TRIM(email)), 256) AS salted_identity_token FROM demo_crypto_users;

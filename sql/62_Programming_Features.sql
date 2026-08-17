@@ -59,7 +59,7 @@ THE TOP 30 REDSHIFT PROGRAMMING & PROCEDURAL FEATURES AT A GLANCE
 │    25. Security Privilege Execution Contexts (`SECURITY INVOKER` vs `SECURITY DEFINER`)                    │
 │    26. Stored Procedure Nesting and Call Chaining                                                           │
 │    27. Session-Scoped Variables & Context Settings (`SET session.key` & `current_setting()`)                │
-│    28. Stored Procedure Temporary Table Lifecycles (`#temp_table`, `ON COMMIT DROP`)                        │
+│    28. Stored Procedure Temporary Table Lifecycles (`#temp_table`, explicit `DROP`)                         │
 │    29. SQL Scalar User-Defined Functions (`CREATE FUNCTION ... LANGUAGE sql`)                              │
 │    30. Python Vectorized User-Defined Functions (`CREATE FUNCTION ... LANGUAGE plpythonu`)                  │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -285,7 +285,11 @@ BEGIN
     v_safe_status := QUOTE_LITERAL(p_status_filter);
 
     -- Feature 13: Dynamic SQL Execution (EXECUTE)
-    v_sql := 'CREATE TEMP TABLE #temp_dynamic_summary ON COMMIT DROP AS ' ||
+    -- Redshift accepts no ON COMMIT clause in either CREATE TABLE or CREATE TABLE AS,
+    -- and temp tables are session-scoped, so drop explicitly to stay re-runnable.
+    DROP TABLE IF EXISTS #temp_dynamic_summary;
+
+    v_sql := 'CREATE TEMP TABLE #temp_dynamic_summary AS ' ||
              'SELECT order_status, SUM(order_amount) as total_amt ' ||
              'FROM ' || v_safe_schema || '.dev_customer_orders ' ||
              'WHERE order_status = ' || v_safe_status || ' ' ||

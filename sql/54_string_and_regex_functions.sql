@@ -65,7 +65,9 @@ SELECT id, description, REGEXP_INSTR(description, 'status [A-Z_]+') AS status_po
 SELECT id, url_path, REGEXP_COUNT(url_path, '/') AS slash_count FROM demo_raw_text;
 
 -- 9. SUBSTRING / SUBSTR (Extracting substrings by index and length)
-SELECT id, SUBSTRING(clean_email, 1, 4) FROM (SELECT LOWER(raw_email) AS clean_email FROM demo_raw_text);
+-- The inner query must project id as well, or the outer reference to it is unresolved.
+SELECT id, SUBSTRING(clean_email, 1, 4) AS email_prefix
+FROM (SELECT id, LOWER(raw_email) AS clean_email FROM demo_raw_text);
 
 -- 10. POSITION / STRPOS (Finding literal substring positions)
 SELECT id, url_path, POSITION('?' IN url_path) AS query_param_pos FROM demo_raw_text;
