@@ -175,6 +175,9 @@ WHERE  o.status = 'COMPLETED'
 GROUP  BY 1, 2, 3, 4, 5
 WITH NO SCHEMA BINDING;
 
+SELECT * FROM rpt.v_sales_by_month;
+
+
 -- (b) Materialized view for the dashboard tile that loads on every page.
 --     Same data, stored. Read it when latency matters more than freshness.
 DROP MATERIALIZED VIEW IF EXISTS rpt.mv_exec_dashboard;
