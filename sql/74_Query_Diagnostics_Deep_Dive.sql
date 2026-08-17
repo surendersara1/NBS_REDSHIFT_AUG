@@ -183,24 +183,33 @@ LIMIT 30;
 -- ============================================================================
 -- IMPLEMENTS: Best Practice #38
 
--- Get per-segment execution breakdown for a specific query:
+-- Get the metrics breakdown for a specific query.
+-- READ THE SHAPE OF THIS VIEW CAREFULLY:
+--   • SVL_QUERY_METRICS_SUMMARY is ONE ROW PER QUERY, not one row per segment. There
+--     is no "segment" or "step_type" column to group by.
+--   • Its times are already in SECONDS. Do not divide by 1,000,000 the way you would
+--     for SYS_QUERY_HISTORY, whose times are microseconds.
+--   • It has no rows / bytes / elapsed_time / is_diskbased / workmem columns. Those
+--     belong to SVL_QUERY_SUMMARY. Spill is reported here as query_temp_blocks_to_disk.
 SELECT
     query,
-    segment,
-    step_type,
-    rows,
-    bytes,
-    elapsed_time / 1000000.0            AS segment_seconds,
-    is_diskbased                        AS disk_spill,
-    workmem / (1024*1024)               AS workmem_mb
+    query_execution_time        AS exec_seconds,
+    query_queue_time            AS queue_seconds,
+    query_cpu_time              AS cpu_seconds,
+    segment_execution_time      AS slowest_segment_seconds,
+    query_blocks_read           AS blocks_read_1mb,
+    query_temp_blocks_to_disk   AS spill_mb,      -- > 0 means this query spilled
+    scan_row_count,
+    join_row_count,
+    return_row_count
 FROM SVL_QUERY_METRICS_SUMMARY
-WHERE query = 12345678                   -- Replace with your query_id
-ORDER BY elapsed_time DESC;
+WHERE query = 12345678;                  -- Replace with your query_id
 
--- The SLOWEST segment is your optimization target.
--- If disk_spill = TRUE → that step ran out of memory and wrote to disk.
+-- segment_execution_time is the slowest single segment — your optimization target.
+-- If spill_mb > 0 → the query ran out of memory and wrote intermediate results to disk.
 --   Fix: Break the query into smaller temp-table steps (Module 26)
 --        or increase WLM memory allocation.
+-- For a true per-step breakdown, use SYS_QUERY_DETAIL (segment_id, step_id, step_name).
 
 -- Get the total bytes scanned vs. returned:
 SELECT
@@ -268,7 +277,7 @@ DECLARE
     v_returned_rows BIGINT;
     v_cache_hit     BOOLEAN;
     v_alert_count   INT;
-    v_spill_count   INT;
+    v_spill_mb      BIGINT;
 BEGIN
     -- 1. Basic query info
     SELECT
@@ -301,14 +310,14 @@ BEGIN
         RAISE INFO '✅ No planner alerts.';
     END IF;
 
-    -- 3. Check for disk spill
-    SELECT COUNT(*) INTO v_spill_count
+    -- 3. Check for disk spill. SVL_QUERY_METRICS_SUMMARY has no is_diskbased column;
+    -- it reports spill volume directly as query_temp_blocks_to_disk, in MB.
+    SELECT NVL(MAX(query_temp_blocks_to_disk), 0) INTO v_spill_mb
     FROM SVL_QUERY_METRICS_SUMMARY
-    WHERE query = p_query_id
-      AND is_diskbased = 't';
+    WHERE query = p_query_id;
 
-    IF v_spill_count > 0 THEN
-        RAISE WARNING '❌ DISK SPILL detected in % segments! Query ran out of memory.', v_spill_count;
+    IF v_spill_mb > 0 THEN
+        RAISE WARNING '❌ DISK SPILL: query wrote % MB to disk! Query ran out of memory.', v_spill_mb;
         RAISE INFO 'FIX: Break into smaller temp tables or increase WLM memory.';
     ELSE
         RAISE INFO '✅ No disk spill.';
@@ -328,6 +337,9 @@ $$;
 --             #111 (Diff checksums)
 
 -- Step 1: Capture baseline BEFORE any change
+-- (drop first — Redshift temp tables are session-scoped, so re-running this template
+--  in the same connection would otherwise fail with "already exists")
+DROP TABLE IF EXISTS baseline_metrics;
 CREATE TEMP TABLE baseline_metrics AS
 SELECT
     COUNT(*)        AS row_count,
@@ -339,6 +351,7 @@ WHERE order_date >= '2026-01-01';
 -- Step 2: Make ONE optimization change (e.g., add a sort key, rewrite a join)
 
 -- Step 3: Re-run and capture AFTER metrics
+DROP TABLE IF EXISTS after_metrics;
 CREATE TEMP TABLE after_metrics AS
 SELECT
     COUNT(*)        AS row_count,

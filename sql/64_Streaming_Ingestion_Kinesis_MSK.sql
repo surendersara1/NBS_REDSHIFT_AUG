@@ -57,6 +57,7 @@ ARCHITECTURE:
 -- qualified reference below fails with 'schema does not exist'.
 CREATE SCHEMA IF NOT EXISTS gold;
 CREATE SCHEMA IF NOT EXISTS etl;
+CREATE SCHEMA IF NOT EXISTS bronze;
 
 -- ============================================================================
 -- SECTION 1: PREREQUISITES — IAM ROLE & EXTERNAL SCHEMA FROM KINESIS

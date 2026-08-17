@@ -61,6 +61,7 @@ ARCHITECTURE:
 -- sql/01 (staging, analytics, admin) or sql/07 (rpt). Without these lines every
 -- qualified reference below fails with 'schema does not exist'.
 CREATE SCHEMA IF NOT EXISTS gold;
+CREATE SCHEMA IF NOT EXISTS bi;
 
 -- ============================================================================
 -- SECTION 1: UNDERSTANDING RESULT CACHING (THE FREE PERFORMANCE TIER)

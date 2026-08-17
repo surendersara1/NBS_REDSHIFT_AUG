@@ -284,8 +284,9 @@ $$;
 
 -- Redshift also has a native MERGE statement, which is cleaner where it fits:
 --
---   MERGE INTO analytics.fct_customer_orders t
---   USING staging.orders s ON t.order_id = s.order_id
+--   (note: Redshift's MERGE takes an alias on the SOURCE only, never the target)
+--   MERGE INTO analytics.fct_customer_orders
+--   USING staging.orders s ON analytics.fct_customer_orders.order_id = s.order_id
 --   WHEN MATCHED THEN UPDATE SET quantity = s.quantity, status = s.status
 --   WHEN NOT MATCHED THEN INSERT (order_id, customer_id, quantity)
 --                         VALUES (s.order_id, s.customer_id, s.quantity);

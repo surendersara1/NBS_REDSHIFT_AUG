@@ -69,6 +69,7 @@ ARCHITECTURE:
 -- qualified reference below fails with 'schema does not exist'.
 CREATE SCHEMA IF NOT EXISTS gold;
 CREATE SCHEMA IF NOT EXISTS etl;
+CREATE SCHEMA IF NOT EXISTS silver;
 
 -- ============================================================================
 -- SECTION 1: AURORA POSTGRESQL ZERO-ETL SETUP
@@ -152,17 +153,18 @@ AS $$
 DECLARE
     v_merged INT;
 BEGIN
-    MERGE INTO gold.dim_customer AS tgt
+    -- Redshift's MERGE takes no alias on the TARGET and has no
+    -- "WHEN MATCHED AND <condition>" clause; both are syntax errors. The condition
+    -- here was only an optimisation, since rewriting a row with identical values
+    -- changes nothing, so it is dropped rather than worked around.
+    MERGE INTO gold.dim_customer
     USING (
         SELECT customer_id, customer_name, email_normalized, created_at
         FROM silver.mv_customers
         WHERE rn = 1
     ) AS src
-    ON tgt.customer_id = src.customer_id
-    WHEN MATCHED AND (
-        tgt.customer_name <> src.customer_name OR
-        tgt.email         <> src.email_normalized
-    ) THEN UPDATE SET
+    ON gold.dim_customer.customer_id = src.customer_id
+    WHEN MATCHED THEN UPDATE SET
         customer_name = src.customer_name,
         email         = src.email_normalized,
         updated_at    = SYSDATE
