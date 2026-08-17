@@ -50,8 +50,12 @@ INSERT INTO fct_merchant_payments (payment_id, merchant_id, payment_status, amou
 SELECT 
     s.n AS payment_id,
     (s.n % 1000 + 1) AS merchant_id,
-    CASE WHEN (s.n % 10) = 0 THEN 'REFUND'
-         WHEN (s.n % 20) = 0 THEN 'CHARGEBACK'
+    -- Order matters: every multiple of 20 is also a multiple of 10, so CHARGEBACK
+    -- must be tested BEFORE REFUND or it is never assigned and the chargeback
+    -- column in the report is silently always 0.00.
+    -- Resulting mix: 5% CHARGEBACK, 5% REFUND, 10% PENDING, 80% SETTLED.
+    CASE WHEN (s.n % 20) = 0 THEN 'CHARGEBACK'
+         WHEN (s.n % 10) = 0 THEN 'REFUND'
          WHEN (s.n % 5) = 0  THEN 'PENDING'
          ELSE 'SETTLED' END AS payment_status,
     (20.00 + (s.n % 200))::DECIMAL(12,2) AS amount,

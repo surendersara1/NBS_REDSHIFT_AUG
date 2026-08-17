@@ -6,7 +6,7 @@ MAPPED BEST PRACTICES (from PROCEDURE_OPTIMIZATION_BEST_PRACTICES_MASTER_FILE.md
 - Practice 11-15: Strict Input Validation & Failing Early.
 - Practice 16: Never SELECT * — select explicit typed columns.
 - Practice 18-19: Sargable half-open timestamp range filtering (preserving Zone Maps).
-- Practice 26, 79: Staging in collocated #TEMP tables with ON COMMIT DROP and explicit ANALYZE.
+- Practice 26, 79: Staging in collocated #TEMP tables with an explicit drop and ANALYZE.
 - Practice 29: Collocated Distribution Keys (DISTKEY account_id).
 - Practice 42: Complete Idempotency (Watermark purge before load).
 - Practice 62: Refreshing target statistics (ANALYZE).
@@ -126,6 +126,10 @@ BEGIN
     -- ===============================================================================
     v_step_start := SYSDATE;
     
+    -- Redshift has no ON COMMIT clause and its temp tables are session-scoped, so an
+    -- explicit drop is what makes this procedure safely re-runnable (Practice 26, 45).
+    DROP TABLE IF EXISTS #stg_billing_validated;
+
     CREATE TEMP TABLE #stg_billing_validated (
         invoice_id BIGINT NOT NULL,
         account_id BIGINT NOT NULL,
@@ -135,8 +139,7 @@ BEGIN
         payment_status VARCHAR(20) NOT NULL
     )
     DISTSTYLE KEY
-    DISTKEY (account_id) -- Collocated with target table to ensure DS_DIST_NONE!
-    ON COMMIT DROP;      -- Automatic lifecycle cleanup (Practice 26, 45)
+    DISTKEY (account_id); -- Collocated with target table to ensure DS_DIST_NONE!
 
     -- Sargable filter extraction:
     INSERT INTO #stg_billing_validated (invoice_id, account_id, billing_date, amount, currency, payment_status)
@@ -213,8 +216,12 @@ SELECT invoice_id, account_id, billing_date, amount, currency, payment_status, S
 FROM raw_billing_landing
 WHERE billing_date = '2026-08-15'::DATE;
 
--- (e) Inspect Slice-Level Parallel Execution in SYS_QUERY_DETAIL:
-SELECT query_id, slice, step_name, is_rrscan, is_diskbased, input_rows, output_rows
+-- (e) Inspect Step-Level Parallel Execution in SYS_QUERY_DETAIL:
+--     This view has no "slice" column (it is already aggregated across slices) and no
+--     "is_diskbased" column -- spill is reported as spilled_block_local_disk /
+--     spilled_block_remote_disk, and slice imbalance as data_skewness.
+SELECT query_id, segment_id, step_id, step_name, is_rrscan,
+       spilled_block_local_disk, data_skewness, input_rows, output_rows
 FROM sys_query_detail
 WHERE query_id = pg_last_query_id()
-ORDER BY slice, step_name;
+ORDER BY segment_id, step_id;

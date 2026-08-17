@@ -109,9 +109,20 @@ BEGIN
         EXCEPTION WHEN OTHERS THEN
             v_err_msg := SUBSTRING(SQLERRM, 1, 950);
             v_stage_duration := DATEDIFF(second, v_stage_start, SYSDATE);
-            
-            -- Log failure and abort orchestrator immediately to protect downstream data:
-            RAISE EXCEPTION '[ORCHESTRATOR FATAL] Pipeline [%] halted at Stage [%]: %', 
+
+            -- Actually record the failure. On entering an exception block Redshift rolls
+            -- back the current transaction and starts a NEW one for the handler, commits
+            -- it, and only then re-throws -- so this FAILED row survives the abort.
+            -- Without it, the status and error_message columns are never populated for
+            -- the one case they exist to record.
+            INSERT INTO audit_pipeline_executions (
+                pipeline_name, stage_name, start_time, end_time, duration_seconds, status, error_message
+            ) VALUES (
+                p_pipeline_name, rec.stage_name, v_stage_start, SYSDATE, v_stage_duration, 'FAILED', v_err_msg
+            );
+
+            -- Abort the orchestrator immediately to protect downstream data:
+            RAISE EXCEPTION '[ORCHESTRATOR FATAL] Pipeline [%] halted at Stage [%]: %',
                 p_pipeline_name, rec.stage_name, v_err_msg;
         END;
 

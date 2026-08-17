@@ -97,8 +97,8 @@ BEGIN
         effective_date DATE NOT NULL
     )
     DISTSTYLE KEY
-    DISTKEY (customer_id)
-    ON COMMIT DROP;
+    DISTKEY (customer_id);
+    -- Redshift accepts no ON COMMIT clause; the DROP above is what makes this re-runnable.
 
     INSERT INTO #stg_scd2_delta
     SELECT 

@@ -79,7 +79,11 @@ COMPOUND SORTKEY (user_id, sku);
 WHY IT'S SLOW:
 - Uses `JSON_EXTRACT_PATH_TEXT` on raw VARCHAR columns.
 - Re-parses the JSON string for EVERY referenced attribute.
-- Cannot dynamically unnest arbitrary-length arrays without hardcoded array indices (`[0]`, `[1]`).
+- Cannot dynamically unnest arbitrary-length arrays without hardcoded array indices.
+- Needs TWO different functions to reach one field: `JSON_EXTRACT_PATH_TEXT` walks
+  object keys only, so pulling an array element requires nesting it inside
+  `JSON_EXTRACT_ARRAY_ELEMENT_TEXT` (zero-based) and parsing the result again.
+  Adding a third line item means editing and re-deploying this SQL.
 */
 CREATE OR REPLACE PROCEDURE prc_bad_json_string_shred()
 LANGUAGE plpgsql
@@ -88,28 +92,28 @@ BEGIN
     TRUNCATE TABLE fct_purchased_items;
     
     -- Hardcoded array index extraction (Flawed if array has 3+ items!)
+    -- One UNION ALL branch per array position, because plain SQL string functions
+    -- have no way to iterate an array of unknown length.
     INSERT INTO fct_purchased_items (webhook_id, user_id, store_code, sku, unit_price, quantity, line_total)
-    SELECT 
+    WITH exploded_items AS (
+        SELECT webhook_id, payload_json,
+               JSON_EXTRACT_ARRAY_ELEMENT_TEXT(JSON_EXTRACT_PATH_TEXT(payload_json, 'items'), 0) AS item_json
+        FROM raw_webhook_landing
+        UNION ALL
+        SELECT webhook_id, payload_json,
+               JSON_EXTRACT_ARRAY_ELEMENT_TEXT(JSON_EXTRACT_PATH_TEXT(payload_json, 'items'), 1) AS item_json
+        FROM raw_webhook_landing
+    )
+    SELECT
         webhook_id,
         JSON_EXTRACT_PATH_TEXT(payload_json, 'user_id')::BIGINT,
         JSON_EXTRACT_PATH_TEXT(payload_json, 'store'),
-        JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '0', 'sku'),
-        JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '0', 'price')::DECIMAL(10,2),
-        JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '0', 'qty')::INT,
-        (JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '0', 'price')::DECIMAL(10,2) * 
-         JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '0', 'qty')::INT)::DECIMAL(12,2)
-    FROM raw_webhook_landing
-    UNION ALL
-    SELECT 
-        webhook_id,
-        JSON_EXTRACT_PATH_TEXT(payload_json, 'user_id')::BIGINT,
-        JSON_EXTRACT_PATH_TEXT(payload_json, 'store'),
-        JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '1', 'sku'),
-        JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '1', 'price')::DECIMAL(10,2),
-        JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '1', 'qty')::INT,
-        (JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '1', 'price')::DECIMAL(10,2) * 
-         JSON_EXTRACT_PATH_TEXT(payload_json, 'items', '1', 'qty')::INT)::DECIMAL(12,2)
-    FROM raw_webhook_landing;
+        JSON_EXTRACT_PATH_TEXT(item_json, 'sku'),
+        JSON_EXTRACT_PATH_TEXT(item_json, 'price')::DECIMAL(10,2),
+        JSON_EXTRACT_PATH_TEXT(item_json, 'qty')::INT,
+        (JSON_EXTRACT_PATH_TEXT(item_json, 'price')::DECIMAL(10,2) *
+         JSON_EXTRACT_PATH_TEXT(item_json, 'qty')::INT)::DECIMAL(12,2)
+    FROM exploded_items;
     
     RAISE INFO 'Legacy string JSON shredding complete.';
 END;

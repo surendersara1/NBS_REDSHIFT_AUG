@@ -25,7 +25,7 @@ In Redshift:
    `ERROR: 1023 DETAIL: Serializable isolation violation on table ...`
 
 THE GOAL:
-1. Query `STV_LOCKS` and `STV_SESSIONS` to identify blocking PIDs.
+1. Query `SVV_TRANSACTIONS` to identify blocking PIDs and what they are waiting on.
 2. Terminate hung backend sessions safely (`pg_terminate_backend`).
 3. Implement short transaction boundaries and `SET statement_timeout` guardrails.
 ======================================================================================
@@ -57,31 +57,39 @@ CREATE TABLE lock_incident_log (
 -- 2. THE DBA LOCK TRIAGE TOOLKIT (System Queries)
 -- ===================================================================================
 
--- QUERY 1: Who is holding or waiting for a lock THIS INSTANT?
-SELECT 
-    l.lock_owner_pid   AS blocking_pid,
-    s.user_name        AS owner_user,
-    s.db_name,
-    l.lock_status      AS status,         -- 'Granted' vs 'Waiting'
-    l.lock_mode        AS lock_type,       -- 'ExclusiveLock', 'SharedLock', 'WriteLock'
-    c.relname          AS table_name,
-    DATEDIFF(second, l.txn_start, GETDATE()) AS txn_age_seconds
-FROM stv_locks l
-JOIN stv_sessions s ON s.process = l.lock_owner_pid
-JOIN pg_class c ON c.oid = l.relation
-ORDER BY l.txn_start ASC;
+-- NOTE ON WHICH VIEW TO USE:
+-- SVV_TRANSACTIONS is the view AWS directs you to for lock contention, and it is
+-- the only one carrying lock_mode / txn_start / relation / granted. STV_LOCKS has
+-- just table_id, lock_owner, lock_owner_pid and lock_status -- and it is visible
+-- to superusers only, so it is the wrong tool in a shared classroom cluster.
 
--- QUERY 2: Find Idle Sessions in open transactions holding locks:
-SELECT 
-    s.process AS pid,
-    s.user_name,
-    s.starttime,
-    DATEDIFF(minute, s.starttime, GETDATE()) AS session_age_minutes,
+-- QUERY 1: Who is holding or waiting for a lock THIS INSTANT?
+SELECT
+    t.pid              AS blocking_pid,
+    t.txn_owner        AS owner_user,
+    t.txn_db           AS db_name,
+    t.granted          AS lock_granted,     -- f = this transaction is WAITING
+    t.lock_mode        AS lock_type,        -- 'AccessShareLock', 'ExclusiveLock', ...
+    c.relname          AS table_name,
+    DATEDIFF(second, t.txn_start, GETDATE()) AS txn_age_seconds
+FROM svv_transactions t
+-- LEFT JOIN: relation is NULL when lockable_object_type = 'transactionid'
+LEFT JOIN pg_class c ON c.oid = t.relation
+ORDER BY t.txn_start ASC;
+
+-- QUERY 2: Find long-lived open transactions still holding their locks:
+SELECT
+    t.pid,
+    t.txn_owner AS user_name,
+    t.txn_start,
+    DATEDIFF(minute, t.txn_start, GETDATE()) AS txn_age_minutes,
     t.lock_mode,
-    t.relation
-FROM stv_sessions s
-LEFT JOIN stv_locks t ON t.lock_owner_pid = s.process
-ORDER BY s.starttime ASC;
+    t.lockable_object_type,
+    c.relname AS table_name
+FROM svv_transactions t
+LEFT JOIN pg_class c ON c.oid = t.relation
+WHERE t.granted = TRUE
+ORDER BY t.txn_start ASC;
 
 -- QUERY 3: Terminate a runaway blocking session (DBA Emergency Action):
 -- SELECT pg_terminate_backend(<blocking_pid>);
@@ -127,7 +135,7 @@ BEGIN
 
     -- Heavy computation happens in temp space with zero table locks on permanent objects:
     DROP TABLE IF EXISTS #temp_lock_prep;
-    CREATE TEMP TABLE #temp_lock_prep (id INT, val VARCHAR(50)) ON COMMIT DROP;
+    CREATE TEMP TABLE #temp_lock_prep (id INT, val VARCHAR(50));
 
     INSERT INTO #temp_lock_prep (id, val)
     SELECT n, 'Calculated Value ' || n::VARCHAR

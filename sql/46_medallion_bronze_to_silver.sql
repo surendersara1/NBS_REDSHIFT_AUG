@@ -93,8 +93,8 @@ BEGIN
         validation_error VARCHAR(255)
     )
     DISTSTYLE KEY
-    DISTKEY (user_id)
-    ON COMMIT DROP;
+    DISTKEY (user_id);
+    -- Redshift accepts no ON COMMIT clause; the DROP above is what makes this re-runnable.
 
     INSERT INTO #stg_parsed_events
     SELECT 

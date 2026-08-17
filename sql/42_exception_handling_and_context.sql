@@ -137,7 +137,9 @@ $$;
 -- Batch: [BATCH_2026_08_15], SQLSTATE: [22P02], Message: Invalid digit, Value 'I', Pos 0, Type: Decimal
 
 -- (c) System Query History Error Inspection:
-SELECT query_id, user_id, transaction_id, status, error_code, error_message
+-- SYS_QUERY_HISTORY records the reason in error_message; there is no error_code
+-- column. Failed statements are identified by status = 'failed'.
+SELECT query_id, user_id, transaction_id, status, error_message
 FROM sys_query_history
-WHERE error_code IS NOT NULL
+WHERE status = 'failed'
 ORDER BY start_time DESC LIMIT 5;
