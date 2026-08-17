@@ -96,9 +96,10 @@ CURRICULUM.md                  the five-day plan
 
 ## Deploy
 
-**Every learner deploys their own copy.** Pick a slug (2–12 lowercase chars)
-and use it everywhere — it is what keeps eight deployments from colliding in
-one account. `cdk` refuses to synthesize without it.
+**You deploy your own copy into your own AWS account.** Pick a slug (2–12
+lowercase chars) and use it everywhere — it names every resource
+(`nbs-<slug>-*`) and the scripts key off it. `cdk` refuses to synthesize
+without it.
 
 ```bash
 npm install -g aws-cdk@latest                       # CLI must be >= 2.1136.0
@@ -124,12 +125,11 @@ aws glue start-job-run --job-name nbs-$USER_SLUG-bronze-to-silver-dev
 ./scripts/render_sql.sh --user $USER_SLUG           # -> sql/_resolved/
 ```
 
-**One AWS account per learner.** Each person deploys into their own account
-with their own VPC, so nothing is shared and nothing can collide. The 5-VPC
-default limit is per account and one VPC per account is nowhere near it —
-**there is no quota to raise.** Each learner runs `cdk bootstrap` once in
-their own account and adds themselves as Lake Formation data lake admin; both
-are self-serve. See [SETUP.md §1](SETUP.md).
+**Your own AWS account, your own root login, your own everything.** Nothing
+here is shared with anyone. The 5-VPC default limit is per account and this
+stack creates one, so **there is no quota to raise**. Run `cdk bootstrap` once
+in your account + region and add yourself as Lake Formation data lake admin —
+both self-serve, both yours. See [SETUP.md §1](SETUP.md).
 
 Open **Redshift Query Editor v2** in the console and work through `sql/`
 **in numeric order** — the files build on each other's objects:
@@ -143,9 +143,11 @@ Open **Redshift Query Editor v2** in the console and work through `sql/`
 | `15` | `13` — calls `sp_assert_unique` |
 
 Running `15` before `11` fails with "relation fct_retail_sales does not
-exist", which is the one out-of-order failure worth warning the room about. The cluster has no public endpoint deliberately — Query Editor v2
-reaches it through the Data API, so eight people can connect on day one
-without VPN, security-group, or psql setup.
+exist", which is the one out-of-order failure worth knowing about.
+
+The cluster has no public endpoint deliberately — Query Editor v2 reaches it
+through the Data API, so you can connect without VPN, security-group, or
+`psql` setup.
 
 ## Decisions worth knowing before you review this
 
@@ -175,11 +177,11 @@ teaches SQL and Lambda UDFs instead. MV auto-refresh changed priority on
 
 ## Cost
 
-Per learner: roughly **$0.25/hour** for the `ra3.large` node plus
+Your account, roughly **$0.25/hour** for the `ra3.large` node plus
 **~$0.04/hour** for the Glue and KMS interface endpoints. Everything else is
 negligible at this data volume.
 
-**Eight learners, five 8-hour days, paused overnight: roughly $100–130.**
+**Five 8-hour days, paused overnight: roughly $13–17 on your bill.**
 
 ```bash
 aws redshift pause-cluster  --cluster-identifier nbs-$USER_SLUG-dev
@@ -187,9 +189,9 @@ aws redshift resume-cluster --cluster-identifier nbs-$USER_SLUG-dev
 ```
 
 Note that **interface endpoints keep billing while the cluster is paused**
-(~$27 across eight learners for a week of wall-clock). That is the price of
-running no NAT gateway, which would cost ~$32/month each. `cdk destroy`
-nightly instead of pausing if that matters.
+(~$3.40 for a week of wall-clock). That is the price of running no NAT
+gateway, which would cost ~$32/month. `cdk destroy` nightly instead of
+pausing if that matters.
 
 Tear down with `cdk destroy --all -c user=$USER_SLUG`. Three things it will
 not remove — see [SETUP.md §10](SETUP.md).

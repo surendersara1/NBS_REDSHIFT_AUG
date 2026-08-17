@@ -1,10 +1,9 @@
 # Setup — from empty laptop to first query
 
-**Every learner deploys their own copy into their own AWS account.** Each
-person runs these steps with their own credentials, in their own account, with
-their own VPC and their own `user` slug. **Nothing is shared** — not the
-account, not the VPC, not the `s3tablescatalog` federated catalog, which the
-bootstrap script creates once inside each learner's own account.
+**You deploy your own copy into your own AWS account.** Your credentials, your
+account, your root login, your VPC, your `user` slug. **Nothing is shared with
+anyone** — not the account, not the VPC, not the `s3tablescatalog` federated
+catalog, which the bootstrap script creates inside your account.
 
 Read this fully before running anything. Time to a working cluster: **about
 45 minutes**, most of it waiting for Redshift to create.
@@ -27,8 +26,8 @@ Read this fully before running anything. Time to a working cluster: **about
 
 The infrastructure code is structurally sound and the SQL is written against
 verified AWS documentation, but **the first deploy is a real first deploy**.
-One person should walk the whole path end-to-end before the other seven
-start. Section 8 lists what is most likely to bite.
+Walk the whole path end-to-end yourself before you rely on any of it.
+Section 8 lists what is most likely to bite.
 
 ---
 
@@ -87,31 +86,24 @@ If either fails, install AWS CLI v2 from the MSI installer — not via `pip`.
   ```
   `UnknownOperation` on the second means S3 Tables is not in that region.
 
-### Deployment model: one AWS account per learner
+### Deployment model — your own account, start to finish
 
-**Each learner deploys into their own AWS account, with their own VPC.**
-That is the model this course runs on, and it removes the single worst
-pre-course risk.
+**You deploy into your own AWS account, with your own VPC and your own root
+login.** Nothing is shared, so nothing has to be coordinated with anyone.
 
 **There is no VPC quota problem.** The default limit is 5 VPCs per region
-*per account*; each learner's FoundationStack creates exactly one, in their
-own account. Nothing to raise, nothing to request, nothing that has to be
-approved before Monday.
+*per account*; your FoundationStack creates exactly one, in your account.
+Nothing to raise, nothing to request, no approval to wait on.
 
-What being in separate accounts *does* mean — all of it self-serve, and all
-of it per learner rather than centrally:
+Everything below is self-serve, in your account:
 
-- **`cdk bootstrap` runs in every account.** Once per account + region. See §3.
-- **`s3tablescatalog` is created in every account.** `bootstrap_s3tables.sh`
-  does this automatically; there is no shared catalog to coordinate.
-- **Lake Formation data lake admin is a two-minute self-serve step.** Each
-  learner adds themselves in their own account (§1, Account requirements).
-  If they own the account, nobody has to grant them anything first.
-- **Resource names cannot collide**, so the `-c user=<slug>` context is now
-  about *identification* rather than collision avoidance. It is still
-  required — `render_sql.sh` and the bootstrap script both key off the slug.
-- **Module `63` (cross-account data sharing) becomes genuinely runnable.**
-  Two learners can pair their accounts instead of treating it as concept-only.
+- **`cdk bootstrap`** — once per account + region. See §3.
+- **`s3tablescatalog`** — `bootstrap_s3tables.sh` creates it in your account.
+  There is no shared catalog to coordinate.
+- **Lake Formation data lake admin** — two minutes, you add yourself (§1,
+  Account requirements). You own the account, so nobody grants it to you.
+- **Nothing can collide**, so `-c user=<slug>` is about naming, not isolation.
+  It is still required — `render_sql.sh` and the bootstrap script key off it.
 
 ---
 
@@ -269,7 +261,7 @@ Then substitute your own ARNs and bucket names into the SQL:
 
 **Learners use `sql/_resolved/`, not `sql/`.** The script exits non-zero if
 any placeholder it should have substituted is still there, so a silent
-half-render cannot reach the room. Two placeholders are left on purpose:
+half-render cannot reach your cluster. Two placeholders are left on purpose:
 `<QUERY_ID>` and `<YOUR_IAM_ROLE_NAME>`.
 
 ### `scripts/create_learners.sh` — not needed in this model
@@ -306,18 +298,16 @@ Work through `sql/_resolved/` **in numeric order**. The dependency chain:
 | `16` | `02` |
 
 Running `15` before `11` fails with *relation "fct_retail_sales" does not
-exist*. That is the one out-of-order failure worth warning the room about.
+exist*. That is the one out-of-order failure worth knowing about.
 
 **Modules `19`–`76`** are self-contained: no placeholders, no dependency on
 the deployed stack, runnable in any order once `01`–`04` have built the
-base tables. Three describe services this platform does not provision
-(`59` SageMaker, `64` Kinesis/MSK, `69` Aurora/DynamoDB) — teach those as
-concepts, not labs.
+base tables. Four describe infrastructure this platform does not provision
+(`59` SageMaker, `63` a second AWS account, `64` Kinesis/MSK,
+`69` Aurora/DynamoDB) — read those, don't try to run them.
 
-**`63` (cross-account data sharing) is the exception, and it is now a real
-lab.** It needs two accounts, and with one account per learner the room has
-eight. Pair people up and have them share a datashare across their own two
-accounts — this is the module that benefits most from the per-account model.
+`63` (cross-account data sharing) is concept-only too — it needs a second AWS
+account, and you have one.
 
 All 76 modules have now been read line by line and their defects fixed; see
 [docs/PRE_COURSE_AUDIT.md §8](docs/PRE_COURSE_AUDIT.md).
@@ -354,14 +344,12 @@ Ranked by likelihood, each with the actual fix:
 
 ---
 
-## 9. Cost — eight separate bills, not one
+## 9. Cost — your account only
 
-Because every learner is in their own AWS account, **each account carries one
-learner's cost**, not eight. Nobody sees an 8× bill; there are eight ~1× bills.
-The aggregate below matters for budgeting across the group, not for any single
-account.
+This is what **your** account bills. It is self-contained: one cluster, one
+VPC, one set of endpoints. Nobody else's usage lands here.
 
-Per learner, roughly:
+Roughly:
 
 | Item | Rate | 8-hour day |
 |---|---|---|
@@ -369,8 +357,7 @@ Per learner, roughly:
 | Glue + KMS interface endpoints (2 AZ each) | ~$0.04/hr | ~$0.96 |
 | Glue jobs, S3, S3 Tables | negligible at this volume | <$0.10 |
 
-**Per learner account, five 8-hour days, paused overnight: roughly $13–17.**
-**Across all eight accounts: roughly $100–130.**
+**Five 8-hour days, paused overnight: roughly $13–17 on your bill.**
 
 Confirm `ra3.large` against current pricing for your region — it is the one
 number here not verified against a published table.
@@ -384,19 +371,18 @@ aws redshift pause-cluster  --cluster-identifier nbs-$USER_SLUG-dev
 aws redshift resume-cluster --cluster-identifier nbs-$USER_SLUG-dev
 ```
 
-Resume takes a few minutes — start it before the room arrives.
+Resume takes a few minutes — start it before you need the cluster.
 
 **Interface endpoints do NOT stop when the cluster pauses.** The Glue and KMS
-endpoints bill ~$0.04/hr continuously — roughly **$3.40 in each learner's own
-account** for a week of wall-clock time, about $27 across all eight. That is
-the price of not running a NAT gateway (which would be ~$32/month *each*).
-Accept it, or `cdk destroy` nightly rather than pausing.
+endpoints bill ~$0.04/hr continuously — about **$3.40 for a week of
+wall-clock time**. That is the price of not running a NAT gateway (which would
+be ~$32/month). Accept it, or `cdk destroy` nightly rather than pausing.
 
 ---
 
 ## 10. Teardown
 
-Each learner tears down their own:
+Tear down your own stack:
 
 ```bash
 cd infra
@@ -421,28 +407,31 @@ aws s3tables list-tables --table-bucket-arn <TableBucketArn>
 
 ---
 
-## 11. Handing it to the room
+## 11. Pre-flight checklist
 
-Give each learner:
+Everything here happens in **your own AWS account**. Nothing depends on
+anyone else, and nothing has to be requested from anyone else.
 
-1. Credentials for **their own AWS account**, with the permissions in §1.
-2. **Their own `user` slug.** Names cannot collide across separate accounts,
-   so this is for identification and for the scripts that key off it — not
-   for collision avoidance. Any short lowercase name works.
-3. This file, and [CURRICULUM.md](CURRICULUM.md) — the five-day plan.
+What you need:
 
-Do before day one:
+1. Credentials for your AWS account, with the permissions in §1.
+2. A `user` slug — any short lowercase name (2–12 chars). Nothing can collide
+   with anyone, so this is purely what names your resources (`nbs-<slug>-*`)
+   and what `render_sql.sh` and `bootstrap_s3tables.sh` key off.
+3. [CURRICULUM.md](CURRICULUM.md) — the five-day plan.
 
-- **Nothing centrally blocking.** With one account per learner there is no
-  shared quota to raise and no shared catalog to provision. This is the main
-  practical advantage of the per-account model.
-- Each learner: `cdk bootstrap` in their own account + region (§3), and add
-  themselves as Lake Formation data lake admin (§1). Both are self-serve and
-  take minutes.
-- Have one person deploy end-to-end and run `sql/01` through `sql/04`
-  **before the other seven start.** This is still the highest-value hour you
-  can spend — it converts "never been deployed" into a known quantity while
-  there is time to react.
+Before you start, in your account:
+
+- [ ] `cdk bootstrap` — once per account + region (§3).
+- [ ] Add yourself as Lake Formation data lake admin (§1). Two minutes; you
+      own the account, so nobody has to grant it to you.
+- [ ] Deploy end-to-end and run `sql/01` through `sql/04`. **Do this before
+      day one, not on it.** Nothing in this repo has ever been deployed to a
+      real account — this is the step that turns that unknown into a known
+      while there is still time to react.
+
+There is **no quota to raise and no shared resource to provision.** Your VPC,
+your `s3tablescatalog`, your cluster.
 
 The one instruction worth repeating on day one: **run the files in order,
 and read the comments.** The comments carry the teaching; the SQL is just

@@ -25,10 +25,9 @@ federated-catalog path, the operational scripts, and **all 76 SQL modules**
 >
 > Modules **19–76** remain self-contained teaching SQL: zero `<PLACEHOLDER>`
 > tokens, illustrative account ids only (`123456789012`). They cannot break the
-> deploy path. Three (`59` Redshift ML, `64` Kinesis/MSK, `69` Zero-ETL)
-> describe services this CDK does not build — read-and-discuss, not run-as-is.
-> `63` cross-account sharing **is** runnable: every learner has their own AWS
-> account, so pairs can share between two real accounts. See §7.
+> deploy path. Four (`59` Redshift ML, `63` cross-account sharing,
+> `64` Kinesis/MSK, `69` Zero-ETL) need infrastructure this CDK does not build
+> — read-and-discuss, not run-as-is. See §7.
 
 ---
 
@@ -92,7 +91,7 @@ clarity.
 | 8 | S2 | **`awsdatacatalog` requires an IAM login.** `sql/03` §3.3 needs Federated Access to Spectrum. Connected as `nbsadmin` the catalog looks empty and reads like a permissions bug. Undocumented. | Fixed |
 | 9 | S2 | **CDK CLI/library schema mismatch.** `requirements.txt` floats `aws-cdk-lib` to a version emitting cloud-assembly schema 54.0.0; CLI < 2.1136.0 cannot read it. Blocks `cdk synth` before anything else. | Documented + floor stated |
 | 10 | S3 | **`nodes` defaulted to 2**, contradicting the single-node `ra3.large` cost model the README and stack docstring both argue for. Silently doubled every learner's cluster cost. | Fixed — default 1 |
-| 11 | S3 | **`render_sql.sh` could half-render silently.** Unresolved placeholders were printed but the script still exited 0, so a partially-rendered SQL set could reach the room. | Fixed — exits non-zero |
+| 11 | S3 | **`render_sql.sh` could half-render silently.** Unresolved placeholders were printed but the script still exited 0, so a partially-rendered SQL set could reach the cluster. | Fixed — exits non-zero |
 | 12 | S3 | **`create_learners.sh` is obsolete** in the per-learner model — it creates 8 logins on one shared cluster. Left in place, now labelled. | Documented |
 
 ---
@@ -182,7 +181,7 @@ Every change to `sql/03` traces to a specific AWS page, read during the audit:
 > actions on the assumption of a shared AWS account. That assumption was
 > wrong. **Each learner has their own AWS account and their own VPC.** One
 > action is withdrawn entirely; the other becomes a two-minute self-serve
-> step. **There is nothing centrally blocking before Monday.**
+> step. **Nothing blocks before Monday.**
 
 ### 4.1 ~~Raise the VPC quota~~ — WITHDRAWN, does not apply
 
@@ -198,20 +197,20 @@ resource-name collisions cannot happen across separate accounts. The
 per-learner naming work is still in place and still correct; it now serves
 identification rather than isolation, and the scripts key off the slug.
 
-### 4.2 Lake Formation data lake admin — self-serve, in each learner's account
+### 4.2 Lake Formation data lake admin — self-serve, in your own account
 
-The S3 Tables path needs it. In the shared-account model this needed a central
-admin to grant eight people. With one account per learner, **each learner adds
-themselves** in their own account: Lake Formation console → Administrative
-roles and tasks. If they own the account, nobody has to act first.
+The S3 Tables path needs it. On the old shared-account assumption this needed a
+central admin to grant it. **You own the account, so you add yourself**:
+Lake Formation console → Administrative roles and tasks. Nobody has to act
+first, and there is nothing to request.
 
 `./scripts/bootstrap_s3tables.sh --user <slug> --verify` reports clearly if it
 is missing. Same for `cdk bootstrap` — once per account + region, self-serve.
 
-**The one thing still worth doing centrally** is the §5 mitigation: have one
-person deploy end-to-end and run `sql/01`–`sql/04` before the other seven
-start. That is unchanged by the account model, and it remains the highest-value
-half-day available, because nothing here has ever been deployed.
+**The one thing still worth doing** is the §5 mitigation: deploy end-to-end and
+run `sql/01`–`sql/04` yourself before relying on any of it. That is unchanged
+by the account model, and it remains the highest-value half-day available,
+because nothing here has ever been deployed.
 
 ---
 
@@ -224,12 +223,11 @@ a deploy. Specifically still unproven:
 |---|---|
 | A real `cdk deploy` | Synth validates structure and the CFN resource spec. It does not catch IAM propagation timing, S3 Tables regional behaviour, or quota limits. |
 | The Glue Iceberg REST config | The `--conf` string wiring Spark to the S3 Tables REST catalog is written to the documented shape but has not run. Most likely single point of failure on day 2. |
-| Any SQL against a live cluster | Nothing has been executed. `sql/03` is documentation-verified but not run. |
 | Any SQL executed on a live cluster | All 76 modules are now read and documentation-verified, but **none has been run.** Every fix in §8 is verified against the AWS documentation, not against a running Redshift. |
 | The `ra3.large` price | The one figure in this repo not checked against a published table. |
 
-**Mitigation, and it is not optional: one person deploys end-to-end and runs
-`sql/01`–`sql/04` before the other seven start.** Half a day. That converts
+**Mitigation, and it is not optional: deploy end-to-end and run
+`sql/01`–`sql/04` yourself before relying on it.** Half a day. That converts
 the largest residual risk into a known quantity while there is still time to
 react. `bootstrap_s3tables.sh --verify` is designed to be the fast checkpoint
 in that walk-through.
@@ -251,10 +249,9 @@ Modules that describe infrastructure the platform does **not** provision, and
 so cannot be run end-to-end on day one:
 
 - `59` Redshift ML — needs SageMaker
-- ~~`63` Data Sharing Cross-Account — needs a second account/namespace~~
-  **Now runnable.** With one AWS account per learner the room has eight
-  accounts. Pair learners and have them share a datashare between their own
-  two accounts — this module gains the most from the per-account model.
+- `63` Data Sharing Cross-Account — needs a second AWS account/namespace.
+  Accounts are fully isolated (own root login, own everything), so there is
+  no second account available. Concept-only.
 - `64` Streaming Ingestion — needs Kinesis or MSK
 - `69` Zero-ETL Integrations — needs Aurora or DynamoDB
 
