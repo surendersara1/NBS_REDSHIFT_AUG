@@ -170,21 +170,25 @@ WHERE snapshot_identifier = 'pre-migration-2026-08-15';
 -- STEP 3: Validate data integrity after restore
 -- Run these queries on the restored cluster:
 
--- Validate row counts for critical tables:
+-- Validate row counts for critical tables.
+-- SVV_TABLE_INFO's columns are "schema" and "table" -- there is no schemaname or
+-- tablename. "table" is a reserved word, so it must be double-quoted.
 SELECT
-    schemaname || '.' || tablename AS full_table_name,
+    schema || '.' || "table" AS full_table_name,
     tbl_rows AS row_count
 FROM SVV_TABLE_INFO
 WHERE schema = 'gold'
 ORDER BY tbl_rows DESC;
 
--- Compare checksums between primary and DR (run on both clusters):
-SELECT
-    'gold.fact_orders' AS table_name,
-    COUNT(*)           AS row_count,
-    SUM(CHECKSUM(order_id::VARCHAR || order_date::VARCHAR || total_amount::VARCHAR))
-                       AS checksum
-FROM gold.fact_orders;
+-- Compare checksums between primary and DR (run on BOTH clusters and diff the output).
+-- Commented out because gold.fact_orders is illustrative -- substitute your own
+-- critical table before running this on a restored cluster.
+-- SELECT
+--     'gold.fact_orders' AS table_name,
+--     COUNT(*)           AS row_count,
+--     SUM(CHECKSUM(order_id::VARCHAR || order_date::VARCHAR || total_amount::VARCHAR))
+--                        AS checksum
+-- FROM gold.fact_orders;
 
 -- STEP 4: Update DNS / application connection strings to point to DR cluster
 -- This is typically handled by Route 53 failover or application config changes.
@@ -228,7 +232,10 @@ FROM gold.fact_orders;
 -- BEGIN;
 -- ALTER TABLE gold.dim_customer RENAME TO dim_customer_deleted;
 -- ALTER TABLE gold_restored.dim_customer_restored RENAME TO dim_customer;
--- ALTER TABLE gold.dim_customer SET SCHEMA gold;
+--   -- the renamed table still lives in gold_restored, so move it FROM there.
+--   -- ("ALTER TABLE gold.dim_customer SET SCHEMA gold" names a table that does not
+--   --  exist at this point, and moving gold -> gold would be a no-op anyway.)
+-- ALTER TABLE gold_restored.dim_customer SET SCHEMA gold;
 -- COMMIT;
 
 
@@ -253,7 +260,7 @@ BEGIN
 
     -- Check critical Gold tables have rows:
     FOR rec IN
-        SELECT schemaname || '.' || tablename AS tbl, tbl_rows
+        SELECT schema || '.' || "table" AS tbl, tbl_rows
         FROM SVV_TABLE_INFO
         WHERE schema = 'gold'
         ORDER BY tbl_rows DESC
