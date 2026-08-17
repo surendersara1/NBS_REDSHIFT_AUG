@@ -14,8 +14,15 @@ A product analytics team stores user activity as SUPER arrays in a denormalized 
 Each row contains a user and their array of page views: { "views": ["/home", "/cart", "/pay"] }.
 The team needs to "explode" each array element into its own row for funnel analysis.
 
-Without LATERAL: They write cursors or multi-step procedures to unnest arrays.
-With LATERAL: A single SQL statement unnests arrays efficiently and in parallel.
+Without lateral unnesting: They write cursors or multi-step procedures to unnest arrays.
+With it: A single SQL statement unnests arrays efficiently and in parallel.
+
+READ THIS FIRST — TERMINOLOGY vs SYNTAX:
+Redshift gives you LATERAL *semantics* (a right-hand expression that sees each row of
+the left) through PartiQL unnesting: `FROM tbl t, t.super_array AS elem`. It does NOT
+give you the `LATERAL` *keyword* — that is absent from the documented FROM-clause
+grammar and is a syntax error. Everywhere this module says "lateral", it means the
+PartiQL form shown below, never `LATERAL ( ... )`.
 
 ARCHITECTURE:
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -119,7 +126,9 @@ INSERT INTO lab.user_activity VALUES
 SELECT
     u.user_id,
     u.activity_date,
-    pv.page_url
+    page_index,
+    pv::VARCHAR AS page_url   -- page_views holds SCALAR strings, so cast the element
+                              -- itself. There is no pv.page_url attribute to reach for.
 FROM lab.user_activity u,
      u.page_views AS pv AT page_index    -- PartiQL array unnesting syntax
 WHERE u.activity_date = '2026-08-14';
@@ -152,28 +161,36 @@ WHERE u.activity_date >= '2026-08-14';
 
 
 -- ============================================================================
--- SECTION 5: LATERAL JOIN WITH EXPLICIT SYNTAX
+-- SECTION 5: TOP-N PER GROUP (WITHOUT A LATERAL KEYWORD — REDSHIFT HAS NONE)
 -- ============================================================================
 
--- Redshift also supports the explicit LATERAL keyword for subqueries:
-SELECT
-    u.user_id,
-    u.activity_date,
-    top_purchase.sku,
-    top_purchase.max_price
-FROM lab.user_activity u,
-LATERAL (
-    SELECT
-        pi.sku::VARCHAR         AS sku,
-        pi.price::DECIMAL(10,2) AS max_price
-    FROM u.purchase_items AS pi
-    ORDER BY pi.price DESC
-    LIMIT 1                      -- Top-1 most expensive item per user
-) AS top_purchase;
+-- IMPORTANT CORRECTION TO A COMMON ASSUMPTION:
+-- Redshift does NOT support the explicit LATERAL keyword. Its documented FROM-clause
+-- grammar admits only: a WITH subquery, a table, a parenthesised subquery, the join
+-- types, PIVOT / UNPIVOT, PartiQL unnesting -- (super_expression.attr) AS alias [AT idx]
+-- -- and UNNEST [WITH OFFSET]. "LATERAL ( ... )" is a syntax error here.
+--
+-- The correlated behaviour people reach for LATERAL to get is already provided by
+-- PartiQL unnesting: "u.purchase_items AS pi" IS evaluated per row of u. So for
+-- Top-N per group, unnest and then rank.
 
--- This is the "Top-N per group" pattern without window functions.
--- The LATERAL subquery runs once PER ROW of the outer table,
--- but Redshift parallelizes it across slices.
+SELECT user_id, activity_date, sku, max_price
+FROM (
+    SELECT
+        u.user_id,
+        u.activity_date,
+        pi.sku::VARCHAR         AS sku,
+        pi.price::DECIMAL(10,2) AS max_price,
+        ROW_NUMBER() OVER (
+            PARTITION BY u.user_id, u.activity_date
+            ORDER BY pi.price::DECIMAL(10,2) DESC
+        ) AS rn
+    FROM lab.user_activity u,
+         u.purchase_items AS pi
+)
+WHERE rn = 1;                    -- Top-1 most expensive item per user per day
+
+-- Change rn = 1 to rn <= 3 for Top-3. This runs fully in parallel across slices.
 
 
 -- ============================================================================
@@ -190,20 +207,23 @@ LATERAL (
 --      WHERE p.order_id = o.order_id) AS last_payment_date
 -- FROM orders o;
 
--- ✅ GOOD: LATERAL join (optimizer can parallelize)
+-- ✅ GOOD: pre-aggregate once, then join. Redshift has no LATERAL keyword, so this --
+-- not LATERAL -- is the replacement for a correlated subquery over real tables.
 -- SELECT
 --     o.order_id,
 --     o.customer_id,
 --     lp.last_payment_date
--- FROM orders o,
--- LATERAL (
---     SELECT MAX(p.payment_date) AS last_payment_date
---     FROM payments p
---     WHERE p.order_id = o.order_id
--- ) AS lp;
+-- FROM orders o
+-- LEFT JOIN (
+--     SELECT order_id, MAX(payment_date) AS last_payment_date
+--     FROM payments
+--     GROUP BY order_id
+-- ) lp ON lp.order_id = o.order_id;
 
--- Both return the same result, but LATERAL gives the optimizer more
--- freedom to choose a parallel plan instead of a nested loop.
+-- Both return the same result, but the pre-aggregated join scans payments ONCE and
+-- hash-joins in parallel, instead of re-executing a subquery per outer row.
+-- (For SUPER arrays the per-row behaviour you want is already what PartiQL
+--  unnesting does -- see Sections 3 to 5.)
 
 
 -- ============================================================================
@@ -234,9 +254,9 @@ WHERE tag::VARCHAR = 'vip'
 │ PartiQL unnest       │ SUPER arrays     │ SUPER type only  │ Excellent        │
 │ (u.array AS elem)    │ Simple unnesting │                  │ (parallel)       │
 ├──────────────────────┼──────────────────┼──────────────────┼──────────────────┤
-│ LATERAL subquery     │ Top-N per group  │ Complex syntax   │ Good             │
-│                      │ Row-dependent    │                  │ (optimizer-      │
-│                      │ calculations     │                  │  dependent)      │
+│ Pre-aggregated join  │ Top-N per group  │ Extra staging    │ Excellent        │
+│ (LATERAL keyword is  │ Row-dependent    │ step vs LATERAL  │ (parallel)       │
+│  NOT supported)      │ calculations     │                  │                  │
 ├──────────────────────┼──────────────────┼──────────────────┼──────────────────┤
 │ Window functions     │ Rank/row_number  │ Cannot filter    │ Excellent        │
 │ (ROW_NUMBER, RANK)   │ within groups    │ in same step     │ (parallel)       │
