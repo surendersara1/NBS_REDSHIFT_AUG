@@ -133,7 +133,7 @@ $$;
 -- ===================================================================================
 /*
 WHY IT'S 10x FASTER:
-- Filters `filter_users` down to active DE users FIRST (reducing 50k rows to 1,000 rows).
+- Filters `filter_users` down to active DE users FIRST (reducing 50,000 rows to 5,000).
 - Filters `filter_clicks` to the 7-day range FIRST (skipping 98% of disk blocks via Zone Maps).
 - The join operates on tiny, highly compact in-memory datasets.
 */

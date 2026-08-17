@@ -49,12 +49,16 @@ INSERT INTO stg_raw_user_updates VALUES
 (3, 102, 'bob@test.com',  '789 Elm St',   '2026-08-15 10:00:00'),
 (4, 102, 'bob@work.com',  '789 Elm St',   '2026-08-15 10:00:00'); -- Exact same timestamp as seq 3! (Tie-breaker required)
 
--- Add 50,000 generated records with synthetic duplicates:
+-- Add 50,000 generated records with synthetic duplicates.
+-- The generated user_id range starts at 1000 deliberately: it must NOT overlap the
+-- hand-crafted users 101 and 102 above. If it did, the bulk rows (which carry later
+-- updated_at values) would outrank them and silently destroy both the "latest wins"
+-- and the tie-breaker demonstrations in section 4.
 INSERT INTO stg_raw_user_updates (sequence_id, user_id, email, address, updated_at)
-SELECT 
+SELECT
     (100 + s.n) AS sequence_id,
-    (s.n % 10000 + 1) AS user_id,
-    'user_' || (s.n % 10000 + 1)::VARCHAR || '@example.com' AS email,
+    (s.n % 10000 + 1000) AS user_id,
+    'user_' || (s.n % 10000 + 1000)::VARCHAR || '@example.com' AS email,
     'Street Address ' || s.n::VARCHAR AS address,
     DATEADD(minute, (s.n % 1440), '2026-08-15 00:00:00'::TIMESTAMP) AS updated_at
 FROM (

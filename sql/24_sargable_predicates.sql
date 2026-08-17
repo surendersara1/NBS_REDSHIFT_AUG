@@ -168,7 +168,7 @@ WHERE txn_timestamp >= '2026-08-10 00:00:00'::TIMESTAMP
   AND txn_timestamp < '2026-08-11 00:00:00'::TIMESTAMP;
 
 -- (b) Run and verify block skipping in SYS_QUERY_DETAIL:
--- SELECT query_id, step_name, is_rrscan, input_rows, output_rows, local_scanned_bytes
+-- SELECT query_id, step_name, is_rrscan, input_rows, output_rows, blocks_read
 -- FROM sys_query_detail
 -- WHERE query_id = pg_last_query_id()
 -- ORDER BY step_name;

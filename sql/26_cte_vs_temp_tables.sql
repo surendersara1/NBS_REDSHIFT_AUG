@@ -27,7 +27,8 @@ In Redshift:
 THE GOAL:
 1. Know when to use a lightweight CTE (single-use filter) vs. an explicit `#TEMP` table.
 2. Use `#TEMP` tables with explicit `DISTKEY` and `ANALYZE` for multi-stage pipelines.
-3. Use `ON COMMIT DROP` to prevent temporary schema bloat.
+3. Manage temp table lifecycle explicitly — Redshift has no `ON COMMIT` clause,
+   and its temp tables survive until the session ends.
 ======================================================================================
 */
 
@@ -119,7 +120,9 @@ WHY IT'S SUPERIOR FOR COMPLEX PIPELINES:
    guaranteeing zero network redistribution in subsequent joins.
 2. STATS VIA ANALYZE: Running `ANALYZE #stg_user_spend` gives the query optimizer exact
    row counts and distinct value statistics before executing the ranking window.
-3. ON COMMIT DROP: Automatically drops the temp table when the transaction ends, eliminating catalog bloat.
+3. EXPLICIT LIFECYCLE: Redshift temp tables are session-scoped and Redshift accepts no
+   `ON COMMIT` clause, so the procedure drops the table up front. That is what makes the
+   procedure re-runnable within one session instead of failing on "already exists".
 */
 CREATE OR REPLACE PROCEDURE prc_good_temp_table_pipeline()
 LANGUAGE plpgsql
@@ -130,14 +133,18 @@ BEGIN
     TRUNCATE TABLE rpt_regional_top_customers;
 
     -- Stage 1: Aggregate into a localized Temp Table with collocated DISTKEY
+    -- Redshift has NO "ON COMMIT" clause (see CREATE TABLE syntax) and its temp
+    -- tables live for the whole SESSION, not the transaction. Drop explicitly so a
+    -- second CALL in the same session does not fail with "already exists".
+    DROP TABLE IF EXISTS #stg_user_spend;
+
     CREATE TEMP TABLE #stg_user_spend (
         user_id BIGINT NOT NULL,
         region VARCHAR(32) NOT NULL,
         total_spend DECIMAL(14,2) NOT NULL
     )
     DISTSTYLE KEY
-    DISTKEY (user_id)
-    ON COMMIT DROP;
+    DISTKEY (user_id);
 
     INSERT INTO #stg_user_spend (user_id, region, total_spend)
     SELECT user_id, region, SUM(order_amount)
@@ -176,8 +183,8 @@ $$;
 -- SELECT * FROM rpt_regional_top_customers ORDER BY region, regional_rank;
 
 -- (b) Check for Disk Spills in recent queries (Practice 36):
--- SELECT query_id, step_name, rows, workmem, is_diskbased
+-- SELECT query, step, rows, workmem, label, is_diskbased
 -- FROM svl_query_summary
--- WHERE query_id = pg_last_query_id()
--- ORDER BY step_name;
+-- WHERE query = pg_last_query_id()
+-- ORDER BY workmem DESC;
 -- (is_diskbased = 't' indicates that memory was exceeded and spilled to disk!)

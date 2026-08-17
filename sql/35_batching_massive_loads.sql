@@ -196,7 +196,7 @@ FROM archive_events
 WHERE event_date >= '2025-01-01'::DATE AND event_date < '2025-02-01'::DATE;
 
 -- (e) Inspect Transaction Memory and WLM Queue Runtimes:
-SELECT query_id, service_class, queue_elapsed_time, exec_elapsed_time
+SELECT query_id, service_class_id, service_class_name, queue_time, execution_time
 FROM sys_query_history
 WHERE query_text LIKE '%INSERT INTO fct_events_v2%'
 ORDER BY start_time DESC LIMIT 5;

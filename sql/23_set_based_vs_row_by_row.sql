@@ -192,8 +192,11 @@ SELECT
     (quantity * unit_price * 0.90)::DECIMAL(12,2)
 FROM stg_order_items;
 
--- (c) Query execution detail to verify parallel slice activity:
--- SELECT query_id, slice, step_name, input_rows, output_rows, local_scanned_bytes
+-- (c) Query execution detail to verify parallel step activity:
+--     SYS_QUERY_DETAIL reports one row per step, already aggregated across slices --
+--     it has no per-slice column. data_skewness is how you see uneven work between
+--     slices: 0% is a perfectly balanced step, 100% is one slice doing everything.
+-- SELECT query_id, segment_id, step_id, step_name, input_rows, output_rows, data_skewness
 -- FROM sys_query_detail
 -- WHERE query_id = pg_last_query_id()
--- ORDER BY slice, step_name;
+-- ORDER BY segment_id, step_id;

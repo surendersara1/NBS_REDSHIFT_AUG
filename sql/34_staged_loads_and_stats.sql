@@ -92,8 +92,9 @@ BEGIN
         sale_amount DECIMAL(12,2) NOT NULL
     )
     DISTSTYLE KEY
-    DISTKEY (customer_id)
-    ON COMMIT DROP;
+    DISTKEY (customer_id);
+    -- No ON COMMIT clause: Redshift does not support one. Temp tables are
+    -- session-scoped, which is why the DROP above is what makes this re-runnable.
 
     -- Insert 50,000 rows into temp table
     INSERT INTO #stg_sales (sale_id, customer_id, sale_amount)
@@ -137,8 +138,9 @@ BEGIN
         sale_amount DECIMAL(12,2) NOT NULL
     )
     DISTSTYLE KEY
-    DISTKEY (customer_id)
-    ON COMMIT DROP;
+    DISTKEY (customer_id);
+    -- No ON COMMIT clause: Redshift does not support one. Temp tables are
+    -- session-scoped, which is why the DROP above is what makes this re-runnable.
 
     INSERT INTO #stg_sales (sale_id, customer_id, sale_amount)
     SELECT s.n, (s.n % 100000 + 1), (25.00 + (s.n % 500))::DECIMAL(12,2)

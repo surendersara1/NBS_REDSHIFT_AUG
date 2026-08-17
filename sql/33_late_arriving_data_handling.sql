@@ -173,7 +173,7 @@ WHERE txn_date >= '2026-08-08'::DATE AND txn_date <= '2026-08-15'::DATE
 GROUP BY txn_date;
 
 -- (d) Check Range-Restricted scan efficiency in SYS_QUERY_DETAIL:
-SELECT query_id, step_name, is_rrscan, input_rows, output_rows, local_scanned_bytes
+SELECT query_id, step_name, is_rrscan, input_rows, output_rows, blocks_read
 FROM sys_query_detail
 WHERE query_id = pg_last_query_id()
 ORDER BY step_name;
