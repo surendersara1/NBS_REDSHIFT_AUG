@@ -3,14 +3,15 @@
 **Date:** 2026-08-16
 **Auditor:** Claude Opus 5, against the live AWS documentation MCP server
 **Scope:** CDK infrastructure, Glue ETL, the S3 → S3 Tables → Redshift
-federated-catalog path, the operational scripts, and **`sql/01`–`sql/18`**
+federated-catalog path, the operational scripts, and **all 76 SQL modules**
 **Course starts:** 2026-08-17
 
 > **Scope boundary, stated up front.** The repository contains **76 SQL
 > modules**. This audit covers the **deployable platform** — CDK, Glue jobs,
-> scripts — plus **23 of the 76 SQL modules read line by line**:
+> scripts — plus **all 76 SQL modules, read line by line.**
 >
-> **UPDATE — all 76 modules have now been read line by line.**
+> The first pass (2026-08-16, §1–§7) covered the platform and 26 modules.
+> The second pass (§8) read the remaining 50 and re-scanned the rest.
 >
 > | | Modules |
 > |---|---|
