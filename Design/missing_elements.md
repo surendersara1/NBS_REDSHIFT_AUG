@@ -175,7 +175,7 @@ These files exist but are **thinner** than the design doc mandates. Each entry s
 | 14 | [43_vacuum_and_maintenance_in_code.sql](file:///d:/NBS_Coaching_Redshift/sql/43_vacuum_and_maintenance_in_code.sql) | Missing `VACUUM RECLUSTER` (for AQS), `VACUUM BOOST`, and interaction with auto-vacuum. No procedure that monitors and conditionally triggers VACUUM. | §H-64, §H-65 |
 | 15 | [45_temporary_tables_lifecycle.sql](file:///d:/NBS_Coaching_Redshift/sql/45_temporary_tables_lifecycle.sql) | Missing catalog bloat monitoring (`pg_catalog.pg_class` row count over time). No `CREATE TEMP TABLE ... ON COMMIT` variants. | §J-79 |
 | 16 | [49_orchestration_and_control_tables.sql](file:///d:/NBS_Coaching_Redshift/sql/49_orchestration_and_control_tables.sql) | Missing Redshift Query Scheduler (`SYS_QUERY_SCHEDULER`). No integration pattern with Step Functions or EventBridge. | §M-95 |
-| 17 | [51_Olap_Functions.sql](file:///d:/NBS_Coaching_Redshift/sql/51_Olap_Functions.sql) | Missing `MEDIAN()`, `PERCENTILE_CONT()`, `PERCENTILE_DISC()`, `RATIO_TO_REPORT()`, `LISTAGG()`. Only covers rank/row_number/lead/lag. | §C (Query Writing — window functions) |
+| 17 | [51.1_Olap_Function.sql](file:///d:/NBS_Coaching_Redshift/sql/51.1_Olap_Function.sql) | Missing `MEDIAN()`, `PERCENTILE_CONT()`, `PERCENTILE_DISC()`, `RATIO_TO_REPORT()`, `LISTAGG()`. Only covers rank/row_number/lead/lag. | §C (Query Writing — window functions) |
 | 18 | [53_date_functions.sql](file:///d:/NBS_Coaching_Redshift/sql/53_date_functions.sql) | Missing timezone-aware operations (`CONVERT_TIMEZONE`), `INTERVAL` arithmetic, epoch conversion patterns. No half-open range exercise. | §C-19 (half-open timestamp ranges) |
 
 ---
