@@ -184,7 +184,11 @@ ORDER BY lockable_object_type, relation;
 -- The lock on lock_accounts has escalated. You now hold a write-level lock and
 -- you will hold it until you end the transaction.
 
--- A4. Release everything:
+-- A4. Release everything. COMMIT, ROLLBACK and END all end the transaction and
+--     all release every lock it held. END is simply a synonym for COMMIT in
+--     Redshift, so "BEGIN ... END;" and "BEGIN ... COMMIT;" are the same thing.
+--     This file uses COMMIT and ROLLBACK throughout, because which one you meant
+--     matters when you are reading someone else's incident afterwards.
 ROLLBACK;
 
 SELECT COUNT(*) FROM svv_transactions WHERE pid = pg_backend_pid();
@@ -394,6 +398,7 @@ SELECT balance FROM lock_accounts WHERE account_id = 2;
 */
 
 -- B1  SESSION B: change it and COMMIT — fully visible to the outside world
+BEGIN;
 UPDATE lock_accounts SET balance = 5555.00 WHERE account_id = 2;
 COMMIT;
 
@@ -555,8 +560,14 @@ UPDATE lock_accounts SET balance = balance + 1 WHERE account_id = 4;
  The survivor proceeds. The victim must retry its whole transaction.
 */
 
--- Clean up whichever survived:
-ROLLBACK;    -- in BOTH sessions
+-- A3  SESSION A: clean up. Run this even if A was the victim -- if it was
+--     aborted the ROLLBACK is harmless, and if it SURVIVED it is still holding
+--     locks on both tables and will block the whole room until you do.
+ROLLBACK;
+
+-- B3  SESSION B: same, in the other tab. Whichever session survived the
+--     deadlock still has an OPEN transaction. Ending both is not optional.
+ROLLBACK;
 
 /*
 THE FIX IS ALWAYS THE SAME: A CONSISTENT LOCK ORDER.
