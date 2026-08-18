@@ -32,36 +32,54 @@ design assumes few, large, batch writes — not many small concurrent ones.
 Everything else in this file follows from that sentence.
 
 ======================================================================================
-THE THREE LOCK MODES
+LOCK MODES — WHAT THE DOCUMENTATION ACTUALLY SAYS
 ======================================================================================
-┌──────────────────────┬──────────────────────────────┬───────────────────────────┐
-│ Lock mode            │ Acquired by                  │ Blocks                    │
-├──────────────────────┼──────────────────────────────┼───────────────────────────┤
-│ AccessShareLock      │ SELECT, UNLOAD               │ ONLY AccessExclusiveLock  │
-│                      │ (also the read phase of      │ Never blocks another      │
-│                      │  UPDATE and DELETE)          │ reader or a writer.       │
-├──────────────────────┼──────────────────────────────┼───────────────────────────┤
-│ ShareRowExclusiveLock│ COPY, INSERT, UPDATE, DELETE │ AccessExclusiveLock and   │
-│                      │                              │ other ShareRowExclusive.  │
-│                      │                              │ Does NOT block readers.   │
-├──────────────────────┼──────────────────────────────┼───────────────────────────┤
-│ AccessExclusiveLock  │ ALTER TABLE, DROP TABLE,     │ EVERYTHING, including     │
-│                      │ TRUNCATE, VACUUM,            │ plain SELECTs.            │
-│                      │ LOCK TABLE                   │                           │
-└──────────────────────┴──────────────────────────────┴───────────────────────────┘
+Be sceptical of tidy "here are the N lock modes and the conflict matrix" tables
+you find for Redshift — including one that used to be in THIS file. AWS does not
+publish a single canonical taxonomy of Redshift lock modes with an acquisition
+list and a conflict matrix. What the documentation states directly is narrower,
+and this file now sticks to exactly that:
 
-THE CONFLICT MATRIX — "if A holds the row, can B take the column?"
+  * "The LOCK command obtains a table-level lock in 'ACCESS EXCLUSIVE' mode,
+     waiting if necessary for any conflicting locks to be released."
+    It takes NO mode argument — you cannot ask for a weaker one.
+    "This command is only meaningful when it is run inside a transaction block."
 
-                        │ B wants:  AccessShare  ShareRowExcl  AccessExclusive
-    ────────────────────┼──────────────────────────────────────────────────────
-    A holds AccessShare │              YES          YES            WAIT
-    A holds ShareRowExcl│              YES          WAIT           WAIT
-    A holds AccessExcl  │             WAIT          WAIT           WAIT
+  * "Less restrictive table locks are acquired implicitly by commands that refer
+     to tables, such as write operations."  AWS does not enumerate them there.
 
-  READ THE FIRST COLUMN. A reader is almost never blocked, and almost never
-  blocks anyone. Redshift readers and writers do not fight. Only DDL fights
-  everybody. That is why the production incident is nearly always "somebody left
-  a transaction open and then someone else ran an ALTER TABLE".
+  * "Some DDL operations, such as DROP TABLE and TRUNCATE, create exclusive
+     locks. These operations prevent data reads."
+
+  * "COPY and INSERT operations are pure write operations. DELETE and UPDATE
+     operations are read/write operations (for rows to be deleted or updated,
+     they have to be read first)."
+
+  * Concurrent INSERT/COPY on one table SHARE a lock and BOTH MAKE PROGRESS.
+    A statement needing an exclusive lock — UPDATE, DELETE, MERGE, DDL — does not.
+    (This is the single-table deadlock in Demo 8b. It surprises people.)
+
+  * "A transaction releases all of its table locks at once when it either commits
+     or rolls back; it doesn't relinquish locks one at a time."
+
+THE MODE NAMES YOU WILL ACTUALLY SEE
+  Do not memorise a matrix. Read SVV_TRANSACTIONS on your own cluster. The values
+  AWS shows in its own sample output for that view are:
+
+      AccessShareLock        on a relation
+      AccessExclusiveLock    on a relation
+      RowExclusiveLock       on a relation
+      ExclusiveLock          on lockable_object_type = 'transactionid'
+
+  Section 1 has you print exactly what YOUR statements acquire. That observation
+  beats any table, including this one.
+
+THE PRACTICAL SHAPE — all of this IS documented
+  readers         see the latest committed snapshot and never wait for a writer
+  INSERT / COPY   share a lock with each other; they proceed concurrently
+  UPDATE / DELETE read first, then need exclusive access
+  DDL / TRUNCATE  exclusive, and they PREVENT DATA READS
+  every lock      released together at COMMIT or ROLLBACK, never one at a time
 
 ======================================================================================
 THE OTHER HALF: LOCKS ARE HELD UNTIL THE TRANSACTION ENDS
@@ -96,10 +114,15 @@ Every demo ends with a step that releases it.
 IF YOU GET STUCK: run Section 9's triage query from a third tab, find the pid,
 and terminate it. Nothing here can damage anything outside these demo tables.
 
-VERIFICATION NOTE: lock modes, isolation behaviour and the system views used here
-are from the Redshift Database Developer Guide. This file has not been executed
-on a live cluster -- these demos are exactly the kind you should run yourself,
-which is the point of the module.
+VERIFICATION NOTE — read this before you teach from the file.
+Every behavioural claim below was re-checked against the AWS documentation:
+LOCK, Managing concurrent write operations, Isolation levels in Amazon Redshift,
+Write and read/write operations, SVV_TRANSACTIONS, STV_LOCKS, STL_TR_CONFLICT.
+An earlier draft of this file carried a confident three-lock-mode table and a
+conflict matrix that AWS does not actually publish; both have been removed and
+replaced with quoted documentation plus "go and read SVV_TRANSACTIONS yourself".
+The file still has NOT been executed on a live cluster -- and these demos are
+precisely the kind you should run rather than take on trust.
 ======================================================================================
 */
 
@@ -273,8 +296,16 @@ WHY THIS MATTERS OPERATIONALLY
 -- ============================================================================
 -- DEMO 3: TWO WRITERS DO FIGHT   (ShareRowExclusive x2 = WAIT)
 -- ============================================================================
--- Two sessions writing to the SAME TABLE serialise, even when they touch
--- completely different rows. This is the row-lock assumption breaking.
+-- Two sessions running UPDATE/DELETE on the SAME TABLE serialise, even when they
+-- touch completely different rows. This is the row-lock assumption breaking.
+--
+-- IMPORTANT QUALIFIER, straight from the docs: this is NOT true of every write.
+-- "COPY and INSERT operations are pure write operations" and concurrent
+-- INSERT/COPY on one table SHARE a lock and both make progress. It is UPDATE and
+-- DELETE that are read/write and need exclusive access. So:
+--     INSERT  ||  INSERT   -> both proceed, no blocking
+--     UPDATE  ||  UPDATE   -> the second waits, even on a different row
+-- Demo 8b shows the nasty consequence of that difference.
 
 -- A1  SESSION A:
 BEGIN;
@@ -380,9 +411,15 @@ THE OPERATIONAL RULE
 -- ============================================================================
 -- DEMO 5: SNAPSHOT ISOLATION — WHY YOUR LONG TRANSACTION READS STALE DATA
 -- ============================================================================
--- SNAPSHOT isolation is the DEFAULT in Redshift provisioned clusters and
--- serverless workgroups. A transaction sees the latest committed snapshot as of
--- the moment the TRANSACTION started -- not as of each statement.
+-- "SNAPSHOT isolation is the default isolation level when creating provisioned
+--  clusters and serverless workgroups" -- verbatim from the AWS docs.
+--
+-- PRECISELY WHEN THE SNAPSHOT IS TAKEN: not at BEGIN. AWS says a snapshot "is
+-- created within a transaction on the first occurrence of most SELECT statements,
+-- DML commands such as COPY, DELETE, INSERT, UPDATE, and TRUNCATE" and on
+-- ALTER TABLE / CREATE TABLE / DROP TABLE / TRUNCATE TABLE. In this demo step A1
+-- is that first SELECT, so the snapshot is pinned there -- not at the BEGIN above
+-- it. The distinction matters if you BEGIN early and query much later.
 --
 -- Consequence: inside a long transaction, the world is frozen. Committed work by
 -- other sessions is invisible to you until you end your own transaction. No
@@ -498,6 +535,9 @@ CONSEQUENCES WORTH KNOWING
 -- This is not a lock. Nobody blocks. One transaction simply loses at commit
 -- time and must be RETRIED.
 
+-- First, see which level you are actually on:
+SELECT * FROM stv_db_isolation_level;
+
 -- Set the level for the session (do this in BOTH tabs before the demo):
 -- SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
@@ -575,6 +615,78 @@ THE FIX IS ALWAYS THE SAME: A CONSISTENT LOCK ORDER.
   follows it -- and have every job take them in that order. A deadlock is
   impossible when nobody ever holds B while waiting for A.
   Demo 9 shows how to enforce that up front.
+*/
+
+
+-- ============================================================================
+-- DEMO 8b: THE SINGLE-TABLE DEADLOCK  ** REDSHIFT-SPECIFIC, EASY TO MISS **
+-- ============================================================================
+-- Demo 8 was the textbook deadlock: two tables, opposite order. This one needs
+-- only ONE table, and it exists because of the INSERT/UPDATE asymmetry.
+--
+-- AWS states it directly:
+--   "The snapshot isolation deadlock happens when concurrent INSERT or COPY
+--    statements are sharing a lock and making progress, and another statement
+--    needs to perform an operation (UPDATE, DELETE, MERGE, or DDL operation)
+--    that requires an exclusive lock on the same table."
+--
+-- The shape:
+--     T1:  INSERT/COPY INTO table_A;
+--     T2:  INSERT/COPY INTO table_A;  then  UPDATE/DELETE/MERGE/DDL table_A
+--
+-- T1 and T2 happily share the insert lock. Then T2 asks for exclusive access to
+-- a table T1 is still holding a share of -- and T1 is not finished. Deadlock,
+-- on a single table, with no opposite ordering anywhere in sight.
+
+-- A1  SESSION A: a pure write. Shares the lock; does NOT block anyone.
+BEGIN;
+INSERT INTO lock_ledger VALUES (301, 1, 10.00, 'session A insert');
+
+-- B1  SESSION B: another pure write on the SAME table. Also proceeds -- both
+--     sessions are now holding a share of the same lock.
+BEGIN;
+INSERT INTO lock_ledger VALUES (302, 2, 20.00, 'session B insert');
+
+-- B2  SESSION B: [BLOCKS or DEADLOCKS] now escalate to something exclusive
+UPDATE lock_ledger SET amount = amount + 1 WHERE entry_id = 1;
+-- ^ B now wants exclusive access to lock_ledger, but A still holds its share
+--   and has not committed. If A then tries to escalate too, neither can move.
+
+-- A2  SESSION A: [DEADLOCK] A escalates as well -- now it is mutual
+UPDATE lock_ledger SET amount = amount + 1 WHERE entry_id = 2;
+/*
+ One session is chosen as the victim:
+   ERROR: deadlock detected
+ Note there is only ONE table involved. Consistent lock ORDERING -- Demo 8's
+ fix -- would not have helped here. There is nothing to order.
+*/
+
+-- A3  SESSION A: clean up (harmless if A was the victim)
+ROLLBACK;
+
+-- B3  SESSION B: clean up. Whichever survived is still holding locks.
+ROLLBACK;
+
+/*
+THE TWO DOCUMENTED FIXES — neither is "lock in a consistent order"
+
+  1. SPLIT THE TRANSACTION. Keep pure writes together and move anything needing
+     an exclusive lock into its OWN transaction, so the INSERT/COPY statements
+     can all progress and the exclusive work runs after them:
+
+         BEGIN; INSERT INTO t ...; COMMIT;      -- shared, concurrent, fine
+         BEGIN; UPDATE t ...;      COMMIT;      -- exclusive, on its own
+
+  2. RETRY. AWS's own advice for transactions that genuinely must mix INSERT/COPY
+     with MERGE/UPDATE/DELETE on the same table: "include retry logic in your
+     applications to work around potential deadlocks." This is Practice 82 --
+     design every operation to be retry-safe -- earning its place again.
+
+WHY THIS MATTERS FOR YOUR ETL
+  A load that INSERTs into a fact table and then UPDATEs a watermark or applies a
+  MERGE on that SAME table, running on more than one worker, is exactly this
+  shape. It works fine in testing with one worker and deadlocks intermittently in
+  production. Split the transaction.
 */
 
 
