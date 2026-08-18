@@ -104,7 +104,7 @@ BEGIN
     -- -------------------------------------------------------------------------------
     v_step_name := '2. Ingest and Cast Dirty Data';
     
-    INSERT INTO target_clean_data (record_id, clean_amount)
+    
     SELECT record_id, raw_amount::DECIMAL(12,2)
     FROM source_dirty_data;
 
