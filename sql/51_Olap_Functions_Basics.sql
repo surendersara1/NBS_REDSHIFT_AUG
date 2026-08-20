@@ -197,7 +197,7 @@ ORDER BY row_num;
 SELECT region, store_name, revenue
 FROM (
     SELECT region, store_name, revenue,
-           ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue DESC, store_name) AS rn
+           ROW_NUMBER() OVER (PAR TITION BY region ORDER BY revenue DESC, store_name) AS rn
     FROM store_revenue
 )
 WHERE rn = 1;
@@ -578,7 +578,7 @@ ORDER BY sale_date;
 SELECT
     sale_date,
     revenue,
-    SUM(revenue) OVER (ORDER BY sale_date) AS running_total
+    SUM(revenue) AS running_total
 FROM daily_sales
 WHERE store_name = 'Downtown'
 ORDER BY sale_date;
@@ -1370,7 +1370,7 @@ ORDER BY store_name, sale_date;
 SELECT
     store_name,
     revenue,
-    RANK()         OVER (ORDER BY revenue)            AS rank_asc,
+    RANK()               OVER (ORDER BY revenue)            AS rank_asc,
     ROUND(PERCENT_RANK() OVER (ORDER BY revenue), 4)  AS percent_rank,
     ROUND(CUME_DIST()    OVER (ORDER BY revenue), 4)  AS cume_dist
 FROM store_revenue
