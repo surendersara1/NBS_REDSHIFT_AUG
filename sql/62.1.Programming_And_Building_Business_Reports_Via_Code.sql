@@ -1,6 +1,6 @@
 /*
 ======================================================================================
-MODULE 62.x: PROGRAMMING & BUILDING BUSINESS REPORTS VIA CODE
+MODULE 62.1: PROGRAMMING & BUILDING BUSINESS REPORTS VIA CODE
              A RETAIL WAREHOUSE, MODELLED ON ORACLE RETAIL (RMS)
 ======================================================================================
 TARGET AUDIENCE: Senior Data Engineers. This is the capstone.
@@ -13,7 +13,7 @@ WHAT MODULE 62 LEAVES OUT, AND THIS FILE SUPPLIES
   materialized view, or a business question. That gap is the whole point here:
 
       62    "here is how %ROWTYPE works"
-      62.x  "here is a 15-dimension retail star schema, three fact tables, ten
+      62.1  "here is a 15-dimension retail star schema, three fact tables, ten
              merchandising questions, ten materialized views and the procedures
              that build and refresh the whole thing"
 
